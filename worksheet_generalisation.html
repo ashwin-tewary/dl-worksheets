@@ -1,0 +1,2702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Generalisation · Worksheet · Underfit → Overfit → Bias–Variance → Double Descent</title>
+<style>
+
+:root{
+  --ink:#16213D; --blue:#3A5DA1; --amber:#C8801F; --plum:#6D2E46;
+  --cream:#FEF3E1; --creamb:#E2C58C; --grey:#555555; --lgrey:#9A9A9A;
+  --rule:#DDDDDD; --red:#B3372E; --redbg:#FBEDEC; --green:#2E7D53; --greenbg:#EDF5F0;
+  --panel:#F7F8FA;
+  --serif:Cambria,Georgia,"Times New Roman",serif;
+  --sans:Calibri,"Segoe UI",Tahoma,system-ui,-apple-system,sans-serif;
+  --mono:Consolas,"Cascadia Mono",ui-monospace,Menlo,monospace;
+  --track:#EDF0F4; --r:11px; --r-sm:9px;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:#fff;color:var(--grey);font-family:var(--sans);font-size:17px;line-height:1.55}
+.wrap{max-width:1100px;margin:0 auto;padding:0 28px 60px}
+
+/* ---------- notation ---------- */
+.nota{white-space:nowrap;font-family:var(--serif)}
+.nota i{font-style:italic}
+/* .60em keeps the proportion; the 11px floor keeps a subscript legible
+   inside 16px body text and on a phone */
+.nota sup,.nota sub{font-size:max(11px,.60em);line-height:0;font-style:normal}
+.nsep{display:inline-block;width:.26em}
+
+/* ---------- top bar ---------- */
+.topbar{position:sticky;top:0;z-index:60;background:#fff;border-bottom:1.5px solid var(--rule)}
+.tb{max-width:1100px;margin:0 auto;padding:10px 28px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.tb-title{font-family:var(--serif);font-weight:700;color:var(--ink);font-size:18px}
+.tb-spacer{flex:1 1 auto}
+.pwrap{display:flex;align-items:center;gap:12px}
+.pbar{width:200px;height:9px;background:#EEEEEE;border-radius:99px;overflow:hidden}
+.pbar i{display:block;height:100%;width:0;background:var(--amber);border-radius:99px;transition:width .35s ease}
+.pnum{font-size:15px;color:var(--ink);font-weight:700;white-space:nowrap}
+.psec{font-size:15px;color:var(--lgrey);white-space:nowrap}
+.tbtn{font-family:var(--sans);font-size:15px;padding:7px 15px;border:1.5px solid var(--ink);border-radius:6px;background:#fff;color:var(--ink);cursor:pointer;font-weight:600}
+.tbtn:hover{background:var(--ink);color:#fff}
+
+/* ---------- masthead ---------- */
+.mast{padding:34px 0 6px;border-bottom:2px solid var(--ink);margin-bottom:26px}
+.mast h1{font-family:var(--serif);color:var(--ink);font-size:38px;line-height:1.15;margin:6px 0 8px;font-weight:700}
+.mast p{margin:0 0 18px;max-width:820px;font-size:17px}
+
+/* ---------- sections ---------- */
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--amber);font-family:var(--sans)}
+.sec{margin:0 0 14px;padding:22px 0 8px;border-top:1px solid var(--rule)}
+.sec:first-child{border-top:0}
+.sec-head{display:flex;align-items:flex-start;gap:16px;cursor:pointer}
+.sec-head h2{font-family:var(--serif);color:var(--ink);font-size:29px;line-height:1.2;margin:2px 0 0;font-weight:700}
+.sec-head .hgrow{flex:1 1 auto}
+.chev{font-family:var(--sans);font-size:13px;color:var(--lgrey);border:1px solid var(--rule);background:#fff;border-radius:99px;padding:4px 12px;cursor:pointer;white-space:nowrap}
+.chev:hover{border-color:var(--amber);color:var(--amber)}
+.sec-body{padding-top:6px}
+.sec.collapsed .sec-body{display:none}
+.sec-strip{display:none;align-items:center;gap:14px;margin-top:10px;background:var(--panel);border:1.5px solid var(--rule);border-left:4px solid var(--green);border-radius:5px;padding:12px 16px}
+.sec.collapsed .sec-strip{display:flex;flex-wrap:wrap}
+.sec-strip .ss-res{font-family:var(--serif);font-size:19px;color:var(--ink)}
+.sec-strip .ss-re{font-size:14px;color:var(--lgrey)}
+.sec.your .sec-head{background:var(--ink);border-radius:6px;padding:16px 20px;margin-bottom:8px}
+.sec.your .sec-head h2{color:#fff}
+.sec.your .sec-head .eyebrow{color:var(--creamb)}
+.sec.your .chev{background:transparent;color:#B9C4DA;border-color:#3C4A6B}
+
+/* ---------- section head treatment, from lecture 6 ---------- */
+.seg-head{display:flex;align-items:baseline;gap:16px;margin-bottom:2px}
+.seg-num{font-family:var(--serif);font-size:15px;font-weight:700;color:var(--amber);
+  letter-spacing:.16em;text-transform:uppercase;white-space:nowrap}
+.seg-rule{flex:1 1 auto;height:1px;background:var(--rule)}
+.sec.your .seg-num{color:var(--creamb)}
+.sec.your .seg-rule{background:#3C4A6B}
+
+/* ---------- generic blocks ---------- */
+.blk{margin:16px 0}
+.locked{opacity:.25;pointer-events:none;filter:saturate(.4)}
+.blk h3{font-family:var(--serif);font-size:22px;color:var(--ink);margin:26px 0 2px;font-weight:700}
+.mathline{font-family:var(--serif);font-size:21px;color:var(--ink);line-height:2.05;margin:4px 0}
+.mathline.big{font-size:26px}
+.dim{color:var(--lgrey)}
+.hl{color:var(--amber);font-weight:700}
+p.txt{max-width:900px;margin:10px 0}
+ul.lines{list-style:none;padding:0;margin:10px 0;max-width:880px}
+ul.lines li{padding:7px 0 7px 26px;position:relative}
+ul.lines li:before{content:"\2192";position:absolute;left:0;color:var(--amber);font-weight:700}
+ol.lines{margin:10px 0;max-width:880px;padding-left:24px}
+ol.lines li{padding:5px 0}
+.note{font-size:16px;color:var(--grey);background:var(--panel);border-left:3px solid var(--creamb);padding:10px 14px;margin:14px 0;max-width:900px}
+.card{border:1.5px solid var(--rule);border-radius:6px;padding:18px 22px;margin:18px 0;background:#fff}
+.card.cream{background:var(--cream);border-color:var(--creamb)}
+.card.navy{background:var(--ink);border-color:var(--ink);color:#E6ECF7}
+.card.navy .mathline,.card.navy b,.card.navy strong{color:#fff}
+.card.navy .eyebrow{color:var(--creamb)}
+.card.navy table.wt{color:#E6ECF7}
+.card.navy table.wt th,.card.navy table.wt td{border-color:#3C4A6B}
+.card.navy table.wt thead th,.card.navy table.wt tbody th{background:#22314F;color:#fff}
+.card.navy .note{background:#22314F;color:#C9D4E8;border-left-color:var(--creamb)}
+.card.red{background:var(--redbg);border-color:var(--red);color:#7C2A24}
+.card.green{background:var(--greenbg);border-color:var(--green);color:#1F5C3C}
+.card.grey{background:var(--panel)}
+.card h4{font-family:var(--serif);color:var(--ink);font-size:20px;margin:0 0 8px}
+.card.navy h4{color:#fff}
+.card.red h4{color:#7C2A24}
+.card.green h4{color:#1F5C3C}
+.card.red .mathline{color:#7C2A24}
+.card.green .mathline{color:#1F5C3C}
+.tag{display:inline-block;font-size:12px;letter-spacing:.13em;text-transform:uppercase;font-weight:700;color:var(--amber);border:1px solid var(--creamb);background:var(--cream);border-radius:99px;padding:3px 11px;font-family:var(--sans)}
+.tag.plum{color:var(--plum);border-color:#D8BCC5;background:#F8EFF2}
+.strip{background:var(--panel);border:1.5px solid var(--rule);border-left:4px solid var(--amber);border-radius:5px;padding:13px 18px;font-family:var(--serif);font-size:20px;color:var(--ink);margin:18px 0}
+.strip.pin{position:sticky;top:var(--stick,74px);z-index:12;box-shadow:0 6px 14px -10px rgba(22,33,61,.55)}
+.strip .sl{display:block;font-family:var(--sans);font-size:12px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--amber);margin-bottom:5px}
+.pill{display:inline-block;font-size:14px;font-weight:700;border-radius:99px;padding:4px 12px;font-family:var(--sans);margin-right:10px}
+.pill.up{color:var(--green);background:var(--greenbg);border:1px solid #BEDCCB}
+.pill.down{color:var(--red);background:var(--redbg);border:1px solid #EDC9C5}
+
+/* ---------- sign chips ---------- */
+.signs{display:flex;flex-wrap:wrap;gap:7px;margin:14px 0 6px}
+.sgn{font-family:var(--serif);font-size:19px;font-weight:700;width:34px;height:34px;line-height:31px;
+  text-align:center;border-radius:5px;border:1.5px solid}
+.sgn.p{color:var(--green);background:var(--greenbg);border-color:#BEDCCB}
+.sgn.n{color:var(--red);background:var(--redbg);border-color:#EDC9C5}
+
+/* ---------- tables ---------- */
+.tbls{display:flex;gap:34px;flex-wrap:wrap;overflow-x:auto;max-width:100%;padding-bottom:2px}
+.tscroll{overflow-x:auto;max-width:100%;margin:8px 0}
+table.wt{border-collapse:collapse;font-family:var(--serif);font-size:19px;color:var(--ink);margin:8px 0}
+table.wt caption{caption-side:top;text-align:left;font-family:var(--sans);font-size:12px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;padding-bottom:7px;color:var(--amber)}
+table.wt th,table.wt td{border:1px solid var(--rule);padding:8px 15px;text-align:center;white-space:nowrap}
+table.wt thead th{background:var(--panel);font-weight:700}
+table.wt tbody th{background:#fff;font-weight:400;color:var(--grey)}
+table.wt td.lft,table.wt th.lft{text-align:left;white-space:normal}
+table.wt tr.hi td,table.wt tr.hi th{background:#FCF4E7}
+table.wt td.gp{background:var(--greenbg);color:var(--green);font-weight:700}
+table.wt td.gn{background:var(--redbg);color:var(--red);font-weight:700}
+table.wt td.mark{background:var(--cream);font-weight:700}
+table.wt.grad{width:100%;font-size:20px}
+table.wt.grad thead th{background:var(--ink);color:#fff}
+table.wt.grad tbody th{background:var(--panel);color:var(--ink);font-weight:700}
+
+/* ---------- given values ---------- */
+.given{display:flex;gap:12px;flex-wrap:wrap;margin:16px 0}
+.gcard{border:1.5px solid var(--rule);border-radius:6px;padding:11px 18px;font-family:var(--serif);font-size:20px;color:var(--ink)}
+.gcard.in{border-color:#BCCAE4;background:#F4F7FC}
+.gcard.out{border-color:#D8BCC5;background:#F8EFF2}
+.gcard.a{border-color:var(--creamb);background:var(--cream)}
+
+/* ---------- steps / blanks ---------- */
+.step{border-left:3px solid transparent;padding:12px 0 14px 17px;margin:8px 0;transition:opacity .25s ease}
+.step.active{border-left-color:var(--amber);background:linear-gradient(90deg,#FFFCF5 0%,#fff 70%)}
+.step.done{border-left-color:#DCE4D9}
+.need{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;margin:0 0 8px}
+.need .nl{font-size:13px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--amber);font-family:var(--sans)}
+.need code{font-family:var(--serif);font-size:18px;color:var(--ink);background:var(--cream);border:1px solid var(--creamb);border-radius:4px;padding:2px 10px}
+.verb{display:inline-block;font-size:12px;letter-spacing:.15em;text-transform:uppercase;font-weight:700;
+  font-family:var(--sans);color:var(--plum);border:1px solid #D8BCC5;background:#F8EFF2;
+  border-radius:99px;padding:3px 11px;margin-right:10px;vertical-align:3px}
+.slot{display:inline-block;min-width:120px;padding:1px 12px 3px;font-family:var(--serif);font-size:22px;text-align:center;color:var(--lgrey);border-bottom:2.5px dashed var(--amber);vertical-align:baseline}
+.slot.wide{min-width:340px;font-family:var(--sans);font-size:18px}
+.slot.ok{border:2px solid var(--green);border-radius:6px;background:var(--greenbg);color:var(--green);font-weight:700;padding:1px 12px 2px}
+.slot.shown{border:2px solid var(--creamb);border-radius:6px;background:var(--cream);color:#8A5A10;font-weight:700;padding:1px 12px 2px}
+.pop{display:inline-block;animation:pop .3s ease}
+@keyframes pop{from{transform:translateY(-7px) scale(.9);opacity:0}to{transform:none;opacity:1}}
+.subs{margin-top:4px}
+.sub{padding:9px 0 6px 15px;border-left:2px solid var(--rule);margin:10px 0}
+.sub.active{border-left-color:var(--amber)}
+.sub.done{border-left-color:#DCE4D9}
+.sublab{display:block;font-size:12px;letter-spacing:.13em;text-transform:uppercase;font-weight:700;
+  color:var(--lgrey);font-family:var(--sans);margin-bottom:4px}
+.chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:13px;counter-reset:opt}
+.chips.stack{flex-direction:column;align-items:flex-start}
+.chip{font-family:var(--serif);font-size:19px;padding:9px 17px;border:1.5px solid #CBD2DF;border-radius:6px;background:#fff;color:var(--ink);cursor:pointer;text-align:left;line-height:1.4}
+.chip.prose{font-family:var(--sans);font-size:17px;max-width:640px}
+.chip:hover:not(:disabled){border-color:var(--amber);background:#FFFBF3}
+.chip:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.chip.wrong{color:var(--lgrey);border-color:#E6E6E6;background:#FAFAFA;text-decoration:line-through}
+.chip.chosen{background:var(--greenbg);border-color:var(--green);color:var(--green);font-weight:700}
+.chip.revealed{background:var(--cream);border-color:var(--creamb);color:#8A5A10;font-weight:700}
+.chip:disabled{cursor:default;opacity:.5}
+.chip.chosen:disabled,.chip.revealed:disabled{opacity:1}
+.hintbox{margin-top:11px}
+.hint{color:var(--red);background:var(--redbg);border-left:3px solid var(--red);padding:9px 13px;font-size:16px;border-radius:0 4px 4px 0;max-width:820px}
+.showme{display:inline-block;margin-top:10px;background:none;border:0;padding:0;color:var(--amber);text-decoration:underline;cursor:pointer;font-size:15px;font-family:var(--sans)}
+.ansline{margin-top:11px;color:var(--green);font-weight:700;font-family:var(--serif);font-size:20px}
+.ansline.shownans{color:#8A5A10}
+.fly{position:fixed;z-index:200;font-family:var(--serif);font-size:19px;color:var(--amber);background:#fff;border:1.5px solid var(--creamb);border-radius:6px;padding:9px 17px;pointer-events:none;transition:transform .27s ease,opacity .27s ease}
+
+/* ---------- hook and answer, from lecture 6 ---------- */
+.hook{border:1.5px solid var(--rule);border-left:5px solid var(--amber);background:#FFFDF8;
+  padding:20px 24px;margin:16px 0 24px;max-width:900px}
+.hook .lab{color:var(--amber);font-size:12px;font-weight:700;letter-spacing:.16em;
+  text-transform:uppercase;margin-bottom:9px}
+.hook p.qq{font-family:var(--serif);font-size:25px;line-height:1.36;color:var(--ink);
+  margin:0;font-weight:700;max-width:none}
+.hook p.hint{font-size:15px;color:var(--lgrey);margin:11px 0 0;max-width:none;font-family:var(--sans);
+  background:none;border:0;padding:0;border-radius:0}
+.answer{border:1.5px solid #C9DDD0;border-left:5px solid var(--green);background:var(--greenbg);
+  padding:20px 24px;margin:24px 0;max-width:900px}
+.answer .lab{color:var(--green);font-size:12px;font-weight:700;letter-spacing:.16em;
+  text-transform:uppercase;margin-bottom:9px}
+.answer p{margin:0;color:#1F5140;font-size:17.5px;max-width:none;line-height:1.6}
+.answer p + p{margin-top:11px}
+.answer b{color:#123A2C}
+.answer .mathline{color:#1F5140}
+
+/* ---------- MCQ, from lecture 6 ---------- */
+.mcq{border:1.5px solid var(--rule);border-top:3px solid var(--amber);border-radius:0 0 5px 5px;
+  background:#FEFDFB;padding:22px 26px 20px;margin:28px 0;max-width:900px}
+.mcq .tag{margin-bottom:10px;border:0;background:none;padding:0;display:block;letter-spacing:.15em}
+.mcq .q{font-family:var(--serif);font-size:21px;color:var(--ink);line-height:1.45;margin:0 0 4px;font-weight:700}
+.mcq .opts{display:flex;flex-direction:column;gap:9px;margin:18px 0 0}
+.opt{font-family:var(--sans);font-size:16px;text-align:left;line-height:1.5;padding:12px 17px;
+  border:1.5px solid #CBD2DF;border-radius:5px;background:#fff;color:var(--grey);cursor:pointer;
+  display:flex;gap:12px;align-items:flex-start;transition:border-color .13s,background .13s;width:100%}
+.opt .ltr{font-family:var(--serif);font-weight:700;color:var(--amber);min-width:17px;font-size:17px}
+.opt:hover:not(:disabled){border-color:var(--amber);background:#FFFBF3}
+.opt:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.opt.wrong{color:var(--lgrey);border-color:#E8EAEF;background:#FAFBFC}
+.opt.wrong .txt{text-decoration:line-through}
+.opt.wrong .ltr{color:#C3C8D2}
+.opt.right{background:var(--greenbg);border-color:var(--green);color:var(--green);font-weight:600}
+.opt.right .ltr{color:var(--green)}
+.opt.shown{background:var(--cream);border-color:var(--creamb);color:#8A5A10;font-weight:600}
+.opt.shown .ltr{color:#8A5A10}
+.opt:disabled{cursor:default}
+.mcq .fb{margin:14px 0 0}
+.mcq .hint{color:var(--red);background:var(--redbg);border-left:3px solid var(--red);
+  padding:11px 15px;font-size:15.5px;border-radius:0 4px 4px 0;line-height:1.55;max-width:none}
+.mcq .why{color:var(--green);background:var(--greenbg);border-left:3px solid var(--green);
+  padding:13px 16px;font-size:15.5px;border-radius:0 4px 4px 0;line-height:1.6}
+.mcq .why.rev{color:#8A5A10;background:var(--cream);border-left-color:var(--amber)}
+.mcq .why b{color:inherit}
+.mcq .show{display:inline-block;margin:13px 0 0;background:none;border:0;padding:0;color:var(--amber);
+  text-decoration:underline;cursor:pointer;font-size:14.5px;font-family:var(--sans)}
+
+/* ---------- match rows ---------- */
+.match{margin:16px 0;max-width:900px}
+.mrow{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:11px 0;border-top:1px solid var(--rule)}
+.mrow:first-child{border-top:0}
+.mrow .mk{font-family:var(--serif);font-size:20px;color:var(--ink);min-width:250px}
+.mkey{margin:14px 0 0;padding:14px 18px;background:var(--panel);border:1.5px solid var(--rule);border-radius:6px}
+.mkey div{padding:3px 0;font-size:16px}
+.mkey b{color:var(--ink);font-family:var(--serif);font-size:18px;margin-right:8px}
+
+/* ---------- svg ---------- */
+.figure{margin:18px 0}
+.figure svg{max-width:100%;height:auto}
+.figcap{font-size:15px;color:var(--lgrey);margin-top:6px;font-style:italic}
+
+/* ---------- overlay ---------- */
+.overlay{position:fixed;inset:0;z-index:100;background:rgba(22,33,61,.55);display:none;overflow:auto;padding:26px}
+.overlay.open{display:block}
+.ovbox{max-width:1000px;margin:0 auto;background:#fff;border-radius:8px;border:1.5px solid var(--creamb);padding:26px 30px 34px;position:relative}
+.ovclose{position:absolute;top:14px;right:16px}
+
+/* ---------- footer ---------- */
+footer{border-top:2px solid var(--ink);margin-top:36px;padding:22px 0 10px;display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+footer .fnote{font-size:15px;color:var(--lgrey);flex:1 1 auto}
+.dbtn{font-family:var(--sans);font-size:15px;padding:8px 16px;border:1.5px solid var(--rule);border-radius:6px;background:#fff;color:var(--grey);cursor:pointer}
+.dbtn:hover{border-color:var(--red);color:var(--red)}
+.dbtn.armed{border-color:var(--red);background:var(--redbg);color:var(--red);font-weight:700}
+.cite{font-size:15px;color:var(--lgrey);margin-top:16px;font-style:italic}
+
+/* ---------- animations: control strip and canvas, from activations.html ---------- */
+.anim{border:1.5px solid var(--rule);border-radius:6px;background:#fff;padding:14px 16px 12px;margin:22px 0}
+.anim .atitle{font-family:var(--serif);font-size:20px;color:var(--ink);font-weight:700;margin:0 0 2px}
+.anim .aintro{font-size:15.5px;color:var(--grey);margin:0 0 12px;max-width:900px}
+.ctl{background:var(--panel);border:1px solid var(--rule);border-radius:var(--r);
+  padding:10px 13px;margin-bottom:13px;display:flex;gap:9px 17px;align-items:center;flex-wrap:wrap}
+.grp{display:flex;align-items:center;gap:9px;min-width:0}
+.lbl{font:700 12px/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;
+  color:var(--lgrey);white-space:nowrap}
+/* Greek control labels must not be uppercased: uppercase α is Α, which reads as a Latin A */
+.lbl.gk{font:italic 700 16px/1 var(--serif);letter-spacing:0;text-transform:none;color:var(--ink)}
+.div{width:1px;height:26px;background:var(--rule);margin:0 2px}
+.spacer{flex:1 1 auto}
+.seg{display:inline-flex;background:var(--track);border-radius:var(--r);padding:3px;gap:2px}
+.seg button{font:500 13px/1 var(--mono);padding:7px 10px;border:0;background:transparent;
+  color:var(--grey);cursor:pointer;border-radius:var(--r-sm);white-space:nowrap;
+  transition:background .14s ease,color .14s ease}
+.seg button:hover{color:var(--ink)}
+.seg button.on{background:#fff;color:var(--ink);font-weight:700;
+  box-shadow:0 1px 3px rgba(22,33,61,.16)}
+.seg button.sm{font-size:12px;padding:6px 8px}
+.seg.wrap{flex-wrap:wrap;max-width:100%}
+.seg.wrap button{white-space:normal;text-align:left;line-height:1.3}
+.btn{font:600 13px/1 var(--sans);padding:9px 14px;border:1.5px solid var(--rule);
+  border-radius:var(--r);background:#fff;color:var(--ink);cursor:pointer;white-space:nowrap;
+  transition:border-color .14s ease,background .14s ease}
+.btn:hover{border-color:var(--amber);background:#FFFBF3}
+.btn:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.btn.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.btn.sm{font-size:12px;padding:7px 11px}
+.sld{display:flex;align-items:center;gap:9px}
+input[type=range]{-webkit-appearance:none;appearance:none;width:124px;height:22px;
+  background:transparent;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:6px;background:var(--track);border-radius:99px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;
+  margin-top:-5px;border-radius:99px;background:#fff;border:1.5px solid var(--ink)}
+input[type=range]::-moz-range-track{height:6px;background:var(--track);border-radius:99px}
+input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:99px;background:#fff;border:1.5px solid var(--ink)}
+input[type=range]:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.sld .v{font:600 13px/1 var(--mono);color:var(--ink);min-width:46px;
+  font-variant-numeric:tabular-nums}
+.cvwrap{overflow-x:auto;overflow-y:hidden;max-width:100%;min-height:60px}
+canvas.wide{display:block;border-radius:5px}
+img.printshot{display:none}
+
+/* ---------- numbered actions and the under-brace ---------- */
+.vnum{display:inline-block;width:22px;height:22px;line-height:21px;text-align:center;
+  border-radius:99px;background:var(--amber);color:#fff;font-family:var(--sans);
+  font-size:12px;font-weight:700;margin-right:9px;vertical-align:2px}
+.card.navy .vnum{background:var(--creamb);color:var(--ink)}
+.vlab{display:inline-block;min-width:78px;font-family:var(--sans);font-size:12px;
+  letter-spacing:.15em;text-transform:uppercase;font-weight:700;color:var(--plum);
+  margin-right:12px;vertical-align:2px}
+.card.navy .vlab{color:var(--creamb)}
+.strip .vnum{margin-left:4px}
+.brace{display:flex;gap:26px;margin:2px 0 10px;max-width:640px}
+.bpart{flex:1 1 0;min-width:0}
+.bbar{display:block;height:9px;border:2px solid var(--amber);border-top:0;
+  border-radius:0 0 5px 5px}
+.blab{display:block;font-family:var(--sans);font-size:13.5px;color:var(--amber);
+  line-height:1.35;margin-top:5px;text-align:center;font-weight:700}
+.readline{display:flex;align-items:center;gap:9px 20px;flex-wrap:wrap;margin-top:11px}
+.pair{display:flex;align-items:baseline;gap:7px;white-space:nowrap}
+.pair .k{font:700 12px/1 var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--lgrey)}
+/* uppercase β is Β, which reads as a Latin B, so Greek keys stay uncased */
+.pair .k.gk{text-transform:none}
+.pair .v{font:600 16px/1 var(--mono);color:var(--ink);font-variant-numeric:tabular-nums}
+.pair.big .v{font-size:22px}
+.pair .v.win{color:var(--green)}
+.pair .v.pos{color:var(--green)}
+.pair .v.neg{color:var(--red)}
+.verdict{font:700 13px/1 var(--sans);padding:7px 13px;border-radius:99px;border:1.5px solid var(--rule);
+  background:var(--panel);color:var(--lgrey)}
+.verdict.stuck{color:var(--red);background:var(--redbg);border-color:#EDC9C5}
+.verdict.free{color:var(--green);background:var(--greenbg);border-color:#BEDCCB}
+.amirror{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ---------- stages: mini figure beside the calculation ---------- */
+.stage{display:grid;grid-template-columns:300px 1fr;gap:26px;align-items:start;
+       margin:22px 0 26px;padding:18px 0 4px;border-top:1px dashed var(--rule)}
+.stage:first-child{border-top:0;padding-top:4px}
+.stage-fig{position:sticky;top:var(--stick,74px)}
+.step,.sec,.stage,.sub{scroll-margin-top:calc(var(--stick,74px) + 8px)}
+.minicard{border:1.5px solid var(--rule);border-radius:6px;background:#fff;padding:6px 6px 2px}
+.minicard svg{display:block;max-width:100%;height:auto}
+.minicap{font-size:14.5px;color:var(--grey);margin-top:8px;line-height:1.35}
+.minicap b{color:var(--ink)}
+.minicap .mc-eye{display:block;font-size:12px;letter-spacing:.13em;text-transform:uppercase;
+       font-weight:700;color:var(--amber);margin-bottom:3px}
+.stage-body{min-width:0}
+.stage-body .step:first-child{padding-top:0;margin-top:0}
+
+@media (max-width:980px){
+  .stage{grid-template-columns:1fr;gap:14px}
+  .stage-fig{position:static;max-width:300px}
+}
+@media (max-width:760px){
+  .wrap{padding:0 16px 50px}
+  .tb{padding:10px 16px;gap:10px}
+  .pwrap{flex-wrap:wrap;min-width:0}
+  .pbar{width:110px}
+  .pnum{font-size:14px}
+  .psec{display:none}
+  .tb-title{font-size:15px}
+  .mast h1{font-size:28px}
+  .sec-head h2{font-size:23px}
+  .hook p.qq{font-size:21px}
+  .mathline{font-size:19px}
+  .mathline.big{font-size:22px}
+  .slot.wide{min-width:180px}
+  .slot{min-width:96px;font-size:20px}
+  .chip{font-size:17px;padding:8px 13px}
+  .strip{font-size:17px}
+  .strip.pin{position:static}
+  table.wt{font-size:16px}
+  table.wt th,table.wt td{padding:6px 9px}
+  .mrow .mk{min-width:0}
+  .anim{padding:11px 11px 9px}
+  .card{padding:15px 16px}
+  .mcq{padding:18px 16px 16px}
+}
+
+/* ---------- print ---------- */
+@media print{
+  /* running header and page number, in the page margin boxes.  Verified in
+     Chrome: every page carries the title and its own number. */
+  @page{margin:20mm 14mm 16mm;
+    @top-left{content:"Deep Learning \00b7 Worksheet \00b7 Generalisation"}
+    @bottom-right{content:"page " counter(page)}}
+  html,body{background:#fff}
+  body{font-family:var(--serif);font-size:11pt;line-height:1.45;color:#000}
+  .wrap{max-width:none;padding:0}
+  .topbar,.overlay,.chev,.dbtn,.hintbox,.showme,.ansline,.sec-strip,.fly,
+  .ctl,.mcq .show,.mcq .fb,.anim .aintro,.amirror,.prthead{display:none!important}
+  .locked{opacity:1!important;pointer-events:auto!important;filter:none!important}
+  .sec.collapsed .sec-body{display:block!important}
+  .sec{border-top:1px solid #999;padding:14px 0 4px;break-inside:auto}
+  .sec.your .sec-head{background:#fff;border:2px solid #000;padding:8px 10px}
+  .sec.your .sec-head h2,.sec.your .sec-head .eyebrow,.sec.your .seg-num{color:#000}
+  .sec-head h2{font-size:19pt}
+  .mast h1{font-size:24pt}
+  .mast{padding:0 0 6px}
+  .card,.card.navy,.card.cream,.card.red,.card.green,.card.grey{
+    background:#fff!important;color:#000!important;border:1px solid #000;
+    padding:10px 12px;break-inside:avoid}
+  .card.navy .mathline,.card.navy b,.card.navy strong,.card.navy .eyebrow,
+  .card.navy h4,.card.navy p,.card.navy .note{color:#000!important;background:none!important}
+  .card.navy table.wt,.card.navy table.wt th,.card.navy table.wt td{color:#000!important;background:#fff!important;border-color:#000!important}
+  .note,.strip,.hook,.answer{background:#fff!important;border:1px solid #666;
+    color:#000;padding:9px 12px;break-inside:avoid}
+  .strip.pin{position:static}
+  .hook p.qq,.answer p,.mathline,.mcq .q{color:#000}
+  .step,.step.active{border-left:0;background:none!important;padding-left:0;break-inside:avoid}
+  .sub{border-left:0;padding-left:0;break-inside:avoid}
+  .slot,.slot.ok,.slot.shown{border:0!important;border-bottom:1.2pt solid #000!important;
+    border-radius:0!important;background:none!important;color:#000!important;
+    width:90px;min-width:90px;display:inline-block}
+  .slot.wide{width:190px;min-width:190px}
+  .slot .slotin{visibility:hidden}
+  .chips{display:block!important;margin-top:5px}
+  .chip{display:list-item;list-style:none;border:0!important;background:none!important;
+    padding:1px 0 1px 28px!important;color:#000!important;text-decoration:none!important;
+    opacity:1!important;font-size:10pt;max-width:none;font-family:var(--serif)}
+  .chip:before{counter-increment:opt;content:"(" counter(opt,lower-alpha) ")\00a0\00a0";font-weight:700}
+  .need code{background:none;border:1px solid #999}
+  .verb{border:1px solid #000;color:#000;background:none}
+  table.wt{font-size:9.5pt;break-inside:avoid}
+  table.wt th,table.wt td{border:1px solid #666;padding:3px 7px;color:#000}
+  table.wt thead th,table.wt tbody th{background:#fff!important;color:#000!important}
+  table.wt td.gp,table.wt td.gn,table.wt td.mark,table.wt tr.hi td,table.wt tr.hi th{
+    background:#fff!important;color:#000!important}
+  table.wt td.gn{font-style:italic}
+  .tscroll{overflow:visible}
+  .anim{break-inside:avoid;border:1px solid #666;padding:8px 10px}
+  .anim canvas{display:none}
+  .anim img.printshot{display:block!important;width:100%;max-width:100%;height:auto}
+  .readline{font-size:9pt;gap:6px 14px}
+  .pair .v{font-size:10pt}
+  .stage{grid-template-columns:210px 1fr;gap:14px;border-top:1px solid #BBB;break-inside:avoid}
+  .stage-fig{position:static}
+  .minicard{border:1px solid #999}
+  .mcq{break-inside:avoid;border:1px solid #666;border-top:2px solid #000;
+    background:#fff;padding:10px 12px}
+  .opt{border:0!important;background:none!important;color:#000!important;padding:2px 0;font-size:10pt}
+  .opt.wrong .txt{text-decoration:none}
+  .opt .ltr{color:#000}
+  .signs{gap:4px}
+  .sgn{border:1px solid #666;background:none!important;color:#000!important;
+    width:26px;height:26px;line-height:24px;font-size:12pt}
+  .mrow{break-inside:avoid}
+  ul.lines li:before{color:#000}
+  .figure,.minicard,.worked{break-inside:avoid}
+  .sec[data-sec="5"],.sec[data-sec="8"],.sec[data-sec="9"],.sec[data-sec="10"]{
+    break-before:page;page-break-before:always}
+  a{color:#000;text-decoration:none}
+}
+
+
+
+/* ---------- info bubbles on theory terms ---------- */
+.termwrap{position:relative;display:inline;white-space:nowrap}
+.term{border-bottom:1.2px dotted var(--amber);color:var(--ink);font-weight:650;cursor:help}
+.ibub{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:15px;height:15px;margin:0 1px 0 3px;padding:0;vertical-align:4px;
+  border-radius:99px;border:1.3px solid var(--blue);background:#fff;
+  color:var(--blue);font:700 9px/1 var(--sans);cursor:pointer;
+}
+.ibub:hover,.ibub.on{background:var(--blue);color:#fff}
+.ibub:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.bubble{
+  position:absolute;z-index:90;left:0;top:calc(100% + 10px);
+  width:min(380px,78vw);padding:12px 14px 12px;
+  background:#fff;border:1.5px solid var(--creamb);border-radius:8px;
+  box-shadow:0 12px 28px -12px rgba(22,33,61,.5);
+  white-space:normal;text-align:left;font-weight:400;line-height:1.45;
+}
+.bubble.above{top:auto;bottom:calc(100% + 10px)}
+.bubble .bt{font-family:var(--serif);color:var(--ink);font-size:18px;font-weight:700;margin:0 0 5px}
+.bubble .bd{font-size:14.5px;color:var(--grey);margin:0;font-family:var(--sans)}
+.bubble .bf{font-family:var(--serif);color:var(--ink);font-size:16px;margin:9px 0 0}
+.bubble .bs{font-size:12.5px;color:var(--lgrey);margin:8px 0 0;font-style:italic}
+.bmore{display:inline-block;margin-top:10px;background:none;border:0;padding:0;
+  color:var(--amber);text-decoration:underline;cursor:pointer;font-size:13px;font-family:var(--sans)}
+.card.navy .term{color:#fff;border-bottom-color:var(--creamb)}
+.card.navy .ibub{border-color:var(--creamb);color:var(--creamb);background:transparent}
+.card.navy .ibub.on,.card.navy .ibub:hover{background:var(--creamb);color:var(--ink)}
+.gcard-ov{border:1.5px solid var(--rule);border-radius:6px;padding:12px 16px;margin:12px 0;background:#fff}
+.gcard-ov.flash{border-color:var(--amber);background:#FFFBF3}
+.gcard-ov .bt{font-family:var(--serif);color:var(--ink);font-size:20px;font-weight:700;margin:0 0 4px}
+.gcard-ov .bd{font-size:15px;color:var(--grey);margin:0}
+.gcard-ov .bf{font-family:var(--serif);color:var(--ink);font-size:17px;margin:8px 0 0}
+.gcard-ov .bs{font-size:13px;color:var(--lgrey);margin:8px 0 0;font-style:italic}
+@media print{
+  .ibub,.bubble,.bmore{display:none!important}
+  .term{border-bottom:0;font-weight:700}
+}
+
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="tb">
+    <div class="tb-title">Generalisation · Worksheet · Underfit → Overfit → Bias–Variance → Double Descent</div>
+    <div class="tb-spacer"></div>
+    <div class="pwrap">
+      <div class="pbar" aria-hidden="true"><i id="pfill"></i></div>
+      <div class="pnum" id="pnum">0 / 0 blanks filled</div>
+      <div class="psec" id="psec"></div>
+    </div>
+    <button class="tbtn" id="refbtn" type="button">glossary</button>
+  </div>
+</div>
+<div class="wrap">
+  <header class="mast">
+    <div class="eyebrow">deep learning · generalisation</div>
+    <h1>Underfitting, Overfitting, and the Second Descent</h1>
+    <p>Why a small training loss is not the same as having learned the function, how bias and variance split the blame, and why interpolating models are not automatically useless. Fill every blank by clicking. Nothing here is scored. Dotted terms carry an <b>i</b> — open it.</p>
+  </header>
+  <main id="doc"></main>
+  <footer>
+    <span class="fnote">Every value is rounded to 4 decimals at every step, so a calculator reproduces this sheet exactly.</span>
+    <button class="dbtn" id="printbtn" type="button">print</button>
+    <button class="dbtn" id="resetbtn" type="button">reset all</button>
+  </footer>
+  <div class="cite">References: C. M. Bishop, <i>Pattern Recognition and Machine Learning</i> (2006), §§1.1 and 3.2;
+    I. Goodfellow, Y. Bengio &amp; A. Courville, <i>Deep Learning</i> (2016), §§5.2–5.4 and ch. 7;
+    C. M. Bishop &amp; H. Bishop, <i>Deep Learning: Foundations and Concepts</i> (2023), §§4.3 and 9.3.2;
+    S. J. D. Prince, <i>Understanding Deep Learning</i> (2023/25), ch. 20.
+    Double descent: Belkin et al. (2019); Nakkiran et al. (2020).</div>
+</div>
+<div class="overlay" id="ov" role="dialog" aria-modal="true" aria-label="Glossary of terms">
+  <div class="ovbox">
+    <button class="tbtn ovclose" id="ovclose" type="button">close</button>
+    <div class="eyebrow">glossary</div>
+    <h2 style="font-family:Cambria,Georgia,serif;color:#16213D;font-size:27px;margin:6px 0 4px">Terms used in this sheet</h2>
+    <div id="ovbody"></div>
+  </div>
+</div>
+<script>
+"use strict";
+"use strict";
+function nota(sym,sup,sub){
+  var s = "<i>" + sym + "</i>";
+  if(sup !== "" && sup !== undefined && sup !== null){ s += "<sup>[" + sup + "]</sup>"; }
+  if(sub !== "" && sub !== undefined && sub !== null){
+    s += (sup ? "<span class=\"nsep\">&nbsp;</span>" : "") + "<sub>" + sub + "</sub>";
+  }
+  return "<span class=\"nota\">" + s + "</span>";
+}
+var MACRO = {
+  alpha : "<span class=\"nota\"><i>α</i></span>",
+  beta  : "<span class=\"nota\"><i>β</i></span>",
+  lam   : "<span class=\"nota\"><i>λ</i></span>",
+  mu    : "<span class=\"nota\"><i>μ</i></span>",
+  sigma : "<span class=\"nota\"><i>σ</i></span>",
+  eps   : "<span class=\"nota\"><i>ε</i></span>",
+  theta : "<span class=\"nota\"><i>θ</i></span>",
+  Eloss : "<span class=\"nota\"><i>E</i></span>",
+  yhat  : "<span class=\"nota\"><i>ŷ</i></span>",
+  fbar  : "<span class=\"nota\"><i>f̄</i></span>"
+};
+function termHTML(id){
+  var g = GLOSS[id];
+  if(!g){ return "<span class=\"term\">" + id + "</span>"; }
+  return "<span class=\"termwrap\" data-term=\"" + id + "\">" +
+    "<span class=\"term\">" + g.term + "</span>" +
+    "<button type=\"button\" class=\"ibub\" aria-expanded=\"false\" aria-label=\"About " + g.term + "\">i</button>" +
+    "</span>";
+}
+function M(s){
+  s = String(s).replace(/\{([^|{}]*)\|([^|{}]*)\|([^|{}]*)\}/g,
+        function(all,sym,sup,sub){ return nota(sym,sup,sub); });
+  s = s.replace(/\{t:([a-z0-9_]+)\}/g, function(all, id){ return termHTML(id); });
+  return s.replace(/\{([A-Za-z][A-Za-z0-9]*)\}/g,
+        function(all,k){ return Object.prototype.hasOwnProperty.call(MACRO,k) ? MACRO[k] : all; });
+}
+function mk(tag,cls,html){
+  var e = document.createElement(tag);
+  if(cls){ e.className = cls; }
+  if(html !== undefined && html !== null){ e.innerHTML = M(html); }
+  return e;
+}
+function each(list, fn){ Array.prototype.forEach.call(list, fn); }
+function mulberry32(seed){
+  return function(){
+    seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+    var t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+function shuffleWith(rand, arr){
+  var out = arr.slice(), i, j, t;
+  for(i = out.length - 1; i > 0; i--){
+    j = Math.floor(rand() * (i + 1));
+    t = out[i]; out[i] = out[j]; out[j] = t;
+  }
+  return out;
+}
+function R(x, d){
+  d = (d === undefined) ? 4 : d;
+  var p = Math.pow(10, d);
+  return Math.round((x + 0) * p) / p;
+}
+function mean(a){
+  var s = 0, i;
+  for(i=0;i<a.length;i++){ s += a[i]; }
+  return s / a.length;
+}
+function mse(pred, y){
+  var s = 0, i;
+  for(i=0;i<y.length;i++){ s += (pred[i] - y[i]) * (pred[i] - y[i]); }
+  return s / y.length;
+}
+
+/* ----- 3-point hand example ----- */
+var PT = { x:[0,1,2], y:[1,2,0], teX:[3,-1], teY:[0.5, 2.5] };
+var PT_MEAN = 1;
+var PT_CONST_TR = R(mse([1,1,1], PT.y)); /* 0.6667 */
+var PT_LIN_A = 1.5, PT_LIN_B = -0.5;
+var PT_LIN_TR = R(mse([1.5,1.0,0.5], PT.y)); /* 0.5000 */
+var PT_QUAD_TR = 0;
+function quad(x){ return 1 + 2.5*x - 1.5*x*x; }
+function lin(x){ return 1.5 - 0.5*x; }
+var PT_CONST_TE = R(mse([1,1], PT.teY));
+var PT_LIN_TE = R(mse([lin(3), lin(-1)], PT.teY));
+var PT_QUAD_TE = R(mse([quad(3), quad(-1)], PT.teY));
+
+/* ----- sine demo data (animation) ----- */
+var SX = [0.00, 0.20, 0.40, 0.60, 0.80, 1.00];
+var SY = [0.1200, 0.7711, 0.7378, -0.6878, -0.8711, -0.1400];
+function sineTrue(x){ return Math.sin(2 * Math.PI * x); }
+
+function vandermonde(x, M){
+  var n = x.length, p = M + 1, X = [], i, j, row, v;
+  for(i=0;i<n;i++){
+    row = []; v = 1;
+    for(j=0;j<p;j++){ row.push(v); v *= x[i]; }
+    X.push(row);
+  }
+  return X;
+}
+function matVec(A, w){
+  var i, j, out = [], s;
+  for(i=0;i<A.length;i++){
+    s = 0;
+    for(j=0;j<w.length;j++){ s += A[i][j] * w[j]; }
+    out.push(s);
+  }
+  return out;
+}
+function solve(A, b){
+  var n = A.length, M = [], i, j, k, f, t;
+  for(i=0;i<n;i++){
+    M[i] = A[i].slice();
+    M[i].push(b[i]);
+  }
+  for(i=0;i<n;i++){
+    var piv = i;
+    for(k=i+1;k<n;k++){ if(Math.abs(M[k][i]) > Math.abs(M[piv][i])){ piv = k; } }
+    t = M[i]; M[i] = M[piv]; M[piv] = t;
+    if(Math.abs(M[i][i]) < 1e-12){ return null; }
+    f = M[i][i];
+    for(j=i;j<=n;j++){ M[i][j] /= f; }
+    for(k=0;k<n;k++){
+      if(k === i){ continue; }
+      f = M[k][i];
+      for(j=i;j<=n;j++){ M[k][j] -= f * M[i][j]; }
+    }
+  }
+  var w = [];
+  for(i=0;i<n;i++){ w.push(M[i][n]); }
+  return w;
+}
+function polyFit(x, y, M, lam){
+  lam = lam || 0;
+  var X = vandermonde(x, M), p = M + 1, i, j, k, XTXj, XTy = [], A = [];
+  for(j=0;j<p;j++){
+    XTy[j] = 0;
+    for(i=0;i<x.length;i++){ XTy[j] += X[i][j] * y[i]; }
+    A[j] = [];
+    for(k=0;k<p;k++){
+      XTXj = 0;
+      for(i=0;i<x.length;i++){ XTXj += X[i][j] * X[i][k]; }
+      A[j][k] = XTXj + ((j === k) ? lam : 0);
+    }
+  }
+  var w = solve(A, XTy);
+  if(!w){
+    w = [];
+    for(j=0;j<p;j++){ w[j] = 0; }
+  }
+  return w;
+}
+function polyEval(w, x){
+  var s = 0, v = 1, j;
+  for(j=0;j<w.length;j++){ s += w[j] * v; v *= x; }
+  return s;
+}
+function polyCurve(w, xs){
+  var i, out = [];
+  for(i=0;i<xs.length;i++){ out.push(polyEval(w, xs[i])); }
+  return out;
+}
+
+/* bias–variance hand numbers */
+var BV_MU = 5, BV_SIG2 = 1;
+var BV_A = [3,3,3];
+var BV_B = [4,6,5];
+var BV_C = [4.0, 5.0, 4.5]; /* 0.5 y + 0.5*4 */
+function bvStats(preds){
+  var m = mean(preds), i, v = 0;
+  for(i=0;i<preds.length;i++){ v += (preds[i] - m) * (preds[i] - m); }
+  v /= preds.length;
+  var bias = m - BV_MU;
+  return { mean:R(m), bias:R(bias), bias2:R(bias*bias), var:R(v),
+           risk:R(BV_SIG2 + bias*bias + v) };
+}
+var STAT_A = bvStats(BV_A);
+var STAT_B = bvStats(BV_B);
+var STAT_C = bvStats(BV_C);
+
+function symbolTable(cap, rows){
+  var s = "<div class=\"tscroll\"><table class=\"wt\"><caption>" + cap + "</caption><thead><tr><th>symbol</th><th class=\"lft\">meaning</th></tr></thead><tbody>";
+  rows.forEach(function(r){
+    s += "<tr><th>" + M(r[0]) + "</th><td class=\"lft\">" + M(r[1]) + "</td></tr>";
+  });
+  return s + "</tbody></table></div>";
+}
+function T_PT(){
+  return "<table class=\"wt\"><caption>table A · four numbers you will use by hand</caption>" +
+    "<thead><tr><th>set</th><th>x</th><th>y</th></tr></thead><tbody>" +
+    "<tr><th rowspan=\"3\">train</th><td>0</td><td>1</td></tr>" +
+    "<tr><td>1</td><td>2</td></tr>" +
+    "<tr><td>2</td><td>0</td></tr>" +
+    "<tr class=\"hi\"><th rowspan=\"2\">test</th><td>3</td><td>0.5</td></tr>" +
+    "<tr class=\"hi\"><td>−1</td><td>2.5</td></tr>" +
+    "</tbody></table>";
+}
+function T_MODELS(){
+  return "<table class=\"wt\"><caption>table B · three models, same three training points</caption>" +
+    "<thead><tr><th></th><th>constant</th><th>line</th><th>quadratic</th></tr></thead><tbody>" +
+    "<tr><th class=\"lft\">form</th><td>{yhat} = c</td><td>{yhat} = a + b x</td><td>{yhat} = a + b x + c x²</td></tr>" +
+    "<tr><th class=\"lft\"># parameters</th><td>1</td><td>2</td><td>3</td></tr>" +
+    "<tr><th class=\"lft\">fit</th><td>c = mean(y) = 1</td><td>least squares</td><td>interpolates all three points</td></tr>" +
+    "</tbody></table>";
+}
+function T_BVDATA(){
+  return "<table class=\"wt\"><caption>table C · three tiny training sets for a constant</caption>" +
+    "<thead><tr><th>dataset</th><th>the one training y</th></tr></thead><tbody>" +
+    "<tr><th>D₁</th><td>4</td></tr><tr><th>D₂</th><td>6</td></tr><tr><th>D₃</th><td>5</td></tr>" +
+    "</tbody></table>";
+}
+
+/* =========================================================================
+   GLOSSARY.  {t:key} in any string becomes the term plus an info bubble.
+   ========================================================================= */
+var GLOSS = {
+  underfitting:{
+    term:"underfitting",
+    def:"The model is too simple for the true pattern. Training error stays high, and test error is high for the same reason: the hypothesis class cannot represent f even with infinite data.",
+    formula:"high bias, low variance",
+    see:"Goodfellow, Bengio & Courville, Deep Learning (2016), §5.2; Bishop, PRML (2006), §1.1."
+  },
+  overfitting:{
+    term:"overfitting",
+    def:"The model fits the training sample, including noise, so training error looks excellent while error on new draws from the same process is worse. Classic sign: a large generalisation gap.",
+    formula:"low train loss, high test loss",
+    see:"Goodfellow et al., §5.2; Bishop, PRML, §1.1 (polynomial curve fitting)."
+  },
+  generalisation:{
+    term:"generalisation",
+    def:"How well a fitted model predicts new examples drawn from the same distribution as the training data. The thing we actually want. Training loss is only a proxy.",
+    see:"Goodfellow et al., §5.2; Prince, Understanding Deep Learning, ch. 20."
+  },
+  generalisation_gap:{
+    term:"generalisation gap",
+    def:"The difference between test loss and training loss. A large gap usually means the model memorised idiosyncrasies of the sample. A small gap with high loss usually means underfitting.",
+    formula:"gap = L_test − L_train",
+    see:"Goodfellow et al., §5.2."
+  },
+  training_loss:{
+    term:"training loss",
+    def:"Average loss on the examples the optimiser was allowed to see. Also called empirical risk. Can be driven to zero by a model that merely interpolates the sample.",
+    formula:"L_train(θ) = (1/N) Σᵢ ℓ(yᵢ, fθ(xᵢ))",
+    see:"Bishop & Bishop, Deep Learning (2023), ch. 4; Goodfellow et al., §5.1."
+  },
+  test_loss:{
+    term:"test loss",
+    def:"Average loss on a held-out sample that was not used to fit parameters or to choose hyperparameters. An estimate of expected risk. Keep it untouched until the end.",
+    formula:"L_test ≈ E_{x,y}[ℓ(y, fθ(x))]",
+    see:"Goodfellow et al., §5.3."
+  },
+  expected_risk:{
+    term:"expected risk",
+    def:"The loss you would get if you could average over the true data-generating process, not just a finite sample. Training loss estimates this from the same points used for fitting, so it is optimistically biased.",
+    formula:"R(θ) = E_{x,y}[ℓ(y, fθ(x))]",
+    see:"Bishop, PRML, §1.5.5; Goodfellow et al., §5.2."
+  },
+  capacity:{
+    term:"capacity",
+    def:"How large a family of functions the model can represent. Polynomial degree, number of hidden units, and number of parameters are crude proxies. Too little capacity underfits; too much can overfit — until double descent.",
+    see:"Goodfellow et al., §5.2 (VC dimension, representational capacity)."
+  },
+  hypothesis_class:{
+    term:"hypothesis class",
+    def:"The set of functions the learning algorithm is allowed to choose from. Constants, lines, degree-M polynomials, and a given neural architecture are four different classes.",
+    formula:"ℋ = { fθ : θ ∈ Θ }",
+    see:"Goodfellow et al., §5.2."
+  },
+  interpolation:{
+    term:"interpolation",
+    def:"A fit that passes through every training point, so training loss is exactly zero (for squared loss, if the points are distinct). With N scalar targets you typically need at least N free parameters.",
+    formula:"fθ(xᵢ) = yᵢ  for all i",
+    see:"Belkin et al. (2019); Bishop & Bishop (2023), §9.3.2."
+  },
+  interpolation_threshold:{
+    term:"interpolation threshold",
+    def:"The model size where the number of effective parameters first matches the number of training points. Test error often peaks here: the model is just able to interpolate, and does so unstably. Past this point, more parameters can help again.",
+    formula:"P ≈ N",
+    see:"Bishop & Bishop (2023), §9.3.2; Nakkiran et al., Deep Double Descent (2020)."
+  },
+  bias:{
+    term:"bias",
+    def:"How far the average predictor (average over training sets of the same size) sits from the true function. A constant model predicting 3 when the mean is 5 has bias −2, no matter how much data you give it, if it cannot change.",
+    formula:"Bias(x) = E_D[f̂_D(x)] − f(x)",
+    see:"Bishop, PRML, §3.2; Bishop & Bishop (2023), §4.3; Goodfellow et al., §5.4."
+  },
+  variance:{
+    term:"variance",
+    def:"How much the fitted function jumps when you redraw the training set. High-capacity interpolators have high variance: each sample of noise is written into the function.",
+    formula:"Var(x) = E_D[(f̂_D(x) − E_D[f̂_D(x)])²]",
+    see:"Bishop, PRML, §3.2; Goodfellow et al., §5.4."
+  },
+  irreducible_error:{
+    term:"irreducible error",
+    def:"The leftover risk even with the best possible predictor: noise in y, or any part of y that is not a function of x. Also called Bayes error (for classification) or noise variance σ² (for squared loss).",
+    formula:"σ² = E[(y − f(x))²]",
+    see:"Bishop, PRML, §3.2; Goodfellow et al., §5.4.4."
+  },
+  bias_variance:{
+    term:"bias–variance trade-off",
+    def:"For squared loss, expected test error splits into irreducible error + bias² + variance. Making the model more flexible typically lowers bias and raises variance. The U-shaped test curve is this trade-off plotted against capacity.",
+    formula:"E[(y − f̂)²] = σ² + Bias² + Variance",
+    see:"Bishop, PRML, §3.2; Bishop & Bishop (2023), §4.3."
+  },
+  double_descent:{
+    term:"double descent",
+    def:"Test error falls, then rises toward the interpolation threshold, then falls again as the model becomes overparameterised. The second descent is outside classical U-shaped thinking: more parameters can improve test error after the model already interpolates.",
+    see:"Bishop & Bishop (2023), §9.3.2; Prince, UDL, §20.2 (overparameterisation); Belkin et al. (2019)."
+  },
+  overparameterised:{
+    term:"overparameterised",
+    def:"More parameters than training points (P > N). The training loss can be driven to zero in many ways; which interpolator you land on depends on architecture, init, and the optimiser. Often the implicit bias of SGD picks a surprisingly good one.",
+    formula:"P > N",
+    see:"Prince, UDL, §20.2; Bishop & Bishop (2023), §9.3."
+  },
+  regularisation:{
+    term:"regularisation",
+    def:"Any extra preference that stops the fit from using its full capacity. Weight decay, early stopping, dropout, and data augmentation are all regularisers. In bias–variance language they usually raise bias a little to cut variance a lot.",
+    see:"Goodfellow et al., ch. 7; Bishop & Bishop (2023), ch. 9; Bishop, PRML, §1.1 (the penalty λ)."
+  },
+  weight_decay:{
+    term:"weight decay",
+    def:"Add λ‖θ‖² to the loss (ridge / L2). Large λ shrinks coefficients toward zero and recovers a simpler function. λ = 0 is unregularised least squares.",
+    formula:"L_λ(θ) = L_train(θ) + λ ‖θ‖²",
+    see:"Bishop, PRML, §3.1.4; Goodfellow et al., §7.1."
+  },
+  validation_set:{
+    term:"validation set",
+    def:"A split used to choose hyperparameters (degree, λ, architecture) but not to update θ by gradient descent. If you tune on the test set, the test number is no longer an honest estimate of expected risk.",
+    see:"Goodfellow et al., §5.3."
+  },
+  hyperparameters:{
+    term:"hyperparameters",
+    def:"Choices that are not fitted by the inner optimiser: polynomial degree, λ, learning rate, width, depth. You select them on validation data, then report test loss once.",
+    see:"Goodfellow et al., §5.3."
+  },
+  inductive_bias:{
+    term:"inductive bias",
+    def:"The assumptions a learner makes in order to generalise at all. Convolution assumes locality and translation structure; a line assumes the world is linear. No free lunch: some bias is required.",
+    see:"Bishop & Bishop (2023), §9.1; Goodfellow et al., §5.2."
+  },
+  mse:{
+    term:"mean squared error",
+    def:"Average of squared residuals. For regression it is the usual training loss, and the bias–variance decomposition is derived for this loss (not for 0–1 loss).",
+    formula:"MSE = (1/N) Σᵢ (yᵢ − ŷᵢ)²",
+    see:"Bishop, PRML, §1.1; Goodfellow et al., §5.2."
+  },
+  least_squares:{
+    term:"least squares",
+    def:"Choose parameters that minimise mean squared error on the training set. For a linear-in-parameters model this is a linear system; for a polynomial of degree M it is least squares in the monomial basis.",
+    formula:"θ̂ = arg min_θ ‖y − Φθ‖²",
+    see:"Bishop, PRML, §3.1."
+  },
+  effective_parameters:{
+    term:"effective parameters",
+    def:"How many degrees of freedom the fit actually uses, after regularisation. Ridge with large λ can make a 100-parameter model behave like a 3-parameter one. Double descent is about effective capacity, not just the count of weights.",
+    see:"Bishop, PRML, §3.5.3 (effective number of parameters); Bishop & Bishop (2023), §9.3."
+  },
+  early_stopping:{
+    term:"early stopping",
+    def:"Halt gradient descent before training loss bottoms out, using a validation curve. It acts like a regulariser: the optimiser has not had time to fit every noise wiggle.",
+    see:"Goodfellow et al., §7.8."
+  },
+  memorisation:{
+    term:"memorisation",
+    def:"Fitting labels, even random labels, by interpolating the sample. Overparameterised nets can do this and still generalise on the true labelling — one of the facts that forced double descent into the textbooks.",
+    see:"Prince, UDL, §20.2; Zhang et al. (2017), Understanding deep learning requires rethinking generalisation."
+  }
+};
+
+var BLANKS = [
+{id:"G1", sec:1, wide:true,
+ prompt:"Training loss is computed on points the model {slot}.",
+ need:["the definition of training vs test"],
+ correct:"was allowed to fit",
+ options:["was allowed to fit","must never see","are drawn from a different task"],
+ hints:{"must never see":"That is the test (or validation) set. Training loss is the number the optimiser sees.",
+        "are drawn from a different task":"Train and test are assumed to come from the same process. That is the whole point of generalisation."}},
+{id:"G2", sec:1, wide:true,
+ prompt:"Test loss estimates {slot}.",
+ need:["why we hold data out"],
+ correct:"expected risk on new draws from the same process",
+ options:["expected risk on new draws from the same process",
+          "how well we memorised the training labels",
+          "the number of parameters"],
+ hints:{"how well we memorised the training labels":"That is training loss, especially after interpolation.",
+        "the number of parameters":"Capacity is a property of the hypothesis class, not a loss."}},
+{id:"G3", sec:1,
+ prompt:"gap = L_test − L_train = 1.2500 − 0.6667 = {{slot}}",
+ need:["L_train = 0.6667 for the constant","L_test = 1.2500 for the constant"],
+ correct:"0.5833",
+ options:["0.5833","1.9167","0.6667","1.2500"],
+ hints:{"1.9167":"Subtract, do not add.",
+        "0.6667":"That is L_train alone.",
+        "1.2500":"That is L_test alone."}},
+{id:"U1", sec:2,
+ prompt:"c = (1 + 2 + 0) / 3 = {{slot}}",
+ need:["three training y values: 1, 2, 0"],
+ correct:"1",
+ options:["1","2","0","1.5"],
+ hints:{"2":"That is one of the y values, not the mean.",
+        "0":"That is the last y, not the mean.",
+        "1.5":"(1+2+0)/3 = 3/3 = 1, not 3/2."}},
+{id:"U2a", sec:2, lab:"residual at x = 0",
+ need:["c = 1","y = 1, 2, 0"],
+ correct:"0",
+ options:["0","−1","+1","+2"],
+ hints:{"−1":"residual = y − c. At x = 0, y is 1.",
+        "+1":"At x = 0, y equals c.",
+        "+2":"That is y at x = 1."}},
+{id:"U2b", sec:2, lab:"residual at x = 1",
+ correct:"+1",
+ options:["+1","0","−1","+2"],
+ hints:{"0":"y is 2, c is 1.",
+        "−1":"Sign: 2 − 1 is positive.",
+        "+2":"That is y, not y − c."}},
+{id:"U2c", sec:2, lab:"residual at x = 2",
+ correct:"−1",
+ options:["−1","+1","0","−2"],
+ hints:{"+1":"y is 0, c is 1, so 0 − 1 is negative.",
+        "0":"The constant does not hit this point.",
+        "−2":"0 − 1 = −1."}},
+{id:"U3", sec:2,
+ prompt:"L_train = (0² + 1² + (−1)²) / 3 = {{slot}}",
+ need:["residuals 0, +1, −1"],
+ correct:"0.6667",
+ options:["0.6667","0.0000","1.0000","2.0000"],
+ hints:{"0.0000":"Two of the three residuals are not zero. Average the squares.",
+        "1.0000":"You averaged |residual| or took 3/3. Squares: (0+1+1)/3.",
+        "2.0000":"You summed the squares and forgot to divide by 3."}},
+{id:"U4", sec:2, wide:true,
+ prompt:"The constant cannot follow the dip from y = 2 down to y = 0. That limitation is {slot}.",
+ need:["L_train = 0.6667 is not zero"],
+ correct:"bias: the class is too small",
+ options:["bias: the class is too small",
+          "variance: the class is too large",
+          "irreducible error: y is a deterministic function of these x",
+          "a bug in the mean"],
+ hints:{"variance: the class is too large":"A constant has almost no variance across datasets. It is too small a class.",
+        "irreducible error: y is a deterministic function of these x":"There is no extra noise term in table A. The mismatch is the model.",
+        "a bug in the mean":"The mean of 1, 2, 0 really is 1."}},
+{id:"O1a", sec:3, lab:"from x = 0",
+ need:["ŷ(x) = 1 + 2.5 x − 1.5 x²","the curve must hit (0,1), (1,2), (2,0)"],
+ correct:"1",
+ options:["1","2.5","−1.5","0"],
+ hints:{"2.5":"That is the coefficient of x.",
+        "−1.5":"That is the coefficient of x².",
+        "0":"ŷ(0) = a = 1."}},
+{id:"O1b", sec:3, lab:"from x = 1, using a = 1",
+ correct:"1",
+ options:["1","2","0","1.5"],
+ hints:{"2":"That is y at x = 1. The equation is 1 + b + c = 2, so b + c = 1.",
+        "0":"That would be 1 + b + c = 1.",
+        "1.5":"b + c = 2 − 1 = 1."}},
+{id:"O1c", sec:3, lab:"from x = 2, using a = 1",
+ correct:"−1",
+ options:["−1","0","−5","1"],
+ hints:{"0":"1 + 2b + 4c = 0, so 2b + 4c = −1.",
+        "−5":"That is ŷ(3), which you do not know yet.",
+        "1":"The right-hand side is 0 − 1 = −1."}},
+{id:"O2a", sec:3, lab:"c, the x² coefficient",
+ need:["b + c = 1","2b + 4c = −1"],
+ correct:"−1.5",
+ options:["−1.5","1.5","−0.5","2.5"],
+ hints:{"1.5":"Sign. Substituting b = 1 − c into 2b + 4c = −1 gives 2 + 2c = −1, so c = −1.5.",
+        "−0.5":"2(1 − c) + 4c = 2 + 2c = −1, so 2c = −3.",
+        "2.5":"That is b, not c."}},
+{id:"O2b", sec:3, lab:"b, the x coefficient",
+ correct:"2.5",
+ options:["2.5","−1.5","1.0","−2.5"],
+ hints:{"−1.5":"That is c. b = 1 − c = 1 − (−1.5).",
+        "1.0":"That is a, or the sum b + c.",
+        "−2.5":"b = 1 − c is positive."}},
+{id:"O3", sec:3,
+ prompt:"ŷ(3) = 1 + 2.5(3) − 1.5(9) = 1 + 7.5 − 13.5 = {{slot}}",
+ need:["a = 1","b = 2.5","c = −1.5","the test x = 3"],
+ correct:"−5",
+ options:["−5","0.5","1","7.5"],
+ hints:{"0.5":"That is the test y at x = 3, not the model's prediction.",
+        "1":"That is ŷ(0), or the constant model.",
+        "7.5":"You stopped after 2.5 × 3. Subtract 1.5 × 9."}},
+{id:"O4", sec:3,
+ prompt:"test squared error at x = 3: (−5 − 0.5)² = {{slot}}",
+ need:["ŷ(3) = −5","y_test = 0.5"],
+ correct:"30.2500",
+ options:["30.2500","5.5000","−5.5000","0.2500"],
+ hints:{"5.5000":"You took the absolute residual and stopped. Square it: 5.5² = 30.25.",
+        "−5.5000":"A square cannot be negative.",
+        "0.2500":"That would be (0.5 − 0)², as if ŷ were 0."}},
+{id:"O5", sec:3, wide:true,
+ prompt:"Train MSE of the quadratic is 0. Test squared error at x = 3 is 30.25. This pattern is {slot}.",
+ need:["the quadratic interpolates the three training points"],
+ correct:"overfitting: the extra wiggle missed the new x",
+ options:["overfitting: the extra wiggle missed the new x",
+          "underfitting: the class is still too small",
+          "perfect generalisation, because train loss is zero",
+          "irreducible error, because 30.25 cannot be avoided"],
+ hints:{"underfitting: the class is still too small":"Train loss is zero. The class was large enough to interpolate.",
+        "perfect generalisation, because train loss is zero":"Train loss is not expected risk. Look at x = 3.",
+        "irreducible error, because 30.25 cannot be avoided":"The line's test error at the same point is 0.25. The 30.25 was a choice of model."}},
+{id:"B1", sec:4,
+ prompt:"Bias of model A = E[ŷ] − μ = 3 − 5 = {{slot}}",
+ need:["model A always predicts 3","μ = 5"],
+ correct:"−2",
+ options:["−2","+2","0","3"],
+ hints:{"+2":"3 − 5 is negative. Bias is E[ŷ] minus the truth, not the reverse.",
+        "0":"That would mean the average predictor equals μ. A's average is stuck at 3.",
+        "3":"That is the prediction, not the bias."}},
+{id:"B2", sec:4,
+ prompt:"Bias² of model A = (−2)² = {{slot}}",
+ need:["bias = −2"],
+ correct:"4",
+ options:["4","−4","2","0"],
+ hints:{"−4":"A square is non-negative. The sign of the bias disappears.",
+        "2":"Square it, do not take abs.",
+        "0":"Only if the bias were zero."}},
+{id:"B3", sec:4, wide:true,
+ prompt:"Variance of model A across D₁, D₂, D₃ is {slot}.",
+ need:["ŷ is 3, 3, 3"],
+ correct:"0, because the prediction never moves",
+ options:["0, because the prediction never moves",
+          "4, the same as bias²",
+          "1, the noise variance",
+          "2, the spread of the datasets"],
+ hints:{"4, the same as bias²":"Bias² is about distance to μ. Variance is about distance to E[ŷ]. Here E[ŷ] = 3 = ŷ always.",
+        "1, the noise variance":"σ² is a separate term. A's prediction does not use the data, so it has no variance.",
+        "2, the spread of the datasets":"The datasets change. Model A ignores them."}},
+{id:"B4a", sec:4, lab:"E[ŷ] for model B",
+ need:["predictions 4, 6, 5","μ = 5"],
+ correct:"5",
+ options:["5","4","6","4.5"],
+ hints:{"4":"That is D₁ alone. Average 4, 6 and 5.",
+        "6":"That is D₂ alone.",
+        "4.5":"That is model C's average, not B's."}},
+{id:"B4b", sec:4, lab:"bias of model B",
+ correct:"0",
+ options:["0","−1","+1","−2"],
+ hints:{"−1":"E[ŷ] = 5 = μ.",
+        "+1":"E[ŷ] = 5 = μ.",
+        "−2":"That was model A."}},
+{id:"B5", sec:4,
+ prompt:"Variance of B = [(4−5)² + (6−5)² + (5−5)²] / 3 = {{slot}}",
+ need:["E[ŷ] = 5","predictions 4, 6, 5"],
+ correct:"0.6667",
+ options:["0.6667","2.0000","1.0000","0.0000"],
+ hints:{"2.0000":"You summed 1+1+0 and forgot to divide by 3.",
+        "1.0000":"That is σ², given separately, or (1+1+0)/2 using n−1. This sheet uses the population mean over the three datasets.",
+        "0.0000":"Two of the three predictions are not 5."}},
+{id:"B6", sec:4,
+ prompt:"Expected test error of A = σ² + Bias² + Var = 1 + 4 + 0 = {{slot}}",
+ need:["σ² = 1","Bias² = 4","Var = 0"],
+ correct:"5",
+ options:["5","4","1","0"],
+ hints:{"4":"You dropped σ².",
+        "1":"You dropped Bias².",
+        "0":"Add the three pieces."}},
+{id:"B7", sec:4,
+ prompt:"Expected test error of B = 1 + 0 + 0.6667 = {{slot}}",
+ need:["σ² = 1","Bias² = 0","Var = 0.6667"],
+ correct:"1.6667",
+ options:["1.6667","0.6667","1.0000","5.0000"],
+ hints:{"0.6667":"That is variance alone.",
+        "1.0000":"That is σ² alone.",
+        "5.0000":"That is model A's risk."}},
+{id:"B8", sec:4, wide:true,
+ prompt:"Model C shrinks each y toward 4: ŷ = ½ y + ½·4. Compared with B it should have {slot}.",
+ need:["C's predictions are 4.0, 5.0, 4.5"],
+ correct:"more bias, less variance",
+ options:["more bias, less variance",
+          "less bias, more variance",
+          "the same bias and variance as B",
+          "zero bias and zero variance"],
+ hints:{"less bias, more variance":"Shrinkage toward 4, which is not μ = 5, adds bias and damps movement across datasets.",
+        "the same bias and variance as B":"The three numbers 4, 5, 4.5 are a tighter cluster than 4, 6, 5, and their mean is 4.5, not 5.",
+        "zero bias and zero variance":"Only a constant equal to μ would do that, and we cannot know μ in advance."}},
+{id:"D1", sec:6, wide:true,
+ prompt:"The interpolation threshold is the model size where {slot}.",
+ need:["P is the number of parameters","N is the number of training points"],
+ correct:"P first reaches N and train loss can hit zero",
+ options:["P first reaches N and train loss can hit zero",
+          "test loss is minimised",
+          "bias becomes zero",
+          "σ² becomes zero"],
+ hints:{"test loss is minimised":"Test loss often peaks at the threshold, then falls again. The minimum can be in the overparameterised regime.",
+        "bias becomes zero":"An interpolator of noise is not unbiased for f.",
+        "σ² becomes zero":"Noise in y does not care how many parameters you use."}},
+{id:"D2", sec:6, wide:true,
+ prompt:"Past the threshold, adding parameters can {slot}. That is the second descent.",
+ need:["the classical U-shape stops at interpolation"],
+ correct:"lower test loss even though train loss is already ~ 0",
+ options:["lower test loss even though train loss is already ~ 0",
+          "raise train loss back above zero",
+          "delete the irreducible error",
+          "turn variance into bias"],
+ hints:{"raise train loss back above zero":"Overparameterised interpolators still fit the sample. Train loss stays ~ 0; the function between the points changes.",
+        "delete the irreducible error":"σ² is a property of the process, not of P.",
+        "turn variance into bias":"The decomposition still adds. What changes is which interpolator you select."}},
+{id:"R1", sec:7, wide:true,
+ prompt:"A validation set is for {slot}.",
+ need:["θ is fit on training data"],
+ correct:"choosing hyperparameters without touching the test set",
+ options:["choosing hyperparameters without touching the test set",
+          "updating θ by gradient descent",
+          "replacing the test set, so you no longer need one",
+          "computing σ²"],
+ hints:{"updating θ by gradient descent":"That is the training set. If you also descend on validation, it stops being a hyperparameter check.",
+        "replacing the test set, so you no longer need one":"After you pick λ on validation you still need a fresh test number.",
+        "computing σ²":"σ² is not something you read off a split."}}
+];
+
+var SECTIONS = [
+{n:0, eyebrow:"start here", title:"How to use this sheet",
+ result:"click the amber i next to a term whenever you want the definition",
+ blocks:[
+  {t:"lines", items:[
+    "Click the option you think is right. It drops into the blank.",
+    "Wrong answers grey out and give you a hint. Nothing is scored.",
+    "The next step unlocks when the current one is filled.",
+    "Dotted terms carry an <b>i</b> button. Open it for a one-screen definition, the formula, and the textbook section."]}
+ ]},
+
+{n:1, eyebrow:"part 1", title:"Two losses, not one",
+ result:"generalisation is test behaviour, not a small training loss",
+ blocks:[
+  {t:"hook", q:"If training loss is almost zero, have we learned the function?",
+   hint:"Three training points. Two test points. Same process."},
+  {t:"p", html:"A learner is handed a finite sample and asked to predict y at x it has not seen. {t:generalisation} is that ability. The number the optimiser minimises is {t:training_loss}. The number we care about is {t:test_loss}, a stand-in for {t:expected_risk}."},
+  {t:"card", v:"navy", html:
+    "<div class=\"eyebrow\">the split</div>" +
+    "<div class=\"mathline big\" style=\"margin:6px 0 0\">L_train(θ) &nbsp;≠&nbsp; R(θ)</div>" +
+    "<p class=\"txt\" style=\"margin:10px 0 0\">The gap between them is the {t:generalisation_gap}. You cannot see it unless you hold data out.</p>"},
+  {t:"raw", html:"<div class=\"tbls\">" + T_PT() + T_MODELS() + "</div>"},
+  {t:"note", html:"Every calculation below uses table A. Mean squared error throughout: {t:mse}."},
+  {t:"blank", id:"G1"},
+  {t:"blank", id:"G2"},
+  {t:"worked", tag:"constant model, already computed", title:"so you can see a gap",
+   lines:[
+     "c = mean of {1, 2, 0} = <b>1</b>",
+     "L_train = [(1−1)² + (2−1)² + (0−1)²] / 3 = (0 + 1 + 1) / 3 = <b>0.6667</b>",
+     "L_test  = [(0.5−1)² + (2.5−1)²] / 2 = (0.25 + 2.25) / 2 = <b>1.2500</b>"]},
+  {t:"blank", id:"G3"},
+  {t:"mcq", tag:"part 1 · question 1", answer:2,
+   q:"Which statement is safe, given only L_train = 0.6667?",
+   opts:[
+     {txt:"The model has generalisation error 0.6667.",
+      hint:"Generalisation error is expected risk, or at least test loss. You have not used the test points yet."},
+     {txt:"The model is overfit, because the loss is not zero.",
+      hint:"A non-zero training loss is the underfitting signature, not overfitting."},
+     {txt:"You still do not know whether the constant will work on new x.", hint:""},
+     {txt:"σ² must be 0.6667.",
+      hint:"That number is training MSE of a particular model, not the noise of the process."}],
+   why:"Training loss is a number about the sample you fitted. {t:generalisation} is a number about new draws. They are allowed to disagree, and in this sheet they will."},
+  {t:"answer", html:
+    "<p>Hold onto table A. Part 2 will show a model whose training loss cannot fall. Part 3 will show a model whose training loss falls to zero and whose test loss explodes. That pair is {t:underfitting} versus {t:overfitting}.</p>"}
+ ]},
+
+{n:2, eyebrow:"part 2", title:"Underfitting is a class that is too small",
+ result:"a constant has high bias; averaging more data will not save it",
+ blocks:[
+  {t:"hook", q:"Why does the constant stop at L_train = 0.6667?",
+   hint:"Its hypothesis class is a single number."},
+  {t:"p", html:"{t:underfitting} means the {t:hypothesis_class} cannot represent the pattern. In bias–variance language that is {t:bias}: even the average (over datasets) of the fitted function sits far from f. {t:capacity} is too low."},
+  {t:"anim", id:"a1", title:"Animation 1 · degree versus the sine",
+   intro:"Six noisy points on a sine. Drag the polynomial degree. Degree 0 is the constant from this section. Watch training MSE stall high while the curve refuses to bend."},
+  {t:"h3", html:"The constant, by hand"},
+  {t:"blank", id:"U1"},
+  {t:"blanks", ids:["U2a","U2b","U2c"], need:["c = 1"],
+   prompt:"residuals y − c &nbsp; → &nbsp; {{U2a}}, &nbsp; {{U2b}}, &nbsp; {{U2c}}"},
+  {t:"blank", id:"U3"},
+  {t:"blank", id:"U4"},
+  {t:"card", v:"cream", html:
+    "<h4>What more data would do</h4>" +
+    "<p class=\"txt\">If the true mean really were 1, extra samples would make c sit more firmly at 1. Training MSE would still be the scatter around 1. If the true curve is a sine, extra samples would make an even more confident <em>wrong</em> horizontal line. That is bias: it does not vanish with N.</p>"},
+  {t:"mcq", tag:"part 2 · question 2", answer:1,
+   q:"You switch from a constant to a line. What should happen to bias, all else equal?",
+   opts:[
+     {txt:"Bias rises, because you added a parameter.",
+      hint:"Extra parameters enlarge the class. Bias is about whether the average fit can match f."},
+     {txt:"Bias falls (or stays the same), because the line class contains the constants.", hint:""},
+     {txt:"Bias becomes σ².",
+      hint:"σ² is irreducible error, a property of y | x, not of the class."},
+     {txt:"Bias is undefined for a line.",
+      hint:"Bishop's decomposition applies to any estimator. A line fitted by least squares is an estimator."}],
+   why:"Nested classes: every constant is a line with slope 0. Enlarging ℋ can only reduce the approximation error. Variance is the term that typically grows."},
+  {t:"answer", html:"<p>{t:underfitting} is diagnosed by <b>high training loss</b> that extra optimisation will not fix. If gradient descent has stalled at 0.6667 because the class is a constant, you need a richer class, not a smaller learning rate.</p>"}
+ ]},
+
+{n:3, eyebrow:"part 3", title:"Overfitting is a wiggle that fitted the sample",
+ result:"the unique quadratic through the three points predicts −5 at x = 3",
+ blocks:[
+  {t:"hook", q:"Drive training loss to zero. What happens at x = 3?",
+   hint:"Three points, three parameters: a unique quadratic."},
+  {t:"p", html:"{t:overfitting} is the complementary failure: {t:capacity} high enough for {t:interpolation} of the sample, including whatever in y was not the signal. Training loss looks perfect. Test loss does not."},
+  {t:"strip", html:"ŷ(x) = a + b x + c x² &nbsp; must hit (0,1), (1,2), (2,0). That is three equations."},
+  {t:"blanks", ids:["O1a","O1b","O1c"], need:["(0,1), (1,2), (2,0)"],
+   prompt:"a = {{O1a}} &nbsp;&nbsp; b + c = {{O1b}} &nbsp;&nbsp; 2b + 4c = {{O1c}}"},
+  {t:"p", html:"Substitute b = 1 − c into 2b + 4c = −1."},
+  {t:"worked", tag:"algebra, if you want it spelled out", title:"",
+   lines:[
+     "2(1 − c) + 4c = −1",
+     "2 − 2c + 4c = −1",
+     "2 + 2c = −1",
+     "2c = −3 &nbsp; → &nbsp; c = −1.5",
+     "b = 1 − (−1.5) = 2.5"]},
+  {t:"blanks", ids:["O2a","O2b"], need:["b + c = 1","2b + 4c = −1"],
+   prompt:"c = {{O2a}} &nbsp;&nbsp; b = {{O2b}}"},
+  {t:"note", html:"Check: ŷ(0)=1, ŷ(1)=1+2.5−1.5=2, ŷ(2)=1+5−6=0. {t:training_loss} is exactly 0."},
+  {t:"anim", id:"a2", title:"Animation 2 · the interpolating wiggle",
+   intro:"Same six sine points. Degree 5 interpolates all six. The curve is forced through every noisy y and then continues with whatever the monomials do next."},
+  {t:"blank", id:"O3"},
+  {t:"blank", id:"O4"},
+  {t:"blank", id:"O5"},
+  {t:"card", v:"grey", html:
+    "<h4>The line, for contrast</h4>" +
+    "<p class=\"txt\">{t:least_squares} line on the same three points: ŷ = 1.5 − 0.5 x. Train MSE = 0.5000. At x = 3 it predicts 0, squared error (0 − 0.5)² = 0.2500. At x = −1 it predicts 2, squared error (2 − 2.5)² = 0.2500. Mean test MSE = <b>0.2500</b>, against the quadratic's <b>30.2500</b>.</p>"},
+  {t:"mcq", tag:"part 3 · question 3", answer:0,
+   q:"Why is train MSE of the quadratic exactly zero?",
+   opts:[
+     {txt:"Three distinct x give three independent constraints, and three coefficients can meet all three.", hint:""},
+     {txt:"Squared loss is always zero for polynomials.",
+      hint:"A degree-0 polynomial on these points had train MSE 0.6667."},
+     {txt:"The test points lie on the same quadratic.",
+      hint:"ŷ(3) = −5, y = 0.5. They do not."},
+     {txt:"Least squares always interpolates.",
+      hint:"Only when the number of free parameters is at least N (and the basis can separate the points)."}],
+   why:"This is the {t:interpolation_threshold} for this tiny problem: P = N = 3. Unique interpolator in this basis, and it is a bad predictor off the sample."},
+  {t:"answer", html:"<p>Zero training loss is not a trophy. It is the definition of {t:interpolation}. Whether that interpolator {t:generalisation}s is a separate question, answered by test points — or, later, by which interpolator an overparameterised model selects.</p>"}
+ ]},
+
+{n:4, eyebrow:"part 4", cls:"your", title:"Bias, variance, noise — by hand",
+ result:"E[(y − ŷ)²] = σ² + Bias² + Variance",
+ blocks:[
+  {t:"hook", q:"Same process, three different training sets. What, in the test error, is our fault?",
+   hint:"μ = 5 is the true mean. σ² = 1 is given. We predict a constant."},
+  {t:"p", html:"Bishop's decomposition (PRML §3.2; Deep Learning §4.3) is for {t:mse}. It splits expected test error into {t:irreducible_error}, {t:bias} squared, and {t:variance}. That sum is the {t:bias_variance}."},
+  {t:"card", v:"navy", html:
+    "<div class=\"eyebrow\">squared loss, one x</div>" +
+    "<div class=\"mathline big\">E[(y − ŷ)²] = σ² + Bias² + Var</div>" +
+    "<p class=\"txt\" style=\"margin:12px 0 0\">Bias = E<sub>D</sub>[ŷ] − f. &nbsp; Var = E<sub>D</sub>[(ŷ − E<sub>D</sub>[ŷ])²]. &nbsp; The three expectations are over training sets, then over y | x.</p>"},
+  {t:"raw", html:"<div class=\"tbls\">" + T_BVDATA() + "</div>"},
+  {t:"card", v:"grey", html: symbolTable("the three estimators", [
+    ["A", "ignore the data. ŷ = 3 always. A cartoon of underfitting."],
+    ["B", "copy the training y. ŷ ∈ {4, 6, 5}. Unbiased, jumpy."],
+    ["C", "shrink toward 4: ŷ = ½ y + 2. A cartoon of regularisation."]
+  ])},
+  {t:"strip", pin:true, html:"μ = 5 &nbsp;&middot;&nbsp; σ² = 1 &nbsp;&middot;&nbsp; average over the three datasets with equal weight 1/3"},
+  {t:"h3", html:"Model A · the stubborn constant"},
+  {t:"blank", id:"B1"},
+  {t:"blank", id:"B2"},
+  {t:"blank", id:"B3"},
+  {t:"blank", id:"B6"},
+  {t:"h3", html:"Model B · copy the sample"},
+  {t:"blanks", ids:["B4a","B4b"], need:["predictions 4, 6, 5"],
+   prompt:"E[ŷ] = {{B4a}} &nbsp;&nbsp; Bias = {{B4b}}"},
+  {t:"blank", id:"B5"},
+  {t:"blank", id:"B7"},
+  {t:"h3", html:"Model C · shrink"},
+  {t:"note", html:"Predictions: ½·4+2 = 4.0, &nbsp; ½·6+2 = 5.0, &nbsp; ½·5+2 = 4.5. Mean 4.5, so Bias = 4.5 − 5 = −0.5, Bias² = 0.2500, Var = 0.1667, risk = 1.4167."},
+  {t:"blank", id:"B8"},
+  {t:"anim", id:"a3", title:"Animation 3 · redraw the training set",
+   intro:"Left: many least-squares lines, one per redrawn sample of the sine. Right: many interpolating polynomials. The faint bundle is variance. The dashed mean curve versus the true sine is bias."},
+  {t:"mcq", tag:"part 4 · question 4", answer:3,
+   q:"Which change cuts variance without any hope of cutting bias to zero, if f is a sine and ŷ is a constant?",
+   opts:[
+     {txt:"Collect more training points, keep predicting a constant.",
+      hint:"A constant's average will sit at the mean of the sine (near 0). Extra data reduces variance of that constant and leaves the bias."},
+     {txt:"Set σ² = 0 by fiat.",
+      hint:"You cannot legislate the noise. Also that term is not variance of ŷ."},
+     {txt:"Switch to an interpolating polynomial of degree 9.",
+      hint:"That usually raises variance. Look at animation 3."},
+     {txt:"Neither more data nor a larger constant class: the class cannot contain a sine, so bias remains. More data still cuts this model's variance.", hint:""}],
+   why:"The useful reading of {t:bias}: error that survives averaging over datasets. More data is not a substitute for a richer class when the class is wrong. It is a substitute for a jumpy estimator when the class is right."},
+  {t:"answer", html:
+    "<p>A: risk 5.0000, almost all bias. B: risk 1.6667, no bias, all the avoidable error is variance. C: risk 1.4167, a little bias bought a larger drop in variance. That last move is what {t:regularisation} is for.</p>"}
+ ]},
+
+{n:5, eyebrow:"part 5", title:"The U-shape, and where it stops being the whole story",
+ result:"test error U-shape in the underparameterised regime is bias² + variance",
+ blocks:[
+  {t:"hook", q:"If we plot test error against capacity, why do we expect a U?",
+   hint:"Bias falls, variance rises, σ² is a floor."},
+  {t:"p", html:"Fix N. Grow {t:capacity}. Bias² typically falls (the class can match f). Variance typically rises (the class can also match the noise). Their sum is U-shaped. σ² does not care. That picture is the classical {t:bias_variance}."},
+  {t:"anim", id:"a4", title:"Animation 4 · train versus test against degree",
+   intro:"Degree on the horizontal axis. Amber: training MSE. Navy: test MSE against the true sine. The U is the test curve. Interpolation is the first degree where train hits ~ 0 (here degree 5, because N = 6)."},
+  {t:"mcq", tag:"part 5 · question 5", answer:1,
+   q:"On animation 4, what is the first degree at which training MSE hits (numerically) zero?",
+   opts:[
+     {txt:"Degree 0, because a constant can always fit six points.",
+      hint:"A constant has one parameter. Six constraints. Animation 1 already showed a high training MSE."},
+     {txt:"Degree 5: six coefficients, six points.", hint:""},
+     {txt:"Degree 1, the line.",
+      hint:"A line has two parameters. It will not interpolate six generic points."},
+     {txt:"Never: squared loss cannot be zero.",
+      hint:"Interpolation is exactly that: residuals zero, hence MSE zero."}],
+   why:"P = M + 1. The {t:interpolation_threshold} for this basis is M + 1 = N, so M = 5. After that the unregularised polynomial is an interpolator with extra leftover degrees of freedom, and this particular basis becomes a wild extrapolator — which is why we need the next section."},
+  {t:"card", v:"cream", html:
+    "<h4>What the U-shape does not know</h4>" +
+    "<p class=\"txt\">Classical plots stop near interpolation, or they add {t:weight_decay} and plot against λ. Modern deep nets sit far to the right: {t:overparameterised}, training loss ~ 0, and test loss often <em>better</em> than the U's minimum. That continuation is {t:double_descent}.</p>"},
+  {t:"answer", html:"<p>Use the U-shape when you are still below interpolation, and when you are choosing λ. Do not use it to argue that a 100-million-parameter net must overfit merely because P ≫ N.</p>"}
+ ]},
+
+{n:6, eyebrow:"part 6", title:"Double descent",
+ result:"test error can fall a second time after the interpolation peak",
+ blocks:[
+  {t:"hook", q:"If the model already interpolates, why would extra parameters help?",
+   hint:"There are many interpolators. Extra parameters change which one you get."},
+  {t:"p", html:"{t:double_descent} (Belkin et al. 2019; Nakkiran et al. 2020; Bishop & Bishop §9.3.2) is the empirical curve: test error descends as capacity grows, ascends into a peak at the {t:interpolation_threshold}, then descends again in the {t:overparameterised} regime. Prince (UDL §20.2) records the related fact that interpolating nets can still {t:generalisation} — even after {t:memorisation} of random labels is possible."},
+  {t:"card", v:"navy", html:
+    "<div class=\"eyebrow\">the peak is not the end</div>" +
+    "<div class=\"mathline\">underparameterised U &nbsp; → &nbsp; interpolation peak &nbsp; → &nbsp; second descent</div>" +
+    "<p class=\"txt\" style=\"margin:10px 0 0\">Train loss is ~ 0 everywhere to the right of the peak. The second descent is a statement about <em>which interpolator</em>, not about fitting the sample harder.</p>"},
+  {t:"anim", id:"a5", title:"Animation 5 · a cartoon of double descent",
+   intro:"Horizontal axis is parameter count P. Vertical is test error (log scale). The dotted line is P = N. Drag N to slide the interpolation peak. This is a schematic consistent with the papers, not a proof."},
+  {t:"blank", id:"D1"},
+  {t:"blank", id:"D2"},
+  {t:"mcq", tag:"part 6 · question 6", answer:2,
+   q:"A ResNet interpolates CIFAR-10 and still has low test error. What has failed?",
+   opts:[
+     {txt:"The definition of overfitting as train loss ≪ test loss. Gaps can still exist; they need not be catastrophic.",
+      hint:"There often is a gap. The failed heuristic is 'P > N implies terrible test error'."},
+     {txt:"Squared loss. Classification cannot overfit.",
+      hint:"Cross-entropy interpolates too (zero training error / infinite likelihood on one-hot labels)."},
+     {txt:"The heuristic that interpolation (or P > N) automatically means a useless test predictor.", hint:""},
+     {txt:"The test set. It must overlap the train set.",
+      hint:"Standard CIFAR splits do not. That is why the observation surprised people."}],
+   why:"{t:overfitting} as 'the interpolator is always the worst test predictor' is the claim that died. {t:overfitting} as 'a gap between train and test' can still be true. Double descent says the gap's size is not monotone in P."},
+  {t:"note", html:"{t:inductive_bias} of architecture plus the implicit bias of SGD are the usual explanations for which interpolator you get. This sheet does not derive that. It only insists you stop treating P > N as a proof of failure."},
+  {t:"answer", html:"<p>Read a test curve in two halves. Left of P ≈ N: classical U, bias–variance. Right of P ≈ N: all interpolators, ranked by something other than training loss — often {t:effective_parameters}, {t:regularisation}, and the optimiser's path.</p>"}
+ ]},
+
+{n:7, eyebrow:"part 7", title:"Regularisation moves you along the curve",
+ result:"λ, early stopping, and held-out data are how you choose a point on the curve",
+ blocks:[
+  {t:"hook", q:"You cannot always add parameters. What else shrinks variance?",
+   hint:"Bishop's λ in the polynomial example."},
+  {t:"p", html:"{t:regularisation} is a preference over functions inside a class that was already large. {t:weight_decay} is the cleanest: add λ‖θ‖². Large λ recovers a small {t:effective_parameters} count. {t:early_stopping} does a similar job in gradient descent. Tune them on a {t:validation_set}, not on the test set. Those choices are {t:hyperparameters}."},
+  {t:"anim", id:"a6", title:"Animation 6 · ridge on a degree-9 polynomial",
+   intro:"Same six points, M = 9, which would interpolate wildly at λ = 0. Raise λ and the wiggle dies. Too large, and you are back to underfitting."},
+  {t:"blank", id:"R1"},
+  {t:"mcq", tag:"part 7 · question 7", answer:0,
+   q:"You report test accuracy after trying 40 values of λ and keeping the winner, all judged on the test set. The number you report is",
+   opts:[
+     {txt:"optimistically biased: the test set has been used as a validation set.", hint:""},
+     {txt:"still unbiased, because θ was not updated on those examples.",
+      hint:"θ was not, but λ was. Hyperparameter search overfits the split you select with."},
+     {txt:"pessimistically biased, because λ extra-penalises.",
+      hint:"Choosing the best of 40 test numbers overestimates future performance."},
+     {txt:"exactly σ².",
+      hint:"It is still a classification or regression score, not the noise variance."}],
+   why:"Goodfellow §5.3 is blunt: once a split is used to make choices, it is a {t:validation_set}. You need a third split, or a fresh test, to claim {t:generalisation}."},
+  {t:"answer", html:"<p>Practical summary. If training loss is high: you are under capacity, or λ is too big, or training is stuck. If training loss is low and test loss is high: you interpolated the sample; add regularisation, more data, or skip past the interpolation peak with a larger model plus a sane optimiser. Never tune that decision on the number you will publish.</p>"}
+ ]},
+
+{n:8, eyebrow:"retrieval", title:"Seven questions, no new arithmetic",
+ result:"definitions, not tricks",
+ blocks:[
+  {t:"p", html:"Open any {t:underfitting} / {t:overfitting} / {t:bias} bubble if a word has gone cold."},
+  {t:"mcq", tag:"retrieval · 1", answer:2,
+   q:"High training loss and high test loss, similar to each other, most often indicates",
+   opts:[
+     {txt:"overfitting.", hint:"Overfitting is a large gap: train looks better than test."},
+     {txt:"a corrupted test set only.", hint:"Train is also high. The class is failing on data it was allowed to fit."},
+     {txt:"underfitting (or an unsolved optimisation problem).", hint:""},
+     {txt:"double descent.", hint:"Double descent is a shape of test error versus scale, not a single (train, test) pair."}],
+   why:"Same symptom as a constant on a sine: the model is not even winning on the sample."},
+  {t:"mcq", tag:"retrieval · 2", answer:1,
+   q:"Low training loss, much higher test loss, most often indicates",
+   opts:[
+     {txt:"underfitting.", hint:"Underfitting would not have produced a low training loss."},
+     {txt:"overfitting (a large generalisation gap).", hint:""},
+     {txt:"zero irreducible error.", hint:"σ² does not create a gap by itself."},
+     {txt:"that P < N.", hint:"Interpolation overfitting typically needs P ≳ N, unless the basis is already unstable."}],
+   why:"The definition you want: the sample was fitted, the process was not."},
+  {t:"mcq", tag:"retrieval · 3", answer:0,
+   q:"In the decomposition E[(y−ŷ)²] = σ² + Bias² + Var, which term cannot be removed by changing the hypothesis class?",
+   opts:[
+     {txt:"σ², the irreducible error.", hint:""},
+     {txt:"Bias².", hint:"A richer class can reduce approximation error."},
+     {txt:"Variance.", hint:"A smaller class, more data, or regularisation can reduce variance."},
+     {txt:"None of them: all three are properties of ℋ only.", hint:"σ² is a property of y | x."}],
+   why:"Even the Bayes predictor pays σ²."},
+  {t:"mcq", tag:"retrieval · 4", answer:3,
+   q:"An unbiased estimator of f (Bias = 0) can still have terrible test error because of",
+   opts:[
+     {txt:"σ² only. Variance of an unbiased estimator is always small.",
+      hint:"Model B in part 4 was unbiased and had variance 0.6667."},
+     {txt:"the validation set leaking.",
+      hint:"The decomposition does not mention a validation set."},
+     {txt:"double descent, exclusively.",
+      hint:"The classical decomposition already has a variance term."},
+     {txt:"variance (and σ²). Unbiasedness does not control how much ŷ jumps with D.", hint:""}],
+   why:"Unbiased plus high variance is the interpolating polynomial on small N."},
+  {t:"mcq", tag:"retrieval · 5", answer:1,
+   q:"Double descent says that after the interpolation peak",
+   opts:[
+     {txt:"training loss rises again.", hint:"Training loss stays ~ 0. The second descent is in test error."},
+     {txt:"test error can fall as P grows further.", hint:""},
+     {txt:"bias and variance stop adding to MSE.", hint:"The identity still holds. The terms change with P."},
+     {txt:"you no longer need a test set.", hint:"You need it more: training loss has become uninformative."}],
+   why:"That is the content of Bishop & Bishop §9.3.2 and Nakkiran et al."},
+  {t:"mcq", tag:"retrieval · 6", answer:2,
+   q:"Weight decay λ ‖θ‖², as λ increases from 0, typically",
+   opts:[
+     {txt:"increases variance and decreases bias.",
+      hint:"Shrinkage does the opposite: coefficients move less when D changes, and the average fit is pulled toward 0."},
+     {txt:"changes σ².", hint:"The process does not know λ."},
+     {txt:"decreases variance, at the cost of some extra bias.", hint:""},
+     {txt:"forces interpolation.", hint:"Large λ prevents interpolation."}],
+   why:"Model C was the discrete version of this move."},
+  {t:"mcq", tag:"retrieval · 7", answer:0,
+   q:"You should pick polynomial degree and λ on",
+   opts:[
+     {txt:"a validation set, then report a fresh test number once.", hint:""},
+     {txt:"the training set, because that is what least squares uses.",
+      hint:"Least squares already used the training set for θ. Using it again for M and λ is asking the sample to grade itself."},
+     {txt:"the test set, to be honest about generalisation.",
+      hint:"That number then stops being an honest test."},
+     {txt:"whichever split has more examples, always.",
+      hint:"Size matters, but role matters more: train / validate / test are different jobs."}],
+   why:"Hyperparameters overfit the split you select them with. That split is then a {t:validation_set}."}
+ ]}
+];
+
+var rand = mulberry32(20260907);
+BLANKS.forEach(function(B){ B.shuffled = shuffleWith(rand, B.options); });
+var BYID = {};
+BLANKS.forEach(function(B){ BYID[B.id] = B; });
+function blanksInSection(n){ return BLANKS.filter(function(B){ return B.sec === n; }); }
+var state = { ans:{}, wrong:{}, collapsed:{}, autoc:{} };
+var TOTAL_BLANKS = BLANKS.filter(function(B){ return B.counts !== false; }).length;
+
+function renderFig(){}
+function refreshFigures(){}
+
+function needEl(items){
+  var d = mk("div","need");
+  d.appendChild(mk("span","nl","you need"));
+  items.forEach(function(it){ d.appendChild(mk("code","",it)); });
+  return d;
+}
+function slotHTML(B){
+  return "<span class=\"slot" + (B.wide ? " wide" : "") + "\" id=\"slot-" + B.id + "\">" +
+         "<span class=\"slotin\">?</span></span>";
+}
+function chipsFor(B, host){
+  var longest = 0;
+  B.shuffled.forEach(function(o){ if(o.length > longest){ longest = o.length; } });
+  var chips = mk("div","chips" + (longest > 26 ? " stack" : ""));
+  chips.setAttribute("role","group");
+  chips.setAttribute("aria-label","options for this blank");
+  B.shuffled.forEach(function(opt){
+    var btn = mk("button","chip" + (B.wide ? " prose" : ""), opt);
+    btn.type = "button";
+    btn._opt = opt;
+    btn.addEventListener("click", function(){ onChip(B, opt, btn, host); });
+    chips.appendChild(btn);
+  });
+  return chips;
+}
+function hintboxEl(){
+  var hb = mk("div","hintbox");
+  hb.setAttribute("aria-live","polite");
+  return hb;
+}
+function buildStep(B){
+  var st = mk("div","step blk");
+  st.setAttribute("data-blank", B.id);
+  if(B.need && B.need.length){ st.appendChild(needEl(B.need)); }
+  if(B.prompt){
+    var ml = mk("div","mathline");
+    ml.innerHTML = (B.verb ? "<span class=\"verb\">" + B.verb + "</span>" : "") +
+                   M(B.prompt).replace("{{slot}}", slotHTML(B));
+    st.appendChild(ml);
+  }
+  st.appendChild(chipsFor(B, st));
+  st.appendChild(hintboxEl());
+  return st;
+}
+function buildRow(blk, ctr, sec, gate){
+  var st = mk("div","step blk"), ml = mk("div","mathline"), html = M(blk.prompt), i;
+  st.setAttribute("data-row", blk.ids.join(","));
+  if(blk.need && blk.need.length){ st.appendChild(needEl(blk.need)); }
+  for(i=0;i<blk.ids.length;i++){
+    html = html.replace("{{" + blk.ids[i] + "}}", slotHTML(BYID[blk.ids[i]]));
+  }
+  ml.innerHTML = (blk.verb ? "<span class=\"verb\">" + blk.verb + "</span>" : "") + html;
+  st.appendChild(ml);
+  var subs = mk("div","subs");
+  blk.ids.forEach(function(id){
+    var B = BYID[id], sub = mk("div","sub");
+    sub.setAttribute("data-blank", id);
+    if(gate){
+      sub.setAttribute("data-prereq", ctr.n);
+      sub.setAttribute("data-secn", sec.n);
+    }
+    ctr.n++;
+    if(B.lab){ sub.appendChild(mk("span","sublab", B.lab)); }
+    sub.appendChild(chipsFor(B, sub));
+    sub.appendChild(hintboxEl());
+    subs.appendChild(sub);
+  });
+  st.appendChild(subs);
+  return st;
+}
+function buildMCQ(blk){
+  var box = mk("div","mcq blk");
+  box.setAttribute("data-answer", blk.answer);
+  box.appendChild(mk("div","tag", blk.tag));
+  box.appendChild(mk("p","q", blk.q));
+  var opts = mk("div","opts");
+  blk.opts.forEach(function(o,i){
+    var b = mk("button","opt");
+    b.type = "button";
+    b.setAttribute("data-i", i);
+    b.setAttribute("data-hint", M(o.hint || ""));
+    b.innerHTML = "<span class=\"ltr\">" + "ABCDEFG".charAt(i) + "</span><span class=\"txt\">" +
+                  M(o.txt) + "</span>";
+    opts.appendChild(b);
+  });
+  box.appendChild(opts);
+  var fb = mk("div","fb");
+  fb.setAttribute("aria-live","polite");
+  box.appendChild(fb);
+  var show = mk("button","show","show me the answer");
+  show.type = "button";
+  box.appendChild(show);
+  var tpl = document.createElement("template");
+  tpl.className = "whytpl";
+  tpl.innerHTML = M(blk.why);
+  box.appendChild(tpl);
+  wireMCQ(box);
+  return box;
+}
+function wireMCQ(box){
+  var answer = parseInt(box.getAttribute("data-answer"), 10);
+  var opts = [].slice.call(box.querySelectorAll(".opt"));
+  var fb = box.querySelector(".fb");
+  var show = box.querySelector(".show");
+  var why = box.querySelector(".whytpl").innerHTML;
+  var done = false;
+  function finish(revealed){
+    done = true;
+    opts.forEach(function(o, i){
+      o.disabled = true;
+      if(i === answer){ o.classList.remove("wrong"); o.classList.add(revealed ? "shown" : "right"); }
+    });
+    show.style.display = "none";
+    var d = mk("div","why pop" + (revealed ? " rev" : ""));
+    d.innerHTML = why;
+    fb.innerHTML = "";
+    fb.appendChild(d);
+  }
+  opts.forEach(function(o){
+    o.addEventListener("click", function(){
+      if(done){ return; }
+      var i = parseInt(o.getAttribute("data-i"), 10);
+      if(i === answer){ finish(false); return; }
+      o.classList.add("wrong");
+      o.disabled = true;
+      var d = mk("div","hint pop");
+      d.innerHTML = o.getAttribute("data-hint") || "Not this one. Try again.";
+      fb.innerHTML = "";
+      fb.appendChild(d);
+    });
+  });
+  show.addEventListener("click", function(){ if(!done){ finish(true); } });
+  box._reset = function(){
+    done = false;
+    opts.forEach(function(o){ o.disabled = false; o.className = "opt"; });
+    show.style.display = "";
+    fb.innerHTML = "";
+  };
+}
+function buildBlock(blk, ctr, sec, gate){
+  var e;
+  if(blk.t === "blank"){ return buildStep(BYID[blk.id]); }
+  if(blk.t === "blanks"){ return buildRow(blk, ctr, sec, gate); }
+  if(blk.t === "mcq"){ return buildMCQ(blk); }
+  if(blk.t === "p"){ return mk("p","txt blk", blk.html); }
+  if(blk.t === "h3"){ e = mk("div","blk"); e.appendChild(mk("h3","",blk.html)); return e; }
+  if(blk.t === "math"){ return mk("div","mathline blk" + (blk.big ? " big" : ""), blk.html); }
+  if(blk.t === "note"){ return mk("div","note blk", blk.html); }
+  if(blk.t === "strip"){ return mk("div","strip blk" + (blk.pin ? " pin" : ""), blk.html); }
+  if(blk.t === "raw"){ return mk("div","blk", blk.html); }
+  if(blk.t === "hook"){
+    e = mk("div","hook blk");
+    e.appendChild(mk("div","lab","the question"));
+    e.appendChild(mk("p","qq", blk.q));
+    if(blk.hint){ e.appendChild(mk("p","hint", blk.hint)); }
+    return e;
+  }
+  if(blk.t === "answer"){
+    e = mk("div","answer blk");
+    e.appendChild(mk("div","lab","the answer"));
+    e.innerHTML += M(blk.html);
+    return e;
+  }
+  if(blk.t === "lines"){
+    e = mk("div","blk");
+    var ul = mk("ul","lines");
+    blk.items.forEach(function(it){ ul.appendChild(mk("li","",it)); });
+    e.appendChild(ul);
+    return e;
+  }
+  if(blk.t === "card"){
+    e = mk("div","card blk" + (blk.v ? " " + blk.v : ""), blk.html);
+    return e;
+  }
+  if(blk.t === "worked"){
+    e = mk("div","card blk grey worked");
+    if(blk.tag){ e.appendChild(mk("span","tag", blk.tag)); }
+    if(blk.title){ e.appendChild(mk("h4","", blk.title)); }
+    blk.lines.forEach(function(l){ e.appendChild(mk("div","mathline", l)); });
+    if(blk.note){ e.appendChild(mk("div","note", blk.note)); }
+    return e;
+  }
+  if(blk.t === "anim"){
+    e = mk("div","anim blk");
+    e.id = "anim-" + blk.id;
+    e.setAttribute("data-anim", blk.id);
+    e.appendChild(mk("div","atitle", blk.title));
+    if(blk.intro){ e.appendChild(mk("p","aintro", blk.intro)); }
+    return e;
+  }
+  return mk("div","blk","");
+}
+function addBlocks(container, blocks, sec, gate, ctr){
+  blocks.forEach(function(blk){
+    var e = buildBlock(blk, ctr, sec, gate);
+    if(gate && blk.t !== "blanks"){
+      e.setAttribute("data-prereq", ctr.n);
+      e.setAttribute("data-secn", sec.n);
+    }
+    if(blk.t === "blank"){ ctr.n++; }
+    container.appendChild(e);
+  });
+}
+function buildSection(sec){
+  var s = mk("section","sec" + (sec.cls ? " " + sec.cls : ""));
+  s.setAttribute("data-sec", sec.n);
+  s.id = "sec" + sec.n;
+  var head = mk("div","sec-head");
+  var g = mk("div","hgrow");
+  var sh = mk("div","seg-head");
+  sh.appendChild(mk("span","seg-num", sec.eyebrow));
+  sh.appendChild(mk("span","seg-rule"));
+  g.appendChild(sh);
+  g.appendChild(mk("h2","", sec.title));
+  head.appendChild(g);
+  var chev = mk("button","chev","collapse");
+  chev.type = "button";
+  chev.setAttribute("aria-expanded","true");
+  head.appendChild(chev);
+  head.addEventListener("click", function(){ toggleSection(sec.n); });
+  s.appendChild(head);
+  var body = mk("div","sec-body");
+  addBlocks(body, sec.blocks, sec, true, {n:0});
+  s.appendChild(body);
+  var strip = mk("div","sec-strip");
+  strip.appendChild(mk("span","ss-res", sec.result || ""));
+  strip.appendChild(mk("span","ss-re","click the heading to re-open"));
+  s.appendChild(strip);
+  return s;
+}
+function render(){
+  var doc = document.getElementById("doc");
+  doc.innerHTML = "";
+  SECTIONS.forEach(function(sec){ doc.appendChild(buildSection(sec)); });
+  buildOverlay();
+  wrapTables();
+  buildAllAnims();
+  refresh();
+}
+function wrapTables(){
+  each(document.querySelectorAll("table.wt"), function(t){
+    if(t.closest(".tscroll") || t.closest(".tbls")){ return; }
+    var w = mk("div","tscroll");
+    t.parentNode.insertBefore(w, t);
+    w.appendChild(t);
+  });
+}
+function buildOverlay(){
+  var ovb = document.getElementById("ovbody");
+  var keys = Object.keys(GLOSS);
+  var html = "<p class=\"txt\">Every dotted term in the sheet opens one of these. They are also listed here so you can scan the vocabulary in one place.</p>";
+  keys.forEach(function(id){
+    var g = GLOSS[id];
+    html += "<div class=\"gcard-ov\" id=\"gloss-" + id + "\">" +
+      "<div class=\"bt\">" + g.term + "</div>" +
+      "<p class=\"bd\">" + g.def + "</p>" +
+      (g.formula ? "<div class=\"bf\">" + g.formula + "</div>" : "") +
+      "<div class=\"bs\">" + g.see + "</div></div>";
+  });
+  ovb.innerHTML = M(html);
+}
+
+function fly(btn, slot, done){
+  if(!slot || !btn.getBoundingClientRect || REDUCED){ done(); return; }
+  var a = btn.getBoundingClientRect(), b = slot.getBoundingClientRect();
+  var f = document.createElement("span");
+  f.className = "fly";
+  f.innerHTML = btn.innerHTML;
+  f.style.left = a.left + "px";
+  f.style.top  = a.top + "px";
+  document.body.appendChild(f);
+  requestAnimationFrame(function(){
+    f.style.transform = "translate(" + (b.left - a.left + (b.width - a.width) / 2) + "px," +
+                        (b.top - a.top) + "px) scale(.92)";
+    f.style.opacity = "0.1";
+  });
+  window.setTimeout(function(){
+    if(f.parentNode){ f.parentNode.removeChild(f); }
+    done();
+  }, 270);
+}
+function onChip(B, opt, btn, host){
+  if(state.ans[B.id]){ return; }
+  if(opt === B.correct){
+    var slot = document.getElementById("slot-" + B.id);
+    btn.classList.add("chosen");
+    fly(btn, slot, function(){ commit(B, "ok"); });
+    return;
+  }
+  btn.classList.add("wrong");
+  btn.disabled = true;
+  state.wrong[B.id] = (state.wrong[B.id] || 0) + 1;
+  var hb = host.querySelector(".hintbox");
+  var hint = (B.hints && B.hints[opt]) ? B.hints[opt] : "Not this one. Look at the numbers you were given.";
+  hb.innerHTML = "<div class=\"hint\"><b>✕</b>&nbsp;&nbsp;" + M(hint) + "</div>";
+  if(state.wrong[B.id] >= 2 && !host.querySelector(".showme")){
+    var sm = mk("button","showme","show me");
+    sm.type = "button";
+    sm.addEventListener("click", function(){ commit(B, "shown"); });
+    hb.appendChild(sm);
+  }
+}
+function hostOf(id){ return document.querySelector("[data-blank=\"" + id + "\"]"); }
+function commit(B, mode){
+  if(state.ans[B.id]){ return; }
+  state.ans[B.id] = mode;
+  var host = hostOf(B.id);
+  var slot = document.getElementById("slot-" + B.id);
+  if(slot){
+    slot.className = "slot" + (B.wide ? " wide" : "") + " " + (mode === "ok" ? "ok" : "shown");
+    slot.innerHTML = "<span class=\"slotin pop\">" + M(B.correct) + "</span>";
+  }
+  if(host){
+    each(host.querySelectorAll(".chip"), function(c){
+      c.disabled = true;
+      if(c._opt === B.correct){
+        c.classList.remove("wrong");
+        c.classList.add(mode === "ok" ? "chosen" : "revealed");
+      }
+    });
+    var hb = host.querySelector(".hintbox");
+    if(hb){ hb.innerHTML = ""; }
+    host.classList.add("done");
+    host.classList.remove("active");
+  }
+  refresh();
+  var secBlanks = blanksInSection(B.sec);
+  var complete = secBlanks.filter(function(x){ return state.ans[x.id]; }).length === secBlanks.length;
+  if(complete && !state.autoc[B.sec]){
+    state.autoc[B.sec] = true;
+    window.setTimeout(function(){
+      state.collapsed[B.sec] = true;
+      applyCollapse();
+      var nx = nextSectionEl(B.sec);
+      if(nx){ nx.scrollIntoView({behavior: REDUCED ? "auto" : "smooth", block:"start"}); }
+    }, 1200);
+  }else{
+    window.setTimeout(scrollToActive, 300);
+  }
+}
+function nextSectionEl(n){
+  var i;
+  for(i=0;i<SECTIONS.length;i++){
+    if(SECTIONS[i].n > n){ return document.getElementById("sec" + SECTIONS[i].n); }
+  }
+  return null;
+}
+function scrollToActive(){
+  var a = document.querySelector(".step.active, .sub.active, .mrow.active");
+  if(!a){ return; }
+  var r = a.getBoundingClientRect();
+  if(r.top < 110 || r.bottom > window.innerHeight - 30){
+    a.scrollIntoView({behavior: REDUCED ? "auto" : "smooth", block:"center"});
+  }
+}
+function toggleSection(n){
+  state.collapsed[n] = !state.collapsed[n];
+  applyCollapse();
+}
+function applyCollapse(){
+  SECTIONS.forEach(function(sec){
+    var e = document.getElementById("sec" + sec.n);
+    if(!e){ return; }
+    var c = !!state.collapsed[sec.n];
+    e.classList.toggle("collapsed", c);
+    var chev = e.querySelector(".chev");
+    if(chev){
+      chev.textContent = c ? "expand" : "collapse";
+      chev.setAttribute("aria-expanded", c ? "false" : "true");
+    }
+  });
+}
+function refresh(){
+  var bySec = {}, id;
+  for(id in state.ans){
+    if(Object.prototype.hasOwnProperty.call(state.ans, id)){
+      bySec[BYID[id].sec] = (bySec[BYID[id].sec] || 0) + 1;
+    }
+  }
+  each(document.querySelectorAll("#doc [data-prereq]"), function(e){
+    var need = parseInt(e.getAttribute("data-prereq"), 10);
+    var sn = parseInt(e.getAttribute("data-secn"), 10);
+    var lock = (bySec[sn] || 0) < need;
+    if(lock && e.parentElement && e.parentElement.closest(".locked")){ lock = false; }
+    e.classList.toggle("locked", lock);
+  });
+  each(document.querySelectorAll(".step,.sub,.mrow"), function(e){ e.classList.remove("active"); });
+  SECTIONS.forEach(function(sec){
+    var list = blanksInSection(sec.n), i;
+    for(i=0;i<list.length;i++){
+      if(!state.ans[list[i].id]){
+        var h = hostOf(list[i].id);
+        if(h && !h.classList.contains("locked") && !h.closest(".locked")){ h.classList.add("active"); }
+        break;
+      }
+    }
+  });
+  var n = 0;
+  for(id in state.ans){
+    if(Object.prototype.hasOwnProperty.call(state.ans, id) && BYID[id].counts !== false){ n++; }
+  }
+  document.getElementById("pnum").textContent = n + " / " + TOTAL_BLANKS + " blanks filled";
+  document.getElementById("pfill").style.width = (100 * n / TOTAL_BLANKS) + "%";
+  var cur = null, k;
+  for(k=0;k<SECTIONS.length;k++){
+    var l = blanksInSection(SECTIONS[k].n);
+    if(l.length && l.some(function(x){ return !state.ans[x.id]; })){ cur = SECTIONS[k]; break; }
+  }
+  var ps = document.getElementById("psec");
+  ps.innerHTML = cur ? M("section " + cur.n + " &middot; " + cur.title)
+                     : M("all done &middot; every blank filled");
+}
+
+function closeBubbles(){
+  each(document.querySelectorAll(".termwrap.open"), function(w){
+    w.classList.remove("open");
+    var b = w.querySelector(".ibub");
+    if(b){ b.setAttribute("aria-expanded","false"); b.classList.remove("on"); }
+    var card = w.querySelector(".bubble");
+    if(card){ w.removeChild(card); }
+  });
+}
+function openBubble(wrap){
+  var id = wrap.getAttribute("data-term");
+  var g = GLOSS[id];
+  if(!g){ return; }
+  wrap.classList.add("open");
+  var btn = wrap.querySelector(".ibub");
+  if(btn){ btn.classList.add("on"); btn.setAttribute("aria-expanded","true"); }
+  var card = mk("div","bubble");
+  card.setAttribute("role","tooltip");
+  card.innerHTML = "<div class=\"bt\">" + g.term + "</div>" +
+    "<p class=\"bd\">" + g.def + "</p>" +
+    (g.formula ? "<div class=\"bf\">" + g.formula + "</div>" : "") +
+    "<div class=\"bs\">" + g.see + "</div>" +
+    "<button type=\"button\" class=\"bmore\">open in glossary</button>";
+  wrap.appendChild(card);
+  var r = card.getBoundingClientRect();
+  if(r.right > window.innerWidth - 12){
+    card.style.left = "auto";
+    card.style.right = "0";
+  }
+  if(r.bottom > window.innerHeight - 12 && r.top > 180){
+    card.style.top = "auto";
+    card.style.bottom = "calc(100% + 8px)";
+    card.classList.add("above");
+  }
+  card.querySelector(".bmore").addEventListener("click", function(ev){
+    ev.stopPropagation();
+    closeBubbles();
+    document.getElementById("ov").classList.add("open");
+    var target = document.getElementById("gloss-" + id);
+    if(target){ target.scrollIntoView({block:"center"}); target.classList.add("flash"); }
+  });
+}
+function wireBubbles(){
+  document.addEventListener("click", function(ev){
+    var btn = ev.target.closest(".ibub");
+    if(btn){
+      ev.preventDefault();
+      ev.stopPropagation();
+      var wrap = btn.closest(".termwrap");
+      var open = wrap.classList.contains("open");
+      closeBubbles();
+      if(!open){ openBubble(wrap); }
+      return;
+    }
+    if(!ev.target.closest(".bubble")){ closeBubbles(); }
+  });
+  document.addEventListener("keydown", function(ev){
+    if(ev.key === "Escape"){ closeBubbles(); }
+  });
+}
+
+function syncStick(){
+  var tb = document.querySelector(".topbar");
+  if(!tb){ return; }
+  document.documentElement.style.setProperty("--stick",
+    (Math.round(tb.getBoundingClientRect().height) + 14) + "px");
+}
+function initChrome(){
+  var ov = document.getElementById("ov");
+  syncStick();
+  window.addEventListener("resize", syncStick);
+  document.getElementById("refbtn").addEventListener("click", function(){ ov.classList.add("open"); });
+  document.getElementById("ovclose").addEventListener("click", function(){ ov.classList.remove("open"); });
+  ov.addEventListener("click", function(ev){ if(ev.target === ov){ ov.classList.remove("open"); } });
+  document.addEventListener("keydown", function(ev){
+    if(ev.key === "Escape"){ ov.classList.remove("open"); closeBubbles(); }
+  });
+  document.getElementById("printbtn").addEventListener("click", function(){ window.print(); });
+  window.addEventListener("beforeprint", freezeAnims);
+  window.addEventListener("afterprint", thawAnims);
+  var rb = document.getElementById("resetbtn"), armed = false, timer = null;
+  rb.addEventListener("click", function(){
+    if(!armed){
+      armed = true;
+      rb.classList.add("armed");
+      rb.textContent = "click again to erase every answer";
+      timer = window.setTimeout(function(){
+        armed = false; rb.classList.remove("armed"); rb.textContent = "reset all";
+      }, 5000);
+      return;
+    }
+    window.clearTimeout(timer);
+    armed = false;
+    rb.classList.remove("armed");
+    rb.textContent = "reset all";
+    resetAll();
+  });
+  wireBubbles();
+}
+function resetAll(){
+  state = { ans:{}, wrong:{}, collapsed:{}, autoc:{} };
+  destroyAnims();
+  render();
+  applyCollapse();
+  window.scrollTo({top:0, behavior: REDUCED ? "auto" : "smooth"});
+}
+
+var REDUCED = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+var C = (function(){
+  var cs = getComputedStyle(document.documentElement), o = {};
+  ["ink","blue","amber","plum","green","red","lgrey","rule","panel","cream","creamb",
+   "greenbg","redbg","grey"].forEach(function(k){
+    o[k] = cs.getPropertyValue("--" + k).trim() || "#000000";
+  });
+  return o;
+})();
+var LABF  = '13px Calibri, "Segoe UI", system-ui';
+var LABFB = '700 13px Calibri, "Segoe UI", system-ui';
+var TINYF = '700 12px Calibri, "Segoe UI", system-ui';
+var NUMF  = '15px Cambria, Georgia, serif';
+var NUMFB = '700 15px Cambria, Georgia, serif';
+
+function easeOutCubic(t){ return 1 - Math.pow(1 - t, 3); }
+function clamp01(t){ return t < 0 ? 0 : (t > 1 ? 1 : t); }
+function hexA(hex, a){
+  var h = hex.replace("#",""), r, g, b;
+  if(h.length === 3){ h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2]; }
+  r = parseInt(h.substr(0,2),16); g = parseInt(h.substr(2,2),16); b = parseInt(h.substr(4,2),16);
+  return "rgba(" + r + "," + g + "," + b + "," + a + ")";
+}
+function fx(v, d, sign){
+  if(v === null || v === undefined || !isFinite(v)){ return "n/a"; }
+  var s = Math.abs(v).toFixed(d === undefined ? 4 : d);
+  return (v < 0 ? "−" : (sign ? "+" : "")) + s;
+}
+function tx(g,s,x,y,font,col,al,bl){
+  g.font = font; g.fillStyle = col;
+  g.textAlign = al || "left"; g.textBaseline = bl || "alphabetic";
+  g.fillText(s, x, y);
+}
+function halo(g,s,x,y,font,col,al,bl){
+  g.font = font; g.textAlign = al || "left"; g.textBaseline = bl || "alphabetic";
+  g.lineWidth = 4; g.strokeStyle = "#ffffff"; g.lineJoin = "round";
+  g.strokeText(s, x, y);
+  g.fillStyle = col; g.fillText(s, x, y);
+}
+function line(g,x1,y1,x2,y2,col,w){
+  g.strokeStyle = col; g.lineWidth = w || 1.4;
+  g.beginPath(); g.moveTo(x1,y1); g.lineTo(x2,y2); g.stroke();
+}
+
+var ANIMS = [];
+function Anim(o){
+  var self = this;
+  this.o = o;
+  this.H = o.height;
+  this.LW = 940;
+  this.stepMs = 700;
+  this.playing = false;
+  this.lastStepAt = 0;
+  this.ease = 1;
+  this.beat = 3;
+  this.raf = null;
+  this.frozen = false;
+  this.host = o.host;
+  this.wrapEl = mk("div","cvwrap");
+  this.cv = document.createElement("canvas");
+  this.cv.className = "wide";
+  this.cv.setAttribute("role","img");
+  this.cv.setAttribute("aria-label", o.aria || "animated figure");
+  this.wrapEl.appendChild(this.cv);
+  this.ctlEl = mk("div","ctl");
+  this.readEl = mk("div","readline");
+  this.mirror = mk("div","amirror");
+  this.mirror.setAttribute("aria-live","polite");
+  this.host.appendChild(this.ctlEl);
+  this.host.appendChild(this.wrapEl);
+  this.host.appendChild(this.readEl);
+  this.host.appendChild(this.mirror);
+  this.model = o.model();
+  this.cells = {};
+  (o.readKeys || []).forEach(function(k){
+    var p = mk("span","pair" + (k.big ? " big" : ""));
+    p.appendChild(mk("span","k", k.label));
+    var v = mk("span","v","n/a");
+    p.appendChild(v);
+    self.cells[k.id] = v;
+    self.readEl.appendChild(p);
+  });
+  this.loopB = function(ts){ self.loop(ts); };
+  if(window.ResizeObserver){
+    this.ro = new ResizeObserver(function(){ self.resize(); });
+    this.ro.observe(this.wrapEl);
+  }
+  ANIMS.push(this);
+}
+Anim.prototype.resize = function(){
+  var cssW = this.wrapEl.clientWidth || this.LW;
+  var sc = Math.max(1, cssW / this.LW);
+  var dpr = window.devicePixelRatio || 1;
+  var pw = Math.round(this.LW * sc * dpr), ph = Math.round(this.H * sc * dpr);
+  if(pw <= 0 || ph <= 0){ return; }
+  this.sc = sc; this.dpr = dpr;
+  this.cv.style.width  = (this.LW * sc) + "px";
+  this.cv.style.height = (this.H * sc) + "px";
+  if(this.cv.width !== pw){ this.cv.width = pw; }
+  if(this.cv.height !== ph){ this.cv.height = ph; }
+  this.g = this.cv.getContext("2d");
+  if(!this.off){ this.off = document.createElement("canvas"); }
+  this.off.width = pw; this.off.height = ph;
+  var og = this.off.getContext("2d");
+  og.setTransform(sc*dpr, 0, 0, sc*dpr, 0, 0);
+  og.clearRect(0,0,this.LW,this.H);
+  og.lineCap = "round"; og.lineJoin = "round";
+  og.fillStyle = "#ffffff";
+  og.fillRect(0,0,this.LW,this.H);
+  this.o.paintStatic(og, this.LW, this.H, this);
+  this.paint();
+};
+Anim.prototype.paint = function(){
+  if(!this.g || this.frozen){ return; }
+  var g = this.g;
+  g.setTransform(1,0,0,1,0,0);
+  g.clearRect(0,0,this.cv.width,this.cv.height);
+  g.drawImage(this.off, 0, 0);
+  g.setTransform(this.sc*this.dpr, 0, 0, this.sc*this.dpr, 0, 0);
+  g.lineCap = "round"; g.lineJoin = "round";
+  this.o.paintLive(g, this.LW, this.H, this);
+  this.updateRead();
+};
+Anim.prototype.updateRead = function(){
+  var self = this, vals = this.o.readout(this.model, this);
+  Object.keys(vals).forEach(function(k){
+    var cell = self.cells[k];
+    if(!cell){ return; }
+    var v = vals[k];
+    if(typeof v === "object" && v !== null){
+      cell.textContent = v.t;
+      cell.className = "v" + (v.cls ? " " + v.cls : "");
+    }else{
+      cell.textContent = v;
+      cell.className = "v";
+    }
+  });
+};
+Anim.prototype.doStep = function(now){ this.o.stepModel(this.model, this); this.lastStepAt = now; };
+Anim.prototype.loop = function(ts){
+  var since = ts - this.lastStepAt;
+  if(this.playing && since >= this.stepMs){ this.doStep(ts); since = 0; }
+  var tw = Math.max(80, this.stepMs * 0.5);
+  this.ease = REDUCED ? 1 : easeOutCubic(clamp01(since / tw));
+  this.since = since;
+  this.paint();
+  if(this.playing || since < tw + 120){ this.raf = requestAnimationFrame(this.loopB); }
+  else { this.raf = null; }
+};
+Anim.prototype.ensureLoop = function(){
+  if(this.raf === null && !this.frozen){ this.raf = requestAnimationFrame(this.loopB); }
+};
+Anim.prototype.play = function(){
+  this.playing = true; this.lastStepAt = performance.now(); this.ensureLoop();
+  if(this.playBtn){ this.playBtn.classList.add("on"); }
+};
+Anim.prototype.pause = function(){
+  this.playing = false;
+  if(this.playBtn){ this.playBtn.classList.remove("on"); }
+};
+Anim.prototype.stepOnce = function(){ this.pause(); this.doStep(performance.now()); this.ensureLoop(); };
+Anim.prototype.reset = function(){
+  this.pause();
+  this.model = this.o.model(this.model);
+  this.lastStepAt = performance.now() - 99999;
+  this.ease = 1; this.paint();
+};
+Anim.prototype.rebuild = function(){ this.resize(); this.ensureLoop(); };
+Anim.prototype.setSpeed = function(ms){ this.stepMs = ms; };
+Anim.prototype.destroy = function(){
+  this.playing = false;
+  if(this.raf !== null){ cancelAnimationFrame(this.raf); this.raf = null; }
+  if(this.ro){ this.ro.disconnect(); }
+};
+function grpEl(label){
+  var d = mk("div","grp");
+  if(label){ d.appendChild(mk("span","lbl", label)); }
+  return d;
+}
+function btnEl(txt, cls){
+  var b = mk("button","btn" + (cls ? " " + cls : ""), txt);
+  b.type = "button";
+  return b;
+}
+function segEl(items, initial, onPick, cls){
+  var s = mk("span","seg" + (cls ? " " + cls : "")), btns = [];
+  items.forEach(function(it){
+    var b = mk("button", it.sm ? "sm" : "", it.label);
+    b.type = "button";
+    if(it.v === initial){ b.classList.add("on"); }
+    b.addEventListener("click", function(){
+      btns.forEach(function(o){ o.classList.remove("on"); });
+      b.classList.add("on");
+      onPick(it.v);
+    });
+    btns.push(b);
+    s.appendChild(b);
+  });
+  return s;
+}
+function sldEl(min, max, stepv, val, fmt, onIn){
+  var d = mk("div","sld");
+  var i = document.createElement("input");
+  i.type = "range"; i.min = min; i.max = max; i.step = stepv; i.value = val;
+  var v = mk("span","v", fmt(val));
+  i.addEventListener("input", function(){
+    var x = parseFloat(i.value);
+    v.textContent = fmt(x);
+    onIn(x);
+  });
+  d.appendChild(i); d.appendChild(v);
+  d._set = function(x){ i.value = x; v.textContent = fmt(x); };
+  d._input = i;
+  return d;
+}
+function transport(a, onReset){
+  var g = grpEl("");
+  a.playBtn = btnEl("play");
+  a.playBtn.addEventListener("click", function(){
+    if(a.playing){ a.pause(); a.playBtn.textContent = "play"; }
+    else { a.play(); a.playBtn.textContent = "pause"; }
+  });
+  var st = btnEl("step","sm");
+  st.addEventListener("click", function(){ a.stepOnce(); a.playBtn.textContent = "play"; });
+  var rs = btnEl("reset","sm");
+  rs.addEventListener("click", function(){
+    a.reset();
+    a.playBtn.textContent = "play";
+    if(onReset){ onReset(); }
+  });
+  g.appendChild(a.playBtn); g.appendChild(st); g.appendChild(rs);
+  return g;
+}
+function speedCtl(a){
+  var g = grpEl("speed");
+  g.appendChild(segEl([{v:1200,label:"slow",sm:true},{v:700,label:"normal",sm:true},
+                       {v:250,label:"fast",sm:true}], 700, function(v){ a.setSpeed(v); }));
+  return g;
+}
+
+function denseX(n){
+  var i, x = [];
+  for(i=0;i<n;i++){ x.push(i / (n-1)); }
+  return x;
+}
+var DENSE = denseX(160);
+function trainTest(w){
+  var i, tr = 0, te = 0, yh;
+  for(i=0;i<SX.length;i++){ yh = polyEval(w, SX[i]); tr += (yh - SY[i])*(yh - SY[i]); }
+  for(i=0;i<DENSE.length;i++){
+    yh = polyEval(w, DENSE[i]);
+    te += (yh - sineTrue(DENSE[i]))*(yh - sineTrue(DENSE[i]));
+  }
+  return { train:R(tr/SX.length), test:R(te/DENSE.length) };
+}
+function mapX(x,L,Rt){ return L + x * (Rt - L); }
+function mapY(y,top,bot,lo,hi){ return top + (hi - y) / (hi - lo) * (bot - top); }
+function drawAxes(g,L,Rt,top,bot,lo,hi){
+  line(g,L,bot,Rt,bot,C.rule,1);
+  line(g,L,top,L,bot,C.rule,1);
+  tx(g,"x", Rt-6, bot+16, LABF, C.lgrey, "right");
+  tx(g,"y", L-8, top+8, LABF, C.lgrey, "right");
+}
+function drawSine(g,L,Rt,top,bot,lo,hi){
+  g.beginPath();
+  DENSE.forEach(function(x,i){
+    var X = mapX(x,L,Rt), Y = mapY(sineTrue(x),top,bot,lo,hi);
+    if(i===0){ g.moveTo(X,Y); } else { g.lineTo(X,Y); }
+  });
+  g.strokeStyle = hexA(C.ink, 0.28); g.lineWidth = 2; g.stroke();
+}
+function drawPoly(g,w,L,Rt,top,bot,lo,hi,col,width){
+  g.beginPath();
+  DENSE.forEach(function(x,i){
+    var yh = polyEval(w,x);
+    yh = Math.max(lo, Math.min(hi, yh));
+    var X = mapX(x,L,Rt), Y = mapY(yh,top,bot,lo,hi);
+    if(i===0){ g.moveTo(X,Y); } else { g.lineTo(X,Y); }
+  });
+  g.strokeStyle = col; g.lineWidth = width || 2.4; g.stroke();
+}
+function drawPts(g,L,Rt,top,bot,lo,hi){
+  SX.forEach(function(x,i){
+    var X = mapX(x,L,Rt), Y = mapY(SY[i],top,bot,lo,hi);
+    g.fillStyle = C.amber;
+    g.beginPath(); g.arc(X,Y,5.5,0,6.2832); g.fill();
+    g.strokeStyle = "#fff"; g.lineWidth = 1.5; g.stroke();
+  });
+}
+
+function buildA1(host){
+  var a = new Anim({
+    host:host, height:340,
+    aria:"A sine wave, six noisy training points, and a polynomial of adjustable degree.",
+    model:function(prev){ return { M: prev ? prev.M : 0 }; },
+    stepModel:function(m){ m.M = Math.min(9, m.M + 1); },
+    paintStatic:function(g,W,H){
+      tx(g,"true sine (faint) · training points (amber) · polynomial (navy)", 48, 22, LABF, C.lgrey);
+    },
+    paintLive:function(g,W,H,an){
+      var L=48,Rt=900,top=40,bot=310, lo=-1.8, hi=1.8;
+      drawAxes(g,L,Rt,top,bot,lo,hi);
+      drawSine(g,L,Rt,top,bot,lo,hi);
+      var w = polyFit(SX,SY, an.model.M, 1e-8);
+      drawPoly(g,w,L,Rt,top,bot,lo,hi,C.blue,2.6);
+      drawPts(g,L,Rt,top,bot,lo,hi);
+      var tt = trainTest(w);
+      halo(g, "degree " + an.model.M, 70, 56, NUMFB, C.ink);
+      var tag = tt.train < 1e-4 ? "interpolating" : (an.model.M <= 1 ? "underfitting" : "fitting");
+      halo(g, tag, 70, 78, LABFB, tag === "interpolating" ? C.red : (tag === "underfitting" ? C.amber : C.green));
+    },
+    readout:function(m){
+      var w = polyFit(SX,SY,m.M,1e-8), tt = trainTest(w);
+      return { M:String(m.M), P:String(m.M+1), train:fx(tt.train,4), test:fx(tt.test,4) };
+    },
+    readKeys:[{id:"M",label:"degree M"},{id:"P",label:"parameters"},{id:"train",label:"train MSE"},{id:"test",label:"test MSE vs sine"}]
+  });
+  var c = a.ctlEl;
+  c.appendChild(transport(a));
+  c.appendChild(mk("span","div"));
+  var gd = grpEl("degree");
+  gd.appendChild(sldEl(0,9,1,0,function(v){ return String(v); }, function(v){
+    a.model.M = v; a.paint();
+  }));
+  c.appendChild(gd);
+  c.appendChild(mk("span","div"));
+  c.appendChild(speedCtl(a));
+  a.resize();
+  return a;
+}
+function buildA2(host){
+  var a = new Anim({
+    host:host, height:340,
+    aria:"Degree 5 interpolating polynomial on six noisy sine points.",
+    model:function(){ return { M:5 }; },
+    stepModel:function(){},
+    paintStatic:function(g){ tx(g,"degree 5 interpolates N = 6 points", 48, 22, LABF, C.lgrey); },
+    paintLive:function(g,W,H,an){
+      var L=48,Rt=900,top=40,bot=310, lo=-2.4, hi=2.4;
+      drawAxes(g,L,Rt,top,bot,lo,hi);
+      drawSine(g,L,Rt,top,bot,lo,hi);
+      var w = polyFit(SX,SY,5,1e-10);
+      drawPoly(g,w,L,Rt,top,bot,lo,hi,C.plum,2.6);
+      drawPts(g,L,Rt,top,bot,lo,hi);
+    },
+    readout:function(){
+      var w = polyFit(SX,SY,5,1e-10), tt = trainTest(w);
+      return { train:fx(tt.train,4), test:fx(tt.test,4), nrm:fx(Math.sqrt(w.reduce(function(s,v){return s+v*v;},0)),1) };
+    },
+    readKeys:[{id:"train",label:"train MSE"},{id:"test",label:"test MSE vs sine"},{id:"nrm",label:"‖w‖"}]
+  });
+  a.ctlEl.appendChild(mk("span","lbl","static frame · move animation 1's slider to degree 5 to compare"));
+  a.resize();
+  return a;
+}
+function jitterSet(seed){
+  var rng = mulberry32(seed), i, x, y, xs=[], ys=[];
+  for(i=0;i<6;i++){
+    x = SX[i];
+    y = sineTrue(x) + (rng()-0.5)*0.55;
+    xs.push(x); ys.push(y);
+  }
+  return {x:xs, y:ys};
+}
+function buildA3(host){
+  var a = new Anim({
+    host:host, height:360,
+    aria:"Many resampled fits: lines on the left, interpolating polynomials on the right.",
+    model:function(prev){ return { k: prev && prev.k ? prev.k : 1, max:12 }; },
+    stepModel:function(m){ if(m.k < m.max){ m.k++; } },
+    paintStatic:function(g,W,H){
+      tx(g,"left: degree 1   ·   right: degree 5 interpolators   ·   dashed = mean curve", 48, 22, LABF, C.lgrey);
+      line(g,470,36,470,350,C.rule,1);
+    },
+    paintLive:function(g,W,H,an){
+      function panel(x0,x1,M,k){
+        var lo=-2, hi=2, top=44, bot=330, L=x0+28, Rt=x1-16, i, j, acc;
+        drawSine(g,L,Rt,top,bot,lo,hi);
+        acc = DENSE.map(function(){ return 0; });
+        for(i=0;i<k;i++){
+          var D = jitterSet(1000+i);
+          var w = polyFit(D.x, D.y, M, 1e-6);
+          drawPoly(g,w,L,Rt,top,bot,lo,hi, hexA(M===1?C.blue:C.plum, 0.28), 1.4);
+          for(j=0;j<DENSE.length;j++){ acc[j] += polyEval(w, DENSE[j]); }
+          D.x.forEach(function(x,t){
+            g.fillStyle = hexA(C.amber, 0.35);
+            g.beginPath(); g.arc(mapX(x,L,Rt), mapY(D.y[t],top,bot,lo,hi), 3,0,6.2832); g.fill();
+          });
+        }
+        g.beginPath();
+        DENSE.forEach(function(x,j){
+          var Y = mapY(acc[j]/k, top,bot,lo,hi), X=mapX(x,L,Rt);
+          if(j===0){ g.moveTo(X,Y); } else { g.lineTo(X,Y); }
+        });
+        g.setLineDash([6,4]); g.strokeStyle = C.ink; g.lineWidth = 2; g.stroke(); g.setLineDash([]);
+      }
+      panel(0,470,1, an.model.k);
+      panel(470,940,5, an.model.k);
+      halo(g,"low variance", 80, 58, LABFB, C.blue);
+      halo(g,"high variance", 500, 58, LABFB, C.plum);
+    },
+    readout:function(m){ return { k:String(m.k) }; },
+    readKeys:[{id:"k",label:"datasets drawn"}]
+  });
+  var c = a.ctlEl;
+  c.appendChild(transport(a));
+  c.appendChild(mk("span","div"));
+  c.appendChild(speedCtl(a));
+  a.resize();
+  return a;
+}
+function buildA4(host){
+  var a = new Anim({
+    host:host, height:340,
+    aria:"Training and test MSE versus polynomial degree.",
+    model:function(prev){ return { M: prev ? prev.M : 0 }; },
+    stepModel:function(m){ m.M = Math.min(9, m.M+1); },
+    paintStatic:function(g){ tx(g,"amber train · navy test · dotted line at interpolation M = 5", 48, 22, LABF, C.lgrey); },
+    paintLive:function(g,W,H,an){
+      var L=70, Rt=900, top=40, bot=300, i, tr=[], te=[], w, tt;
+      for(i=0;i<=9;i++){
+        w = polyFit(SX,SY,i,1e-8);
+        tt = trainTest(w);
+        tr.push(tt.train); te.push(Math.min(tt.test, 1.2));
+      }
+      var hi = 1.05;
+      function xM(M){ return L + M/9*(Rt-L); }
+      function yV(v){ return top + (hi-v)/hi*(bot-top); }
+      line(g,L,bot,Rt,bot,C.rule,1);
+      line(g,L,top,L,bot,C.rule,1);
+      var xi = xM(5);
+      g.setLineDash([4,4]); line(g,xi,top,xi,bot,C.plum,1.2); g.setLineDash([]);
+      tx(g,"P = N", xi+6, top+14, LABFB, C.plum);
+      function path(arr,col,upto){
+        g.beginPath();
+        for(i=0;i<=upto;i++){
+          var X=xM(i), Y=yV(arr[i]);
+          if(i===0){ g.moveTo(X,Y); } else { g.lineTo(X,Y); }
+        }
+        g.strokeStyle = col; g.lineWidth = 2.4; g.stroke();
+        g.fillStyle = col;
+        g.beginPath(); g.arc(xM(upto), yV(arr[upto]), 6,0,6.2832); g.fill();
+      }
+      path(tr, C.amber, an.model.M);
+      path(te, C.blue, an.model.M);
+      tx(g,"degree M", 470, 328, LABF, C.lgrey, "center");
+    },
+    readout:function(m){
+      var w = polyFit(SX,SY,m.M,1e-8), tt = trainTest(w);
+      return { M:String(m.M), train:fx(tt.train,4), test:fx(tt.test,4) };
+    },
+    readKeys:[{id:"M",label:"degree"},{id:"train",label:"train MSE"},{id:"test",label:"test MSE"}]
+  });
+  var c = a.ctlEl;
+  c.appendChild(transport(a));
+  c.appendChild(mk("span","div"));
+  var gd = grpEl("degree");
+  gd.appendChild(sldEl(0,9,1,0,function(v){return String(v);}, function(v){ a.model.M=v; a.paint(); }));
+  c.appendChild(gd);
+  a.resize();
+  return a;
+}
+function ddCurve(P, N){
+  /* schematic: U then peak at N then descent toward a floor */
+  var t = P / N;
+  var under = 0.55 + 0.15*Math.pow(1 - Math.min(t,1), 2) + 0.08*t;
+  var peak = 1.8 * Math.exp(-0.5*Math.pow((P-N)/(0.12*N+2), 2));
+  var over = 0.22 + 0.45 / (1 + Math.pow(Math.max(t,1), 1.4));
+  return under + peak * (t > 0.55 ? 1 : t/0.55) + (t>1 ? over-0.22 : 0);
+}
+function buildA5(host){
+  var a = new Anim({
+    host:host, height:340,
+    aria:"Schematic double descent of test error versus parameter count.",
+    model:function(prev){ return { N: prev ? prev.N : 24, Pshow: prev ? prev.Pshow : 4 }; },
+    stepModel:function(m){ m.Pshow = Math.min(80, m.Pshow + 2); },
+    paintStatic:function(g){ tx(g,"schematic test error (log-ish) against P.  Dotted: interpolation threshold P = N.", 48, 22, LABF, C.lgrey); },
+    paintLive:function(g,W,H,an){
+      var L=70,Rt=900,top=40,bot=305, N=an.model.N, Pmax=80, i, P;
+      function xP(p){ return L + p/Pmax*(Rt-L); }
+      function yE(e){ return top + (2.3-e)/2.3*(bot-top); }
+      line(g,L,bot,Rt,bot,C.rule,1);
+      line(g,L,top,L,bot,C.rule,1);
+      var xn = xP(N);
+      g.setLineDash([4,4]); line(g,xn,top,xn,bot,C.plum,1.4); g.setLineDash([]);
+      halo(g,"P = N", xn+8, 58, LABFB, C.plum);
+      g.beginPath();
+      for(i=1;i<=an.model.Pshow;i++){
+        P=i; var e=ddCurve(P,N), X=xP(P), Y=yE(e);
+        if(i===1){ g.moveTo(X,Y); } else { g.lineTo(X,Y); }
+      }
+      g.strokeStyle = C.blue; g.lineWidth = 2.6; g.stroke();
+      var eNow = ddCurve(an.model.Pshow, N);
+      g.fillStyle = C.blue;
+      g.beginPath(); g.arc(xP(an.model.Pshow), yE(eNow), 6,0,6.2832); g.fill();
+      tx(g,"P  (parameters)", 480, 328, LABF, C.lgrey, "center");
+      var lab = an.model.Pshow < N*0.7 ? "classical U" : (Math.abs(an.model.Pshow-N)<N*0.18 ? "interpolation peak" : "second descent");
+      halo(g, lab, 80, 64, LABFB, C.ink);
+    },
+    readout:function(m){
+      return { N:String(m.N), P:String(m.Pshow), e:fx(ddCurve(m.Pshow,m.N),3),
+               regime: m.Pshow < m.N*0.7 ? "under-P" : (Math.abs(m.Pshow-m.N)<m.N*0.18 ? "peak" : "over-P") };
+    },
+    readKeys:[{id:"N",label:"N train"},{id:"P",label:"P"},{id:"e",label:"test (schematic)"},{id:"regime",label:"regime"}]
+  });
+  var c = a.ctlEl;
+  c.appendChild(transport(a));
+  c.appendChild(mk("span","div"));
+  var gn = grpEl("N");
+  gn.appendChild(sldEl(8,40,1,24,function(v){return String(v);}, function(v){
+    a.model.N = v; a.paint();
+  }));
+  c.appendChild(gn);
+  var gp = grpEl("P");
+  gp.appendChild(sldEl(1,80,1,4,function(v){return String(v);}, function(v){
+    a.model.Pshow = v; a.paint();
+  }));
+  c.appendChild(gp);
+  a.resize();
+  return a;
+}
+function buildA6(host){
+  var a = new Anim({
+    host:host, height:340,
+    aria:"Degree 9 polynomial with adjustable ridge penalty lambda.",
+    model:function(prev){ return { lam: prev ? prev.lam : 0.0001 }; },
+    stepModel:function(m){ m.lam = Math.min(10, m.lam * 2); },
+    paintStatic:function(g){ tx(g,"M = 9, N = 6.  λ = 0 interpolates.  Large λ is a near-constant.", 48, 22, LABF, C.lgrey); },
+    paintLive:function(g,W,H,an){
+      var L=48,Rt=900,top=40,bot=310, lo=-2.2, hi=2.2;
+      drawAxes(g,L,Rt,top,bot,lo,hi);
+      drawSine(g,L,Rt,top,bot,lo,hi);
+      var w = polyFit(SX,SY,9, an.model.lam);
+      drawPoly(g,w,L,Rt,top,bot,lo,hi,C.blue,2.6);
+      drawPts(g,L,Rt,top,bot,lo,hi);
+      var tt = trainTest(w);
+      var tag = tt.train < 1e-3 && an.model.lam < 1e-3 ? "overfitting" : (tt.train > 0.2 ? "underfitting" : "regularised");
+      halo(g, tag, 70, 56, LABFB, tag==="overfitting"?C.red:(tag==="underfitting"?C.amber:C.green));
+    },
+    readout:function(m){
+      var w = polyFit(SX,SY,9,m.lam), tt = trainTest(w);
+      return { lam: m.lam >= 0.01 ? fx(m.lam,2) : m.lam.toExponential(0), train:fx(tt.train,4), test:fx(tt.test,4) };
+    },
+    readKeys:[{id:"lam",label:"λ"},{id:"train",label:"train MSE"},{id:"test",label:"test MSE"}]
+  });
+  var c = a.ctlEl;
+  var gl = grpEl("λ");
+  /* log slider from 1e-6 to 10 */
+  gl.appendChild(sldEl(-6, 1, 0.1, -4, function(v){
+    return Math.pow(10,v).toExponential(0);
+  }, function(v){
+    a.model.lam = Math.pow(10,v); a.paint();
+  }));
+  c.appendChild(gl);
+  a.resize();
+  return a;
+}
+
+var ANIM_BUILDERS = { a1:buildA1, a2:buildA2, a3:buildA3, a4:buildA4, a5:buildA5, a6:buildA6 };
+function buildAllAnims(){
+  each(document.querySelectorAll("[data-anim]"), function(host){
+    var id = host.getAttribute("data-anim");
+    if(!ANIM_BUILDERS[id]){ return; }
+    ANIM_BUILDERS[id](host);
+  });
+}
+function destroyAnims(){
+  ANIMS.forEach(function(a){ a.destroy(); });
+  ANIMS.length = 0;
+}
+function freezeAnims(){
+  ANIMS.forEach(function(a){
+    a.pause();
+    a.paint();
+    var url = null;
+    try{ url = a.cv.toDataURL("image/png"); }catch(e){ url = null; }
+    if(url){
+      if(!a.shot){
+        a.shot = document.createElement("img");
+        a.shot.className = "printshot";
+        a.wrapEl.appendChild(a.shot);
+      }
+      a.shot.src = url;
+      a.frozen = true;
+    }
+  });
+}
+function thawAnims(){
+  ANIMS.forEach(function(a){ a.frozen = false; a.paint(); });
+}
+
+function runSelfTest(){
+  var groups = [], failures = [];
+  function G(name, fn){
+    var errs = [];
+    function eq(label, got, want, tol){
+      var t = (tol === undefined) ? 1e-9 : tol;
+      if(typeof got === "number" && typeof want === "number"){
+        if(!(Math.abs(got - want) <= t)){ errs.push(label + ": expected " + want + ", got " + got); }
+      }else if(String(got) !== String(want)){
+        errs.push(label + ": expected " + want + ", got " + got);
+      }
+    }
+    function ok(label, cond){ if(!cond){ errs.push(label); } }
+    try{ fn(eq, ok); } catch(e){ errs.push("threw: " + e.message); }
+    groups.push({name:name, errs:errs});
+    if(errs.length){ failures.push({name:name, errs:errs}); }
+  }
+  G("1. three-point arithmetic", function(eq){
+    eq("mean", PT_MEAN, 1);
+    eq("const train", PT_CONST_TR, 0.6667, 5e-4);
+    eq("lin train", PT_LIN_TR, 0.5, 5e-4);
+    eq("quad(3)", quad(3), -5, 1e-9);
+    eq("quad(-1)", quad(-1), -3, 1e-9);
+    eq("const te", PT_CONST_TE, 1.25, 5e-4);
+    eq("lin te", PT_LIN_TE, 0.25, 5e-4);
+    eq("quad te", PT_QUAD_TE, 30.25, 5e-4);
+  });
+  G("2. bias-variance table", function(eq){
+    eq("A bias2", STAT_A.bias2, 4);
+    eq("A var", STAT_A.var, 0);
+    eq("A risk", STAT_A.risk, 5);
+    eq("B mean", STAT_B.mean, 5);
+    eq("B var", STAT_B.var, 0.6667, 5e-4);
+    eq("B risk", STAT_B.risk, 1.6667, 5e-4);
+    eq("C bias2", STAT_C.bias2, 0.25, 5e-4);
+    eq("C var", STAT_C.var, 0.1667, 5e-4);
+    eq("C risk", STAT_C.risk, 1.4167, 5e-4);
+  });
+  G("3. blanks well formed", function(eq, ok){
+    var seen = {}, referenced = {};
+    BLANKS.forEach(function(B){
+      ok("duplicate " + B.id, !seen[B.id]); seen[B.id] = true;
+      ok(B.id + " correct in options", B.options.indexOf(B.correct) >= 0);
+      B.options.forEach(function(o){
+        if(o === B.correct){ return; }
+        ok(B.id + " hint for " + o, !!(B.hints && B.hints[o]));
+      });
+    });
+    function walk(blocks){
+      blocks.forEach(function(b){
+        if(b.t === "blank"){ referenced[b.id] = true; }
+        if(b.t === "blanks"){ b.ids.forEach(function(i){ referenced[i] = true; }); }
+      });
+    }
+    SECTIONS.forEach(function(s){ walk(s.blocks); });
+    BLANKS.forEach(function(B){ ok("placed " + B.id, !!referenced[B.id]); });
+    Object.keys(referenced).forEach(function(id){ ok("exists " + id, !!BYID[id]); });
+  });
+  G("4. MCQs well formed", function(eq, ok){
+    var n = 0;
+    function walk(blocks){
+      blocks.forEach(function(b){
+        if(b.t !== "mcq"){ return; }
+        n++;
+        ok("range " + b.tag, b.answer >= 0 && b.answer < b.opts.length);
+        b.opts.forEach(function(o,i){
+          if(i === b.answer){ ok(b.tag + " correct has no hint", !o.hint); }
+          else { ok(b.tag + " wrong has hint", !!(o.hint && o.hint.length)); }
+        });
+      });
+    }
+    SECTIONS.forEach(function(s){ walk(s.blocks); });
+    eq("mcq count", n, 14);
+  });
+  G("5. glossary keys used exist", function(eq, ok){
+    var ids = {};
+    Object.keys(GLOSS).forEach(function(k){ ids[k] = false; });
+    var blob = JSON.stringify(SECTIONS) + JSON.stringify(BLANKS);
+    blob.replace(/\{t:([a-z0-9_]+)\}/g, function(_,k){
+      ok("unknown term " + k, !!GLOSS[k]);
+      ids[k] = true;
+      return _;
+    });
+  });
+  G("6. progress denominator", function(eq){
+    eq("counted", TOTAL_BLANKS, BLANKS.filter(function(B){ return B.counts !== false; }).length);
+  });
+  var passed = groups.length - failures.length;
+  if(!failures.length){
+    console.log("SELF-TEST: " + passed + "/" + groups.length + " groups passed");
+  }else{
+    console.error("SELF-TEST: " + passed + "/" + groups.length + " failed");
+    failures.forEach(function(f){
+      console.error("  " + f.name);
+      f.errs.forEach(function(e){ console.error("      " + e); });
+    });
+  }
+  return { total:groups.length, passed:passed, failures:failures, blanks:TOTAL_BLANKS };
+}
+
+render();
+applyCollapse();
+initChrome();
+window.SELFTEST = runSelfTest();
+
+</script>
+</body>
+</html>
