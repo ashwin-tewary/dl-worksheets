@@ -5,7 +5,7 @@ css = (root / "_extracted.css").read_text(encoding="utf-8")
 extra = r"""
 /* ---------- info bubbles on theory terms ---------- */
 .termwrap{position:relative;display:inline;white-space:nowrap}
-.term{border-bottom:1.2px dotted var(--amber);color:var(--ink);font-weight:650;cursor:help}
+.term{border-bottom:1.2px dotted var(--amber);color:var(--ink);font-weight:650;cursor:pointer}
 .ibub{
   display:inline-flex;align-items:center;justify-content:center;
   width:15px;height:15px;margin:0 1px 0 3px;padding:0;vertical-align:4px;

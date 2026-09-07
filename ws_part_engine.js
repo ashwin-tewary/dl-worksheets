@@ -19,20 +19,72 @@ var MACRO = {
   yhat  : "<span class=\"nota\"><i>ŷ</i></span>",
   fbar  : "<span class=\"nota\"><i>f̄</i></span>"
 };
-function termHTML(id){
+function termHTML(id, display){
   var g = GLOSS[id];
-  if(!g){ return "<span class=\"term\">" + id + "</span>"; }
+  if(!g){ return "<span class=\"term\">" + (display || id) + "</span>"; }
+  var label = display || g.term;
   return "<span class=\"termwrap\" data-term=\"" + id + "\">" +
-    "<span class=\"term\">" + g.term + "</span>" +
+    "<span class=\"term\">" + label + "</span>" +
     "<button type=\"button\" class=\"ibub\" aria-expanded=\"false\" aria-label=\"About " + g.term + "\">i</button>" +
     "</span>";
 }
-function M(s){
+/* Longest phrases first so “bias–variance” is not split into bias + variance. */
+var TERM_PATTERNS = [
+  {id:"bias_variance", re:/bias[–-]variance(?:\s+trade-?offs?)?/gi},
+  {id:"generalisation_gap", re:/generali[sz]ation gap/gi},
+  {id:"interpolation_threshold", re:/interpolation threshold/gi},
+  {id:"hypothesis_class", re:/hypothesis classes?/gi},
+  {id:"effective_parameters", re:/effective parameters?/gi},
+  {id:"irreducible_error", re:/irreducible error/gi},
+  {id:"expected_risk", re:/expected risk/gi},
+  {id:"training_loss", re:/training loss/gi},
+  {id:"validation_set", re:/validation sets?/gi},
+  {id:"weight_decay", re:/weight decay/gi},
+  {id:"early_stopping", re:/early stopping/gi},
+  {id:"mse", re:/mean squared error/gi},
+  {id:"least_squares", re:/least squares/gi},
+  {id:"inductive_bias", re:/inductive bias/gi},
+  {id:"double_descent", re:/double descent/gi},
+  {id:"test_loss", re:/test loss/gi},
+  {id:"overparameterised", re:/overparameteri[sz]ed/gi},
+  {id:"hyperparameters", re:/hyperparameters?/gi},
+  {id:"underfitting", re:/underfitting/gi},
+  {id:"overfitting", re:/overfitting/gi},
+  {id:"generalisation", re:/generali[sz]ation/gi},
+  {id:"interpolation", re:/interpolation/gi},
+  {id:"memorisation", re:/memori[sz]ation/gi},
+  {id:"regularisation", re:/regulari[sz]ation/gi},
+  {id:"capacity", re:/\bcapacity\b/gi},
+  {id:"variance", re:/\bvariances?\b/gi},
+  {id:"bias", re:/\bbiase?s?\b/gi}
+];
+function linkTerms(html){
+  if(!html || typeof GLOSS === "undefined"){ return html; }
+  var held = [];
+  html = String(html).replace(/<span class="termwrap"[\s\S]*?<\/button><\/span>/g, function(m){
+    held.push(m);
+    return "@@TERM" + (held.length - 1) + "@@";
+  });
+  html = html.replace(/(<[^>]+>)|([^<]+)/g, function(all, tag, text){
+    if(tag){ return tag; }
+    var out = text;
+    TERM_PATTERNS.forEach(function(p){
+      if(!GLOSS[p.id]){ return; }
+      out = out.replace(p.re, function(m){ return termHTML(p.id, m); });
+    });
+    return out;
+  });
+  return html.replace(/@@TERM(\d+)@@/g, function(_, n){ return held[+n]; });
+}
+function M(s, opts){
+  opts = opts || {};
   s = String(s).replace(/\{([^|{}]*)\|([^|{}]*)\|([^|{}]*)\}/g,
         function(all,sym,sup,sub){ return nota(sym,sup,sub); });
   s = s.replace(/\{t:([a-z0-9_]+)\}/g, function(all, id){ return termHTML(id); });
-  return s.replace(/\{([A-Za-z][A-Za-z0-9]*)\}/g,
+  s = s.replace(/\{([A-Za-z][A-Za-z0-9]*)\}/g,
         function(all,k){ return Object.prototype.hasOwnProperty.call(MACRO,k) ? MACRO[k] : all; });
+  if(opts.link !== false){ s = linkTerms(s); }
+  return s;
 }
 function mk(tag,cls,html){
   var e = document.createElement(tag);

@@ -26,8 +26,9 @@ function chipsFor(B, host){
   chips.setAttribute("role","group");
   chips.setAttribute("aria-label","options for this blank");
   B.shuffled.forEach(function(opt){
-    var btn = mk("button","chip" + (B.wide ? " prose" : ""), opt);
+    var btn = mk("button","chip" + (B.wide ? " prose" : ""));
     btn.type = "button";
+    btn.innerHTML = M(opt, {link:false});
     btn._opt = opt;
     btn.addEventListener("click", function(){ onChip(B, opt, btn, host); });
     chips.appendChild(btn);
@@ -46,7 +47,7 @@ function buildStep(B){
   if(B.prompt){
     var ml = mk("div","mathline");
     ml.innerHTML = (B.verb ? "<span class=\"verb\">" + B.verb + "</span>" : "") +
-                   M(B.prompt).replace("{{slot}}", slotHTML(B));
+                   M(B.prompt).replace(/\{\{slot\}\}|\{slot\}/g, slotHTML(B));
     st.appendChild(ml);
   }
   st.appendChild(chipsFor(B, st));
@@ -89,9 +90,9 @@ function buildMCQ(blk){
     var b = mk("button","opt");
     b.type = "button";
     b.setAttribute("data-i", i);
-    b.setAttribute("data-hint", M(o.hint || ""));
+        b.setAttribute("data-hint", M(o.hint || "", {link:false}));
     b.innerHTML = "<span class=\"ltr\">" + "ABCDEFG".charAt(i) + "</span><span class=\"txt\">" +
-                  M(o.txt) + "</span>";
+                  M(o.txt, {link:false}) + "</span>";
     opts.appendChild(b);
   });
   box.appendChild(opts);
@@ -268,7 +269,7 @@ function buildOverlay(){
       (g.formula ? "<div class=\"bf\">" + g.formula + "</div>" : "") +
       "<div class=\"bs\">" + g.see + "</div></div>";
   });
-  ovb.innerHTML = M(html);
+  ovb.innerHTML = M(html, {link:false});
 }
 
 function fly(btn, slot, done){
@@ -319,7 +320,7 @@ function commit(B, mode){
   var slot = document.getElementById("slot-" + B.id);
   if(slot){
     slot.className = "slot" + (B.wide ? " wide" : "") + " " + (mode === "ok" ? "ok" : "shown");
-    slot.innerHTML = "<span class=\"slotin pop\">" + M(B.correct) + "</span>";
+    slot.innerHTML = "<span class=\"slotin pop\">" + M(B.correct, {link:false}) + "</span>";
   }
   if(host){
     each(host.querySelectorAll(".chip"), function(c){
@@ -466,11 +467,10 @@ function openBubble(wrap){
 }
 function wireBubbles(){
   document.addEventListener("click", function(ev){
-    var btn = ev.target.closest(".ibub");
-    if(btn){
+    var wrap = ev.target.closest(".termwrap");
+    if(wrap && (ev.target.closest(".ibub") || ev.target.closest(".term"))){
       ev.preventDefault();
       ev.stopPropagation();
-      var wrap = btn.closest(".termwrap");
       var open = wrap.classList.contains("open");
       closeBubbles();
       if(!open){ openBubble(wrap); }
@@ -1163,6 +1163,9 @@ function runSelfTest(){
     BLANKS.forEach(function(B){
       ok("duplicate " + B.id, !seen[B.id]); seen[B.id] = true;
       ok(B.id + " correct in options", B.options.indexOf(B.correct) >= 0);
+      if(B.prompt){
+        ok(B.id + " prompt contains {{slot}}", B.prompt.indexOf("{{slot}}") >= 0);
+      }
       B.options.forEach(function(o){
         if(o === B.correct){ return; }
         ok(B.id + " hint for " + o, !!(B.hints && B.hints[o]));

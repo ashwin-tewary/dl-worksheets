@@ -465,7 +465,7 @@ img.printshot{display:none}
 
 /* ---------- info bubbles on theory terms ---------- */
 .termwrap{position:relative;display:inline;white-space:nowrap}
-.term{border-bottom:1.2px dotted var(--amber);color:var(--ink);font-weight:650;cursor:help}
+.term{border-bottom:1.2px dotted var(--amber);color:var(--ink);font-weight:650;cursor:pointer}
 .ibub{
   display:inline-flex;align-items:center;justify-content:center;
   width:15px;height:15px;margin:0 1px 0 3px;padding:0;vertical-align:4px;
@@ -566,20 +566,72 @@ var MACRO = {
   yhat  : "<span class=\"nota\"><i>ŷ</i></span>",
   fbar  : "<span class=\"nota\"><i>f̄</i></span>"
 };
-function termHTML(id){
+function termHTML(id, display){
   var g = GLOSS[id];
-  if(!g){ return "<span class=\"term\">" + id + "</span>"; }
+  if(!g){ return "<span class=\"term\">" + (display || id) + "</span>"; }
+  var label = display || g.term;
   return "<span class=\"termwrap\" data-term=\"" + id + "\">" +
-    "<span class=\"term\">" + g.term + "</span>" +
+    "<span class=\"term\">" + label + "</span>" +
     "<button type=\"button\" class=\"ibub\" aria-expanded=\"false\" aria-label=\"About " + g.term + "\">i</button>" +
     "</span>";
 }
-function M(s){
+/* Longest phrases first so “bias–variance” is not split into bias + variance. */
+var TERM_PATTERNS = [
+  {id:"bias_variance", re:/bias[–-]variance(?:\s+trade-?offs?)?/gi},
+  {id:"generalisation_gap", re:/generali[sz]ation gap/gi},
+  {id:"interpolation_threshold", re:/interpolation threshold/gi},
+  {id:"hypothesis_class", re:/hypothesis classes?/gi},
+  {id:"effective_parameters", re:/effective parameters?/gi},
+  {id:"irreducible_error", re:/irreducible error/gi},
+  {id:"expected_risk", re:/expected risk/gi},
+  {id:"training_loss", re:/training loss/gi},
+  {id:"validation_set", re:/validation sets?/gi},
+  {id:"weight_decay", re:/weight decay/gi},
+  {id:"early_stopping", re:/early stopping/gi},
+  {id:"mse", re:/mean squared error/gi},
+  {id:"least_squares", re:/least squares/gi},
+  {id:"inductive_bias", re:/inductive bias/gi},
+  {id:"double_descent", re:/double descent/gi},
+  {id:"test_loss", re:/test loss/gi},
+  {id:"overparameterised", re:/overparameteri[sz]ed/gi},
+  {id:"hyperparameters", re:/hyperparameters?/gi},
+  {id:"underfitting", re:/underfitting/gi},
+  {id:"overfitting", re:/overfitting/gi},
+  {id:"generalisation", re:/generali[sz]ation/gi},
+  {id:"interpolation", re:/interpolation/gi},
+  {id:"memorisation", re:/memori[sz]ation/gi},
+  {id:"regularisation", re:/regulari[sz]ation/gi},
+  {id:"capacity", re:/\bcapacity\b/gi},
+  {id:"variance", re:/\bvariances?\b/gi},
+  {id:"bias", re:/\bbiase?s?\b/gi}
+];
+function linkTerms(html){
+  if(!html || typeof GLOSS === "undefined"){ return html; }
+  var held = [];
+  html = String(html).replace(/<span class="termwrap"[\s\S]*?<\/button><\/span>/g, function(m){
+    held.push(m);
+    return "@@TERM" + (held.length - 1) + "@@";
+  });
+  html = html.replace(/(<[^>]+>)|([^<]+)/g, function(all, tag, text){
+    if(tag){ return tag; }
+    var out = text;
+    TERM_PATTERNS.forEach(function(p){
+      if(!GLOSS[p.id]){ return; }
+      out = out.replace(p.re, function(m){ return termHTML(p.id, m); });
+    });
+    return out;
+  });
+  return html.replace(/@@TERM(\d+)@@/g, function(_, n){ return held[+n]; });
+}
+function M(s, opts){
+  opts = opts || {};
   s = String(s).replace(/\{([^|{}]*)\|([^|{}]*)\|([^|{}]*)\}/g,
         function(all,sym,sup,sub){ return nota(sym,sup,sub); });
   s = s.replace(/\{t:([a-z0-9_]+)\}/g, function(all, id){ return termHTML(id); });
-  return s.replace(/\{([A-Za-z][A-Za-z0-9]*)\}/g,
+  s = s.replace(/\{([A-Za-z][A-Za-z0-9]*)\}/g,
         function(all,k){ return Object.prototype.hasOwnProperty.call(MACRO,k) ? MACRO[k] : all; });
+  if(opts.link !== false){ s = linkTerms(s); }
+  return s;
 }
 function mk(tag,cls,html){
   var e = document.createElement(tag);
@@ -919,14 +971,14 @@ var GLOSS = {
 
 var BLANKS = [
 {id:"G1", sec:1, wide:true,
- prompt:"Training loss is computed on points the model {slot}.",
+ prompt:"Training loss is computed on points the model {{slot}}.",
  need:["the definition of training vs test"],
  correct:"was allowed to fit",
  options:["was allowed to fit","must never see","are drawn from a different task"],
  hints:{"must never see":"That is the test (or validation) set. Training loss is the number the optimiser sees.",
         "are drawn from a different task":"Train and test are assumed to come from the same process. That is the whole point of generalisation."}},
 {id:"G2", sec:1, wide:true,
- prompt:"Test loss estimates {slot}.",
+ prompt:"Test loss estimates {{slot}}.",
  need:["why we hold data out"],
  correct:"expected risk on new draws from the same process",
  options:["expected risk on new draws from the same process",
@@ -978,7 +1030,7 @@ var BLANKS = [
         "1.0000":"You averaged |residual| or took 3/3. Squares: (0+1+1)/3.",
         "2.0000":"You summed the squares and forgot to divide by 3."}},
 {id:"U4", sec:2, wide:true,
- prompt:"The constant cannot follow the dip from y = 2 down to y = 0. That limitation is {slot}.",
+ prompt:"The constant cannot follow the dip from y = 2 down to y = 0. That limitation is {{slot}}.",
  need:["L_train = 0.6667 is not zero"],
  correct:"bias: the class is too small",
  options:["bias: the class is too small",
@@ -1037,7 +1089,7 @@ var BLANKS = [
         "−5.5000":"A square cannot be negative.",
         "0.2500":"That would be (0.5 − 0)², as if ŷ were 0."}},
 {id:"O5", sec:3, wide:true,
- prompt:"Train MSE of the quadratic is 0. Test squared error at x = 3 is 30.25. This pattern is {slot}.",
+ prompt:"Train MSE of the quadratic is 0. Test squared error at x = 3 is 30.25. This pattern is {{slot}}.",
  need:["the quadratic interpolates the three training points"],
  correct:"overfitting: the extra wiggle missed the new x",
  options:["overfitting: the extra wiggle missed the new x",
@@ -1064,7 +1116,7 @@ var BLANKS = [
         "2":"Square it, do not take abs.",
         "0":"Only if the bias were zero."}},
 {id:"B3", sec:4, wide:true,
- prompt:"Variance of model A across D₁, D₂, D₃ is {slot}.",
+ prompt:"Variance of model A across D₁, D₂, D₃ is {{slot}}.",
  need:["ŷ is 3, 3, 3"],
  correct:"0, because the prediction never moves",
  options:["0, because the prediction never moves",
@@ -1112,7 +1164,7 @@ var BLANKS = [
         "1.0000":"That is σ² alone.",
         "5.0000":"That is model A's risk."}},
 {id:"B8", sec:4, wide:true,
- prompt:"Model C shrinks each y toward 4: ŷ = ½ y + ½·4. Compared with B it should have {slot}.",
+ prompt:"Model C shrinks each y toward 4: ŷ = ½ y + ½·4. Compared with B it should have {{slot}}.",
  need:["C's predictions are 4.0, 5.0, 4.5"],
  correct:"more bias, less variance",
  options:["more bias, less variance",
@@ -1123,7 +1175,7 @@ var BLANKS = [
         "the same bias and variance as B":"The three numbers 4, 5, 4.5 are a tighter cluster than 4, 6, 5, and their mean is 4.5, not 5.",
         "zero bias and zero variance":"Only a constant equal to μ would do that, and we cannot know μ in advance."}},
 {id:"D1", sec:6, wide:true,
- prompt:"The interpolation threshold is the model size where {slot}.",
+ prompt:"The interpolation threshold is the model size where {{slot}}.",
  need:["P is the number of parameters","N is the number of training points"],
  correct:"P first reaches N and train loss can hit zero",
  options:["P first reaches N and train loss can hit zero",
@@ -1134,7 +1186,7 @@ var BLANKS = [
         "bias becomes zero":"An interpolator of noise is not unbiased for f.",
         "σ² becomes zero":"Noise in y does not care how many parameters you use."}},
 {id:"D2", sec:6, wide:true,
- prompt:"Past the threshold, adding parameters can {slot}. That is the second descent.",
+ prompt:"Past the threshold, adding parameters can {{slot}}. That is the second descent.",
  need:["the classical U-shape stops at interpolation"],
  correct:"lower test loss even though train loss is already ~ 0",
  options:["lower test loss even though train loss is already ~ 0",
@@ -1145,7 +1197,7 @@ var BLANKS = [
         "delete the irreducible error":"σ² is a property of the process, not of P.",
         "turn variance into bias":"The decomposition still adds. What changes is which interpolator you select."}},
 {id:"R1", sec:7, wide:true,
- prompt:"A validation set is for {slot}.",
+ prompt:"A validation set is for {{slot}}.",
  need:["θ is fit on training data"],
  correct:"choosing hyperparameters without touching the test set",
  options:["choosing hyperparameters without touching the test set",
@@ -1498,8 +1550,9 @@ function chipsFor(B, host){
   chips.setAttribute("role","group");
   chips.setAttribute("aria-label","options for this blank");
   B.shuffled.forEach(function(opt){
-    var btn = mk("button","chip" + (B.wide ? " prose" : ""), opt);
+    var btn = mk("button","chip" + (B.wide ? " prose" : ""));
     btn.type = "button";
+    btn.innerHTML = M(opt, {link:false});
     btn._opt = opt;
     btn.addEventListener("click", function(){ onChip(B, opt, btn, host); });
     chips.appendChild(btn);
@@ -1518,7 +1571,7 @@ function buildStep(B){
   if(B.prompt){
     var ml = mk("div","mathline");
     ml.innerHTML = (B.verb ? "<span class=\"verb\">" + B.verb + "</span>" : "") +
-                   M(B.prompt).replace("{{slot}}", slotHTML(B));
+                   M(B.prompt).replace(/\{\{slot\}\}|\{slot\}/g, slotHTML(B));
     st.appendChild(ml);
   }
   st.appendChild(chipsFor(B, st));
@@ -1561,9 +1614,9 @@ function buildMCQ(blk){
     var b = mk("button","opt");
     b.type = "button";
     b.setAttribute("data-i", i);
-    b.setAttribute("data-hint", M(o.hint || ""));
+        b.setAttribute("data-hint", M(o.hint || "", {link:false}));
     b.innerHTML = "<span class=\"ltr\">" + "ABCDEFG".charAt(i) + "</span><span class=\"txt\">" +
-                  M(o.txt) + "</span>";
+                  M(o.txt, {link:false}) + "</span>";
     opts.appendChild(b);
   });
   box.appendChild(opts);
@@ -1740,7 +1793,7 @@ function buildOverlay(){
       (g.formula ? "<div class=\"bf\">" + g.formula + "</div>" : "") +
       "<div class=\"bs\">" + g.see + "</div></div>";
   });
-  ovb.innerHTML = M(html);
+  ovb.innerHTML = M(html, {link:false});
 }
 
 function fly(btn, slot, done){
@@ -1791,7 +1844,7 @@ function commit(B, mode){
   var slot = document.getElementById("slot-" + B.id);
   if(slot){
     slot.className = "slot" + (B.wide ? " wide" : "") + " " + (mode === "ok" ? "ok" : "shown");
-    slot.innerHTML = "<span class=\"slotin pop\">" + M(B.correct) + "</span>";
+    slot.innerHTML = "<span class=\"slotin pop\">" + M(B.correct, {link:false}) + "</span>";
   }
   if(host){
     each(host.querySelectorAll(".chip"), function(c){
@@ -1938,11 +1991,10 @@ function openBubble(wrap){
 }
 function wireBubbles(){
   document.addEventListener("click", function(ev){
-    var btn = ev.target.closest(".ibub");
-    if(btn){
+    var wrap = ev.target.closest(".termwrap");
+    if(wrap && (ev.target.closest(".ibub") || ev.target.closest(".term"))){
       ev.preventDefault();
       ev.stopPropagation();
-      var wrap = btn.closest(".termwrap");
       var open = wrap.classList.contains("open");
       closeBubbles();
       if(!open){ openBubble(wrap); }
@@ -2635,6 +2687,9 @@ function runSelfTest(){
     BLANKS.forEach(function(B){
       ok("duplicate " + B.id, !seen[B.id]); seen[B.id] = true;
       ok(B.id + " correct in options", B.options.indexOf(B.correct) >= 0);
+      if(B.prompt){
+        ok(B.id + " prompt contains {{slot}}", B.prompt.indexOf("{{slot}}") >= 0);
+      }
       B.options.forEach(function(o){
         if(o === B.correct){ return; }
         ok(B.id + " hint for " + o, !!(B.hints && B.hints[o]));
