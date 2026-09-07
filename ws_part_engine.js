@@ -78,12 +78,14 @@ function linkTerms(html){
 }
 function M(s, opts){
   opts = opts || {};
-  s = String(s).replace(/\{([^|{}]*)\|([^|{}]*)\|([^|{}]*)\}/g,
+  s = String(s).replace(/\{\{\s*slot\s*\}\}|\{\s*slot\s*\}/g, "\uE000SLOT\uE001");
+  s = s.replace(/\{([^|{}]*)\|([^|{}]*)\|([^|{}]*)\}/g,
         function(all,sym,sup,sub){ return nota(sym,sup,sub); });
   s = s.replace(/\{t:([a-z0-9_]+)\}/g, function(all, id){ return termHTML(id); });
   s = s.replace(/\{([A-Za-z][A-Za-z0-9]*)\}/g,
         function(all,k){ return Object.prototype.hasOwnProperty.call(MACRO,k) ? MACRO[k] : all; });
   if(opts.link !== false){ s = linkTerms(s); }
+  if(opts.slotHTML){ s = s.split("\uE000SLOT\uE001").join(opts.slotHTML); }
   return s;
 }
 function mk(tag,cls,html){

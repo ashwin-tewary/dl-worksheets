@@ -40,14 +40,32 @@ function hintboxEl(){
   hb.setAttribute("aria-live","polite");
   return hb;
 }
+function stashPlaceholders(s){
+  var held = [];
+  s = String(s).replace(/\{\{\s*([A-Za-z0-9]+)\s*\}\}|\{\s*(slot)\s*\}/g, function(all, a, b){
+    held.push(a || b);
+    return "\uE000" + (held.length - 1) + "\uE001";
+  });
+  return {s:s, held:held};
+}
+function fillPlaceholders(html, held, lookup){
+  html = String(html).replace(/\uE000SLOT\uE001/g, function(){ return lookup("slot"); });
+  html = html.replace(/\uE000(\d+)\uE001/g, function(_, n){
+    return lookup(held[+n]);
+  });
+  return html.replace(/\{\{\s*slot\s*\}\}|\{\s*slot\s*\}/g, function(){
+    return lookup("slot");
+  });
+}
 function buildStep(B){
   var st = mk("div","step blk");
   st.setAttribute("data-blank", B.id);
   if(B.need && B.need.length){ st.appendChild(needEl(B.need)); }
   if(B.prompt){
     var ml = mk("div","mathline");
-    ml.innerHTML = (B.verb ? "<span class=\"verb\">" + B.verb + "</span>" : "") +
-                   M(B.prompt).replace(/\{\{slot\}\}|\{slot\}/g, slotHTML(B));
+    var stashed = stashPlaceholders(B.prompt);
+    var html = fillPlaceholders(M(stashed.s, {slotHTML: slotHTML(B)}), stashed.held, function(){ return slotHTML(B); });
+    ml.innerHTML = (B.verb ? "<span class=\"verb\">" + B.verb + "</span>" : "") + html;
     st.appendChild(ml);
   }
   st.appendChild(chipsFor(B, st));
@@ -55,12 +73,13 @@ function buildStep(B){
   return st;
 }
 function buildRow(blk, ctr, sec, gate){
-  var st = mk("div","step blk"), ml = mk("div","mathline"), html = M(blk.prompt), i;
+  var st = mk("div","step blk"), ml = mk("div","mathline");
+  var stashed = stashPlaceholders(blk.prompt);
+  var html = fillPlaceholders(M(stashed.s), stashed.held, function(name){
+    return slotHTML(BYID[name] || BYID[blk.ids[0]]);
+  });
   st.setAttribute("data-row", blk.ids.join(","));
   if(blk.need && blk.need.length){ st.appendChild(needEl(blk.need)); }
-  for(i=0;i<blk.ids.length;i++){
-    html = html.replace("{{" + blk.ids[i] + "}}", slotHTML(BYID[blk.ids[i]]));
-  }
   ml.innerHTML = (blk.verb ? "<span class=\"verb\">" + blk.verb + "</span>" : "") + html;
   st.appendChild(ml);
   var subs = mk("div","subs");
@@ -1209,6 +1228,13 @@ function runSelfTest(){
   });
   G("6. progress denominator", function(eq){
     eq("counted", TOTAL_BLANKS, BLANKS.filter(function(B){ return B.counts !== false; }).length);
+  });
+  G("7. slots rendered, no leftover tokens", function(eq, ok){
+    ok("G1 slot in the DOM", !!document.getElementById("slot-G1"));
+    ok("G2 slot in the DOM", !!document.getElementById("slot-G2"));
+    var t = document.getElementById("doc").innerText;
+    ok("no {slot} left in the sheet", t.indexOf("{slot}") < 0);
+    ok("no {{slot}} left in the sheet", t.indexOf("{{slot}}") < 0);
   });
   var passed = groups.length - failures.length;
   if(!failures.length){
