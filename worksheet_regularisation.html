@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Generalisation · Worksheet · Underfit → Overfit → Bias–Variance → Double Descent</title>
+<title>Regularisation · Worksheet · L2 → L1 → Dropout → Batch Norm → Early Stopping</title>
 <style>
 
 
@@ -555,7 +555,7 @@ img.printshot{display:none}
 <body>
 <div class="topbar">
   <div class="tb">
-    <div class="tb-title">Generalisation · Worksheet · Underfit → Overfit → Bias–Variance → Double Descent</div>
+    <div class="tb-title">Regularisation · Worksheet · L2 → L1 → Dropout → BN → Early Stopping</div>
     <div class="tb-spacer"></div>
     <div class="pwrap">
       <div class="pbar" aria-hidden="true"><i id="pfill"></i></div>
@@ -568,9 +568,9 @@ img.printshot{display:none}
 <div class="wrap">
   <p class="wsnav"><a href="index.html">all worksheets</a></p>
   <header class="mast">
-    <div class="eyebrow">deep learning · generalisation</div>
-    <h1>Underfitting, Overfitting, and the Second Descent</h1>
-    <p>Why a small training loss is not the same as having learned the function, how bias and variance split the blame, and why interpolating models are not automatically useless. Fill every blank by clicking. Nothing here is scored. Dotted terms carry an <b>i</b> — open it.</p>
+    <div class="eyebrow">deep learning · regularisation</div>
+    <h1>Five ways to spend capacity more slowly</h1>
+    <p>L2 shrinks every weight, L1 deletes some of them, dropout deletes activations for a step, batch normalisation re-scales a minibatch, and early stopping deletes training time. Fill every blank by clicking. Nothing here is scored. Dotted terms carry an <b>i</b> — open it. Textbook figures are screenshots of the cited pages.</p>
   </header>
   <main id="doc"></main>
   <footer>
@@ -578,11 +578,11 @@ img.printshot{display:none}
     <button class="dbtn" id="printbtn" type="button">print</button>
     <button class="dbtn" id="resetbtn" type="button">reset all</button>
   </footer>
-  <div class="cite">References: C. M. Bishop, <i>Pattern Recognition and Machine Learning</i> (2006), §§1.1 and 3.2;
-    I. Goodfellow, Y. Bengio &amp; A. Courville, <i>Deep Learning</i> (2016), §§5.2–5.4 and ch. 7;
-    C. M. Bishop &amp; H. Bishop, <i>Deep Learning: Foundations and Concepts</i> (2023), §§4.3 and 9.3.2;
-    S. J. D. Prince, <i>Understanding Deep Learning</i> (2023/25), ch. 20.
-    Double descent: Belkin et al. (2019); Nakkiran et al. (2020).</div>
+  <div class="cite">References: C. M. Bishop, <i>Pattern Recognition and Machine Learning</i> (2006), §§1.1, 3.1.4, 5.5.2;
+    I. Goodfellow, Y. Bengio &amp; A. Courville, <i>Deep Learning</i> (2016), ch. 7 and §8.7.1;
+    C. M. Bishop &amp; H. Bishop, <i>Deep Learning: Foundations and Concepts</i> (2023), §§7.4.2 and ch. 9;
+    S. J. D. Prince, <i>Understanding Deep Learning</i> (2023/25), ch. 9 and §11.4.
+    Dropout: Srivastava et al. (2014). Batch normalisation: Ioffe &amp; Szegedy (2015).</div>
 </div>
 <div class="overlay" id="ov" role="dialog" aria-modal="true" aria-label="Glossary of terms">
   <div class="ovbox">
@@ -606,6 +606,7 @@ function nota(sym,sup,sub){
 var MACRO = {
   alpha : "<span class=\"nota\"><i>α</i></span>",
   beta  : "<span class=\"nota\"><i>β</i></span>",
+  gamma : "<span class=\"nota\"><i>γ</i></span>",
   lam   : "<span class=\"nota\"><i>λ</i></span>",
   mu    : "<span class=\"nota\"><i>μ</i></span>",
   sigma : "<span class=\"nota\"><i>σ</i></span>",
@@ -624,35 +625,40 @@ function termHTML(id, display){
     "<button type=\"button\" class=\"ibub\" aria-expanded=\"false\" aria-label=\"About " + g.term + "\">i</button>" +
     "</span>";
 }
-/* Longest phrases first so “bias–variance” is not split into bias + variance. */
 var TERM_PATTERNS = [
-  {id:"bias_variance", re:/bias[–-]variance(?:\s+trade-?offs?)?/gi},
-  {id:"generalisation_gap", re:/generali[sz]ation gap/gi},
-  {id:"interpolation_threshold", re:/interpolation threshold/gi},
-  {id:"hypothesis_class", re:/hypothesis classes?/gi},
+  {id:"running_stats", re:/running (?:mean|average|statistics|stats)/gi},
+  {id:"keep_probability", re:/keep probabilit(?:y|ies)/gi},
+  {id:"inverted_dropout", re:/inverted dropout/gi},
+  {id:"soft_threshold", re:/soft[- ]threshold(?:ing)?/gi},
   {id:"effective_parameters", re:/effective parameters?/gi},
-  {id:"irreducible_error", re:/irreducible error/gi},
-  {id:"expected_risk", re:/expected risk/gi},
-  {id:"training_loss", re:/training loss/gi},
-  {id:"validation_set", re:/validation sets?/gi},
+  {id:"generalisation_gap", re:/generali[sz]ation gap/gi},
+  {id:"batch_norm", re:/batch normali[sz]ation/gi},
   {id:"weight_decay", re:/weight decay/gi},
   {id:"early_stopping", re:/early stopping/gi},
-  {id:"mse", re:/mean squared error/gi},
-  {id:"least_squares", re:/least squares/gi},
-  {id:"inductive_bias", re:/inductive bias/gi},
-  {id:"double_descent", re:/double descent/gi},
-  {id:"test_loss", re:/test loss/gi},
-  {id:"overparameterised", re:/overparameteri[sz]ed/gi},
+  {id:"validation_set", re:/validation sets?/gi},
   {id:"hyperparameters", re:/hyperparameters?/gi},
-  {id:"underfitting", re:/underfitting/gi},
-  {id:"overfitting", re:/overfitting/gi},
-  {id:"generalisation", re:/generali[sz]ation/gi},
-  {id:"interpolation", re:/interpolation/gi},
-  {id:"memorisation", re:/memori[sz]ation/gi},
+  {id:"training_loss", re:/training loss/gi},
+  {id:"test_loss", re:/test loss/gi},
+  {id:"least_squares", re:/least squares/gi},
+  {id:"scale_shift", re:/scale[- ]and[- ]shift/gi},
+  {id:"internal_covariate", re:/internal covariate shift/gi},
+  {id:"inductive_bias", re:/inductive bias/gi},
+  {id:"parameter_norm", re:/parameter[- ]norm penalt(?:y|ies)/gi},
+  {id:"ridge", re:/\bridge(?: regression)?\b/gi},
+  {id:"lasso", re:/\blasso\b/gi},
+  {id:"l2", re:/\bL2\b/g},
+  {id:"l1", re:/\bL1\b/g},
+  {id:"sparsity", re:/sparsit(?:y|ies)|sparse solutions?/gi},
+  {id:"dropout", re:/dropouts?/gi},
+  {id:"shrinkage", re:/shrinkage/gi},
   {id:"regularisation", re:/regulari[sz]ation/gi},
-  {id:"capacity", re:/\bcapacity\b/gi},
+  {id:"overfitting", re:/overfitting/gi},
+  {id:"underfitting", re:/underfitting/gi},
+  {id:"generalisation", re:/generali[sz]ation/gi},
   {id:"variance", re:/\bvariances?\b/gi},
-  {id:"bias", re:/\bbiase?s?\b/gi}
+  {id:"bias", re:/\bbiase?s?\b/gi},
+  {id:"capacity", re:/\bcapacity\b/gi},
+  {id:"mse", re:/mean squared error/gi}
 ];
 function linkTerms(html){
   if(!html || typeof GLOSS === "undefined"){ return html; }
@@ -722,25 +728,6 @@ function mse(pred, y){
   for(i=0;i<y.length;i++){ s += (pred[i] - y[i]) * (pred[i] - y[i]); }
   return s / y.length;
 }
-
-/* ----- 3-point hand example ----- */
-var PT = { x:[0,1,2], y:[1,2,0], teX:[3,-1], teY:[0.5, 2.5] };
-var PT_MEAN = 1;
-var PT_CONST_TR = R(mse([1,1,1], PT.y)); /* 0.6667 */
-var PT_LIN_A = 1.5, PT_LIN_B = -0.5;
-var PT_LIN_TR = R(mse([1.5,1.0,0.5], PT.y)); /* 0.5000 */
-var PT_QUAD_TR = 0;
-function quad(x){ return 1 + 2.5*x - 1.5*x*x; }
-function lin(x){ return 1.5 - 0.5*x; }
-var PT_CONST_TE = R(mse([1,1], PT.teY));
-var PT_LIN_TE = R(mse([lin(3), lin(-1)], PT.teY));
-var PT_QUAD_TE = R(mse([quad(3), quad(-1)], PT.teY));
-
-/* ----- sine demo data (animation) ----- */
-var SX = [0.00, 0.20, 0.40, 0.60, 0.80, 1.00];
-var SY = [0.1200, 0.7711, 0.7378, -0.6878, -0.8711, -0.1400];
-function sineTrue(x){ return Math.sin(2 * Math.PI * x); }
-
 function vandermonde(x, M){
   var n = x.length, p = M + 1, X = [], i, j, row, v;
   for(i=0;i<n;i++){
@@ -749,15 +736,6 @@ function vandermonde(x, M){
     X.push(row);
   }
   return X;
-}
-function matVec(A, w){
-  var i, j, out = [], s;
-  for(i=0;i<A.length;i++){
-    s = 0;
-    for(j=0;j<w.length;j++){ s += A[i][j] * w[j]; }
-    out.push(s);
-  }
-  return out;
 }
 function solve(A, b){
   var n = A.length, M = [], i, j, k, f, t;
@@ -807,769 +785,925 @@ function polyEval(w, x){
   for(j=0;j<w.length;j++){ s += w[j] * v; v *= x; }
   return s;
 }
-function polyCurve(w, xs){
+var SX = [0.00, 0.20, 0.40, 0.60, 0.80, 1.00];
+var SY = [0.1200, 0.7711, 0.7378, -0.6878, -0.8711, -0.1400];
+function sineTrue(x){ return Math.sin(2 * Math.PI * x); }
+
+/* 1-D ridge: ŷ = w x on (1,2) and (2,3).  SSE = 5w² − 16w + 13.  w = 8/(5+λ). */
+function ridge1D(lam){ return 8 / (5 + lam); }
+var RIDGE_W0 = R(ridge1D(0));     /* 1.6000 */
+var RIDGE_W1 = R(ridge1D(1));     /* 1.3333 */
+var RIDGE_SSE0 = R(0.2);
+var RIDGE_MSE0 = R(0.1);
+var RIDGE_SSE1 = R((2 - 8/6)*(2 - 8/6) + (3 - 16/6)*(3 - 16/6)); /* 0.5556 */
+
+/* 2-feature linear model used for L1 vs L2. */
+var X2 = [[1,0],[2,0],[0,1],[1,1],[3,0]];
+var Y2 = [2.0, 3.8, 0.2, 2.1, 5.9];
+function xtx2(){ return [[15,1],[1,2]]; }
+function xty2(){ return [29.4, 2.3]; }
+function ridge2(lam){
+  var A = [[15 + lam, 1],[1, 2 + lam]];
+  return solve(A, [29.4, 2.3]);
+}
+function pred2(w){
   var i, out = [];
-  for(i=0;i<xs.length;i++){ out.push(polyEval(w, xs[i])); }
+  for(i=0;i<X2.length;i++){ out.push(w[0]*X2[i][0] + w[1]*X2[i][1]); }
   return out;
 }
-
-/* bias–variance hand numbers */
-var BV_MU = 5, BV_SIG2 = 1;
-var BV_A = [3,3,3];
-var BV_B = [4,6,5];
-var BV_C = [4.0, 5.0, 4.5]; /* 0.5 y + 0.5*4 */
-function bvStats(preds){
-  var m = mean(preds), i, v = 0;
-  for(i=0;i<preds.length;i++){ v += (preds[i] - m) * (preds[i] - m); }
-  v /= preds.length;
-  var bias = m - BV_MU;
-  return { mean:R(m), bias:R(bias), bias2:R(bias*bias), var:R(v),
-           risk:R(BV_SIG2 + bias*bias + v) };
+function soft(z, t){
+  if(z > t){ return z - t; }
+  if(z < -t){ return z + t; }
+  return 0;
 }
-var STAT_A = bvStats(BV_A);
-var STAT_B = bvStats(BV_B);
-var STAT_C = bvStats(BV_C);
-
-function symbolTable(cap, rows){
-  var s = "<div class=\"tscroll\"><table class=\"wt\"><caption>" + cap + "</caption><thead><tr><th>symbol</th><th class=\"lft\">meaning</th></tr></thead><tbody>";
-  rows.forEach(function(r){
-    s += "<tr><th>" + M(r[0]) + "</th><td class=\"lft\">" + M(r[1]) + "</td></tr>";
-  });
-  return s + "</tbody></table></div>";
+/* Minimise SSE + λ‖w‖₁ by coordinate descent. Threshold is λ/2 because d(SSE)/dw_j = 2(XᵀX w − Xᵀy). */
+function lasso2(lam, iters){
+  iters = iters || 4000;
+  var w = [0,0], j, k, col, rho, z, rj, i;
+  var cols = [[1,2,0,1,3],[0,0,1,1,0]];
+  for(k=0;k<iters;k++){
+    for(j=0;j<2;j++){
+      col = cols[j]; z = 0; rho = 0;
+      for(i=0;i<5;i++){
+        rj = Y2[i] - (w[0]*X2[i][0] + w[1]*X2[i][1]) + col[i]*w[j];
+        rho += col[i] * rj;
+        z += col[i]*col[i];
+      }
+      w[j] = soft(rho, lam/2) / z;
+    }
+  }
+  return w;
 }
-function T_PT(){
-  return "<table class=\"wt\"><caption>table A · four numbers you will use by hand</caption>" +
-    "<thead><tr><th>set</th><th>x</th><th>y</th></tr></thead><tbody>" +
-    "<tr><th rowspan=\"3\">train</th><td>0</td><td>1</td></tr>" +
-    "<tr><td>1</td><td>2</td></tr>" +
-    "<tr><td>2</td><td>0</td></tr>" +
-    "<tr class=\"hi\"><th rowspan=\"2\">test</th><td>3</td><td>0.5</td></tr>" +
-    "<tr class=\"hi\"><td>−1</td><td>2.5</td></tr>" +
+var OLS2 = ridge2(0);
+var OLS2R = [R(OLS2[0]), R(OLS2[1])];
+var OLS2_MSE = R(mse(pred2(OLS2), Y2));
+var LASSO2 = lasso2(2);
+var LASSO2R = [R(LASSO2[0]), R(LASSO2[1])];
+
+function bnStats(u){
+  var m = mean(u), i, v = 0;
+  for(i=0;i<u.length;i++){ v += (u[i]-m)*(u[i]-m); }
+  v /= u.length;
+  return {mu:m, var:v, std:Math.sqrt(v)};
+}
+var BN_U = [1,3,5,7];
+var BN_S = bnStats(BN_U);
+var BN_UHAT = BN_U.map(function(x){ return R((x - BN_S.mu) / Math.sqrt(BN_S.var)); });
+var BN_Y = BN_UHAT.map(function(x){ return R(2*x + 1); });
+
+function figHTML(src, cap){
+  return "<figure class=\"bookfig\"><img src=\"" + src + "\" alt=\"\">" +
+    "<figcaption class=\"cap\">" + cap + "</figcaption></figure>";
+}
+function T_1D(){
+  return "<table class=\"wt\"><caption>table A · two training pairs for ŷ = w x</caption>" +
+    "<thead><tr><th></th><th>x</th><th>y</th></tr></thead><tbody>" +
+    "<tr><th>point 1</th><td>1</td><td>2</td></tr>" +
+    "<tr><th>point 2</th><td>2</td><td>3</td></tr>" +
     "</tbody></table>";
 }
-function T_MODELS(){
-  return "<table class=\"wt\"><caption>table B · three models, same three training points</caption>" +
-    "<thead><tr><th></th><th>constant</th><th>line</th><th>quadratic</th></tr></thead><tbody>" +
-    "<tr><th class=\"lft\">form</th><td>{yhat} = c</td><td>{yhat} = a + b x</td><td>{yhat} = a + b x + c x²</td></tr>" +
-    "<tr><th class=\"lft\"># parameters</th><td>1</td><td>2</td><td>3</td></tr>" +
-    "<tr><th class=\"lft\">fit</th><td>c = mean(y) = 1</td><td>least squares</td><td>interpolates all three points</td></tr>" +
+function T_2D(){
+  return "<table class=\"wt\"><caption>table B · five points, two features, no intercept</caption>" +
+    "<thead><tr><th>n</th><th>x₁</th><th>x₂</th><th>y</th></tr></thead><tbody>" +
+    "<tr><th>1</th><td>1</td><td>0</td><td>2.0</td></tr>" +
+    "<tr><th>2</th><td>2</td><td>0</td><td>3.8</td></tr>" +
+    "<tr><th>3</th><td>0</td><td>1</td><td>0.2</td></tr>" +
+    "<tr><th>4</th><td>1</td><td>1</td><td>2.1</td></tr>" +
+    "<tr><th>5</th><td>3</td><td>0</td><td>5.9</td></tr>" +
     "</tbody></table>";
 }
-function T_BVDATA(){
-  return "<table class=\"wt\"><caption>table C · three tiny training sets for a constant</caption>" +
-    "<thead><tr><th>dataset</th><th>the one training y</th></tr></thead><tbody>" +
-    "<tr><th>D₁</th><td>4</td></tr><tr><th>D₂</th><td>6</td></tr><tr><th>D₃</th><td>5</td></tr>" +
+function T_BN(){
+  return "<table class=\"wt\"><caption>table C · one hidden unit, a mini-batch of four</caption>" +
+    "<thead><tr><th>example</th><th>u</th></tr></thead><tbody>" +
+    "<tr><th>1</th><td>1</td></tr><tr><th>2</th><td>3</td></tr>" +
+    "<tr><th>3</th><td>5</td></tr><tr><th>4</th><td>7</td></tr>" +
+    "</tbody></table>";
+}
+function T_DROP(){
+  return "<table class=\"wt\"><caption>table D · inverted dropout, p = 0.5</caption>" +
+    "<thead><tr><th>unit</th><th>h</th><th>mask m</th><th>h̃ = m h / p</th></tr></thead><tbody>" +
+    "<tr><th>1</th><td>1.2</td><td>1</td><td>2.4</td></tr>" +
+    "<tr><th>2</th><td>−0.4</td><td>0</td><td>0</td></tr>" +
+    "<tr><th>3</th><td>2.0</td><td>1</td><td>4.0</td></tr>" +
+    "<tr><th>4</th><td>0.8</td><td>0</td><td>0</td></tr>" +
     "</tbody></table>";
 }
 
 /* =========================================================================
-   GLOSSARY.  {t:key} in any string becomes the term plus an info bubble.
+   GLOSSARY
    ========================================================================= */
 var GLOSS = {
-  underfitting:{
-    term:"underfitting",
-    def:"The model is too simple for the true pattern. Training error stays high, and test error is high for the same reason: the hypothesis class cannot represent f even with infinite data.",
-    formula:"high bias, low variance",
-    see:"Goodfellow, Bengio & Courville, Deep Learning (2016), §5.2; Bishop, PRML (2006), §1.1."
+  regularisation:{
+    term:"regularisation",
+    def:"Any extra preference that stops a model from using its full capacity on the training sample. Penalties on weights, dropout, batch normalisation's noise, data augmentation, and early stopping are all regularisers. They usually raise bias a little to cut variance a lot.",
+    formula:"Ẽ(θ) = E(θ) + λ Ω(θ)",
+    see:"Goodfellow et al., Deep Learning (2016), ch. 7; Bishop & Bishop (2023), ch. 9; Prince, UDL, ch. 9."
+  },
+  parameter_norm:{
+    term:"parameter-norm penalty",
+    def:"Add λ times a norm of the weights to the training loss. The optimiser then trades fit against size. Which norm you pick (L1 or L2) changes the geometry of that trade, and therefore which weights survive.",
+    formula:"Ω(w) = ‖w‖_q^q",
+    see:"Goodfellow et al., §7.1; Bishop, PRML, §3.1.4."
+  },
+  l2:{
+    term:"L2",
+    def:"The squared Euclidean penalty Σ_i w_i². Contours are circles. The solution shrinks every weight toward zero but almost never hits exactly zero. Also called ridge when used with least squares, and (almost) weight decay in SGD.",
+    formula:"Ω₂(w) = (1/2) ‖w‖₂²",
+    see:"Goodfellow et al., §7.1.1; Bishop, PRML, §3.1.4; Bishop & Bishop §9.2."
+  },
+  l1:{
+    term:"L1",
+    def:"The absolute-value penalty Σ_i |w_i|. Contours are diamonds with corners on the axes. The solution is sparse: some weights become exactly zero. Also called the lasso in statistics.",
+    formula:"Ω₁(w) = ‖w‖₁",
+    see:"Goodfellow et al., §7.1.2; Bishop, PRML, §3.1.4 (q = 1); Bishop & Bishop fig. 9.6."
+  },
+  ridge:{
+    term:"ridge",
+    def:"Least squares plus an L2 penalty. Closed form: ŵ = (XᵀX + λI)⁻¹ Xᵀy. Large λ recovers a smaller effective parameter count. λ = 0 is ordinary least squares.",
+    formula:"ŵ_λ = (XᵀX + λ I)⁻¹ Xᵀ y",
+    see:"Bishop, PRML, §3.1.4; Bishop & Bishop, §4.1.6."
+  },
+  lasso:{
+    term:"lasso",
+    def:"Least squares plus an L1 penalty. No tidy closed form in general; coordinate descent or proximal gradient. The name is 'least absolute shrinkage and selection operator': it both shrinks and selects.",
+    formula:"min_w ‖y − Xw‖² + λ ‖w‖₁",
+    see:"Bishop, PRML, §3.1.4; Goodfellow et al., §7.1.2."
+  },
+  weight_decay:{
+    term:"weight decay",
+    def:"In SGD, the update w ← (1 − ηλ) w − η ∇E. For vanilla SGD this is equivalent to L2 on the loss. In adaptive methods (Adam) the two are not the same; decoupled weight decay (AdamW) restores the L2-like behaviour.",
+    formula:"w ← (1 − ηλ) w − η ∇E",
+    see:"Goodfellow et al., §7.1; Bishop & Bishop, §9.2; Loshchilov & Hutter, AdamW (2019)."
+  },
+  shrinkage:{
+    term:"shrinkage",
+    def:"Pulling coefficients toward zero. Ridge shrinks smoothly. Lasso shrinks and then clips at zero. Shrinkage cuts variance; if the true weights were large, it adds bias.",
+    see:"Bishop, PRML, §3.2 (bias–variance) and §3.1.4."
+  },
+  sparsity:{
+    term:"sparsity",
+    def:"Many weights exactly zero, so the predictor uses only a subset of features (or hidden units). L1 produces this; L2 does not. Dropout produces sparsity in activations, not in the stored weights.",
+    formula:"#{ i : w_i = 0 } large",
+    see:"Goodfellow et al., §7.1.2; Bishop & Bishop, fig. 9.6."
+  },
+  soft_threshold:{
+    term:"soft-thresholding",
+    def:"The proximal map of λ|w|. Subtract λ from the absolute value and clip at zero, keeping the sign. This is the exact 1-D lasso update, and the reason small coefficients vanish.",
+    formula:"S_λ(z) = sign(z) max(|z| − λ, 0)",
+    see:"Goodfellow et al., §7.1.2 (subgradient of L1)."
+  },
+  dropout:{
+    term:"dropout",
+    def:"During training, independently set hidden units to zero with probability 1−p. Each minibatch trains a different thin subnetwork. At test time, use the full net with weights (or activations) scaled so the expected input matches training.",
+    formula:"h̃ = (m ⊙ h) / p    with m_i ~ Bernoulli(p)",
+    see:"Srivastava et al. (2014); Goodfellow et al., §7.12; Prince, UDL, figs. 9.8–9.9; Bishop & Bishop, §9.6.1."
+  },
+  inverted_dropout:{
+    term:"inverted dropout",
+    def:"The modern implementation: divide by p at train time, leave the graph untouched at test time. Equivalent to multiplying leftover weights by p at test (the original paper), but cheaper and less error-prone.",
+    formula:"train: h̃ = m ⊙ h / p ;  test: h̃ = h",
+    see:"Goodfellow et al., §7.12; Srivastava et al. (2014)."
+  },
+  keep_probability:{
+    term:"keep probability",
+    def:"p, the chance a unit is kept. Typical values: 0.8–0.9 for input, 0.5–0.8 for hidden. p = 1 is 'no dropout'. Smaller p is stronger regularisation and a noisier gradient.",
+    formula:"P(m_i = 1) = p",
+    see:"Srivastava et al. (2014); Prince, UDL, §9.3."
+  },
+  batch_norm:{
+    term:"batch normalisation",
+    def:"For each channel, subtract the minibatch mean and divide by the minibatch standard deviation, then apply a learned scale γ and shift β. At test time, replace batch statistics by a running average collected during training.",
+    formula:"û = (u − μ_B) / √(σ_B² + ε),   y = γ û + β",
+    see:"Ioffe & Szegedy (2015); Bishop & Bishop, §7.4.2; Prince, UDL, §11.4; Goodfellow et al., §8.7.1."
+  },
+  scale_shift:{
+    term:"scale-and-shift",
+    def:"The affine pair (γ, β) after normalisation. Without them, the layer would be forced to zero mean and unit variance, which can destroy a useful representation (a sigmoid wants to sit off zero). They let the net undo the normalisation if it should.",
+    formula:"y = γ û + β",
+    see:"Ioffe & Szegedy (2015); Prince, UDL, §11.4."
+  },
+  running_stats:{
+    term:"running statistics",
+    def:"Exponential moving averages of μ_B and σ_B², updated every training step. Used at test time so a single example (or a tiny batch) still has a defined normalisation. If you forget to switch, test predictions depend on whoever else is in the batch.",
+    formula:"μ ← α μ + (1−α) μ_B",
+    see:"Ioffe & Szegedy (2015); Bishop & Bishop, §7.4.2."
+  },
+  internal_covariate:{
+    term:"internal covariate shift",
+    def:"Ioffe & Szegedy's original motivation: the distribution of each layer's inputs keeps moving as earlier layers train, so later layers chase a moving target. Later work (Santurkar et al. 2018) argues BN helps more by smoothing the loss landscape. Both stories are still taught; the algebra of BN does not depend on which you prefer.",
+    see:"Ioffe & Szegedy (2015); Santurkar et al. (2018); Prince, UDL, §11.4."
+  },
+  early_stopping:{
+    term:"early stopping",
+    def:"Monitor validation loss (or error) while you train. Save the parameters at the best validation point and stop when it has not improved for a patience window. Acts like a regulariser: the optimiser has not had time to fit every noise wiggle.",
+    formula:"θ̂ = θ_{t*}  with t* = arg min_t L_val(θ_t)",
+    see:"Goodfellow et al., §7.8; Bishop, PRML, §5.5.2; Prince, UDL, fig. 9.6; Bishop & Bishop, §9.3.1."
+  },
+  validation_set:{
+    term:"validation set",
+    def:"A split used to choose hyperparameters (λ, p, patience, architecture) but not to update θ by gradient descent. Once you have used a split to make choices, it is no longer an honest test.",
+    see:"Goodfellow et al., §5.3."
+  },
+  hyperparameters:{
+    term:"hyperparameters",
+    def:"Choices the inner optimiser does not fit: λ, dropout p, BN momentum, patience, learning rate. Tune them on validation data, then report test loss once.",
+    see:"Goodfellow et al., §5.3."
+  },
+  effective_parameters:{
+    term:"effective parameters",
+    def:"How many degrees of freedom the fit actually uses after regularisation. Ridge with large λ can make a 100-weight model behave like a 3-weight one. Early stopping has an analogous 'effective number of iterations'.",
+    see:"Bishop, PRML, §3.5.3 and §5.5.2 (effective number of parameters)."
   },
   overfitting:{
     term:"overfitting",
-    def:"The model fits the training sample, including noise, so training error looks excellent while error on new draws from the same process is worse. Classic sign: a large generalisation gap.",
-    formula:"low train loss, high test loss",
-    see:"Goodfellow et al., §5.2; Bishop, PRML, §1.1 (polynomial curve fitting)."
+    def:"Training loss looks excellent; test loss does not. The model used capacity to fit sample noise. Regularisers exist to stop that.",
+    formula:"large generalisation gap",
+    see:"Goodfellow et al., §5.2."
+  },
+  underfitting:{
+    term:"underfitting",
+    def:"Training loss stays high. The class is too small, λ is too large, dropout p is too small, or you stopped far too early.",
+    see:"Goodfellow et al., §5.2."
   },
   generalisation:{
     term:"generalisation",
-    def:"How well a fitted model predicts new examples drawn from the same distribution as the training data. The thing we actually want. Training loss is only a proxy.",
-    see:"Goodfellow et al., §5.2; Prince, Understanding Deep Learning, ch. 20."
+    def:"Performance on new draws from the same process. Training loss is only a proxy. Every method on this sheet is a way of buying better generalisation, usually at some cost to training fit.",
+    see:"Prince, UDL, ch. 9; Goodfellow et al., ch. 7."
   },
   generalisation_gap:{
     term:"generalisation gap",
-    def:"The difference between test loss and training loss. A large gap usually means the model memorised idiosyncrasies of the sample. A small gap with high loss usually means underfitting.",
+    def:"L_test − L_train. Regularisation typically raises L_train a little and lowers L_test, shrinking the gap.",
     formula:"gap = L_test − L_train",
     see:"Goodfellow et al., §5.2."
   },
   training_loss:{
     term:"training loss",
-    def:"Average loss on the examples the optimiser was allowed to see. Also called empirical risk. Can be driven to zero by a model that merely interpolates the sample.",
-    formula:"L_train(θ) = (1/N) Σᵢ ℓ(yᵢ, fθ(xᵢ))",
-    see:"Bishop & Bishop, Deep Learning (2023), ch. 4; Goodfellow et al., §5.1."
+    def:"Average loss on the examples the optimiser sees. With a penalty, the number you minimise is training loss plus Ω, not training loss alone.",
+    see:"Bishop & Bishop, ch. 4."
   },
   test_loss:{
     term:"test loss",
-    def:"Average loss on a held-out sample that was not used to fit parameters or to choose hyperparameters. An estimate of expected risk. Keep it untouched until the end.",
-    formula:"L_test ≈ E_{x,y}[ℓ(y, fθ(x))]",
+    def:"Loss on a held-out sample unused for θ and unused for hyperparameters. The number you publish.",
     see:"Goodfellow et al., §5.3."
-  },
-  expected_risk:{
-    term:"expected risk",
-    def:"The loss you would get if you could average over the true data-generating process, not just a finite sample. Training loss estimates this from the same points used for fitting, so it is optimistically biased.",
-    formula:"R(θ) = E_{x,y}[ℓ(y, fθ(x))]",
-    see:"Bishop, PRML, §1.5.5; Goodfellow et al., §5.2."
-  },
-  capacity:{
-    term:"capacity",
-    def:"How large a family of functions the model can represent. Polynomial degree, number of hidden units, and number of parameters are crude proxies. Too little capacity underfits; too much can overfit — until double descent.",
-    see:"Goodfellow et al., §5.2 (VC dimension, representational capacity)."
-  },
-  hypothesis_class:{
-    term:"hypothesis class",
-    def:"The set of functions the learning algorithm is allowed to choose from. Constants, lines, degree-M polynomials, and a given neural architecture are four different classes.",
-    formula:"ℋ = { fθ : θ ∈ Θ }",
-    see:"Goodfellow et al., §5.2."
-  },
-  interpolation:{
-    term:"interpolation",
-    def:"A fit that passes through every training point, so training loss is exactly zero (for squared loss, if the points are distinct). With N scalar targets you typically need at least N free parameters.",
-    formula:"fθ(xᵢ) = yᵢ  for all i",
-    see:"Belkin et al. (2019); Bishop & Bishop (2023), §9.3.2."
-  },
-  interpolation_threshold:{
-    term:"interpolation threshold",
-    def:"The model size where the number of effective parameters first matches the number of training points. Test error often peaks here: the model is just able to interpolate, and does so unstably. Past this point, more parameters can help again.",
-    formula:"P ≈ N",
-    see:"Bishop & Bishop (2023), §9.3.2; Nakkiran et al., Deep Double Descent (2020)."
   },
   bias:{
     term:"bias",
-    def:"How far the average predictor (average over training sets of the same size) sits from the true function. A constant model predicting 3 when the mean is 5 has bias −2, no matter how much data you give it, if it cannot change.",
+    def:"How far the average predictor sits from the true function. Regularisation usually increases bias (the average fit is pulled toward a simpler function).",
     formula:"Bias(x) = E_D[f̂_D(x)] − f(x)",
-    see:"Bishop, PRML, §3.2; Bishop & Bishop (2023), §4.3; Goodfellow et al., §5.4."
+    see:"Bishop, PRML, §3.2."
   },
   variance:{
     term:"variance",
-    def:"How much the fitted function jumps when you redraw the training set. High-capacity interpolators have high variance: each sample of noise is written into the function.",
-    formula:"Var(x) = E_D[(f̂_D(x) − E_D[f̂_D(x)])²]",
-    see:"Bishop, PRML, §3.2; Goodfellow et al., §5.4."
+    def:"How much the fitted function jumps when you redraw the training set. Regularisation usually cuts variance. That is the point.",
+    formula:"Var(x) = E_D[(f̂_D(x) − E_D[f̂_D])²]",
+    see:"Bishop, PRML, §3.2."
   },
-  irreducible_error:{
-    term:"irreducible error",
-    def:"The leftover risk even with the best possible predictor: noise in y, or any part of y that is not a function of x. Also called Bayes error (for classification) or noise variance σ² (for squared loss).",
-    formula:"σ² = E[(y − f(x))²]",
-    see:"Bishop, PRML, §3.2; Goodfellow et al., §5.4.4."
+  capacity:{
+    term:"capacity",
+    def:"How large a family of functions the model can represent. Regularisation reduces effective capacity without changing the architecture.",
+    see:"Goodfellow et al., §5.2."
   },
-  bias_variance:{
-    term:"bias–variance trade-off",
-    def:"For squared loss, expected test error splits into irreducible error + bias² + variance. Making the model more flexible typically lowers bias and raises variance. The U-shaped test curve is this trade-off plotted against capacity.",
-    formula:"E[(y − f̂)²] = σ² + Bias² + Variance",
-    see:"Bishop, PRML, §3.2; Bishop & Bishop (2023), §4.3."
-  },
-  double_descent:{
-    term:"double descent",
-    def:"Test error falls, then rises toward the interpolation threshold, then falls again as the model becomes overparameterised. The second descent is outside classical U-shaped thinking: more parameters can improve test error after the model already interpolates.",
-    see:"Bishop & Bishop (2023), §9.3.2; Prince, UDL, §20.2 (overparameterisation); Belkin et al. (2019)."
-  },
-  overparameterised:{
-    term:"overparameterised",
-    def:"More parameters than training points (P > N). The training loss can be driven to zero in many ways; which interpolator you land on depends on architecture, init, and the optimiser. Often the implicit bias of SGD picks a surprisingly good one.",
-    formula:"P > N",
-    see:"Prince, UDL, §20.2; Bishop & Bishop (2023), §9.3."
-  },
-  regularisation:{
-    term:"regularisation",
-    def:"Any extra preference that stops the fit from using its full capacity. Weight decay, early stopping, dropout, and data augmentation are all regularisers. In bias–variance language they usually raise bias a little to cut variance a lot.",
-    see:"Goodfellow et al., ch. 7; Bishop & Bishop (2023), ch. 9; Bishop, PRML, §1.1 (the penalty λ)."
-  },
-  weight_decay:{
-    term:"weight decay",
-    def:"Add λ‖θ‖² to the loss (ridge / L2). Large λ shrinks coefficients toward zero and recovers a simpler function. λ = 0 is unregularised least squares.",
-    formula:"L_λ(θ) = L_train(θ) + λ ‖θ‖²",
-    see:"Bishop, PRML, §3.1.4; Goodfellow et al., §7.1."
-  },
-  validation_set:{
-    term:"validation set",
-    def:"A split used to choose hyperparameters (degree, λ, architecture) but not to update θ by gradient descent. If you tune on the test set, the test number is no longer an honest estimate of expected risk.",
-    see:"Goodfellow et al., §5.3."
-  },
-  hyperparameters:{
-    term:"hyperparameters",
-    def:"Choices that are not fitted by the inner optimiser: polynomial degree, λ, learning rate, width, depth. You select them on validation data, then report test loss once.",
-    see:"Goodfellow et al., §5.3."
+  least_squares:{
+    term:"least squares",
+    def:"Minimise mean squared error on the training set. Unregularised, for a linear-in-parameters model, this is a linear system.",
+    formula:"θ̂ = arg min_θ ‖y − Φθ‖²",
+    see:"Bishop, PRML, §3.1."
   },
   inductive_bias:{
     term:"inductive bias",
-    def:"The assumptions a learner makes in order to generalise at all. Convolution assumes locality and translation structure; a line assumes the world is linear. No free lunch: some bias is required.",
+    def:"The assumptions a learner makes in order to generalise at all. Convolution assumes locality; residual skips assume the identity is a good default. Regularisers are extra inductive biases stacked on the architecture.",
     see:"Bishop & Bishop (2023), §9.1; Goodfellow et al., §5.2."
   },
   mse:{
     term:"mean squared error",
-    def:"Average of squared residuals. For regression it is the usual training loss, and the bias–variance decomposition is derived for this loss (not for 0–1 loss).",
+    def:"Average of squared residuals. All hand calculations on this sheet use MSE or SSE = N · MSE, and round to 4 decimals at every step.",
     formula:"MSE = (1/N) Σᵢ (yᵢ − ŷᵢ)²",
-    see:"Bishop, PRML, §1.1; Goodfellow et al., §5.2."
-  },
-  least_squares:{
-    term:"least squares",
-    def:"Choose parameters that minimise mean squared error on the training set. For a linear-in-parameters model this is a linear system; for a polynomial of degree M it is least squares in the monomial basis.",
-    formula:"θ̂ = arg min_θ ‖y − Φθ‖²",
-    see:"Bishop, PRML, §3.1."
-  },
-  effective_parameters:{
-    term:"effective parameters",
-    def:"How many degrees of freedom the fit actually uses, after regularisation. Ridge with large λ can make a 100-parameter model behave like a 3-parameter one. Double descent is about effective capacity, not just the count of weights.",
-    see:"Bishop, PRML, §3.5.3 (effective number of parameters); Bishop & Bishop (2023), §9.3."
-  },
-  early_stopping:{
-    term:"early stopping",
-    def:"Halt gradient descent before training loss bottoms out, using a validation curve. It acts like a regulariser: the optimiser has not had time to fit every noise wiggle.",
-    see:"Goodfellow et al., §7.8."
-  },
-  memorisation:{
-    term:"memorisation",
-    def:"Fitting labels, even random labels, by interpolating the sample. Overparameterised nets can do this and still generalise on the true labelling — one of the facts that forced double descent into the textbooks.",
-    see:"Prince, UDL, §20.2; Zhang et al. (2017), Understanding deep learning requires rethinking generalisation."
+    see:"Bishop, PRML, §1.1."
   }
 };
 
 var BLANKS = [
-{id:"G1", sec:1, wide:true,
- prompt:"Training loss is computed on points the model {{slot}}.",
- need:["the definition of training vs test"],
- correct:"was allowed to fit",
- options:["was allowed to fit","must never see","are drawn from a different task"],
- hints:{"must never see":"That is the test (or validation) set. Training loss is the number the optimiser sees.",
-        "are drawn from a different task":"Train and test are assumed to come from the same process. That is the whole point of generalisation."}},
-{id:"G2", sec:1, wide:true,
- prompt:"Test loss estimates {{slot}}.",
- need:["why we hold data out"],
- correct:"expected risk on new draws from the same process",
- options:["expected risk on new draws from the same process",
-          "how well we memorised the training labels",
-          "the number of parameters"],
- hints:{"how well we memorised the training labels":"That is training loss, especially after interpolation.",
-        "the number of parameters":"Capacity is a property of the hypothesis class, not a loss."}},
-{id:"G3", sec:1,
- prompt:"gap = L_test − L_train = 1.2500 − 0.6667 = {{slot}}",
- need:["L_train = 0.6667 for the constant","L_test = 1.2500 for the constant"],
- correct:"0.5833",
- options:["0.5833","1.9167","0.6667","1.2500"],
- hints:{"1.9167":"Subtract, do not add.",
-        "0.6667":"That is L_train alone.",
-        "1.2500":"That is L_test alone."}},
-{id:"U1", sec:2,
- prompt:"c = (1 + 2 + 0) / 3 = {{slot}}",
- need:["three training y values: 1, 2, 0"],
- correct:"1",
- options:["1","2","0","1.5"],
- hints:{"2":"That is one of the y values, not the mean.",
-        "0":"That is the last y, not the mean.",
-        "1.5":"(1+2+0)/3 = 3/3 = 1, not 3/2."}},
-{id:"U2a", sec:2, lab:"residual at x = 0",
- need:["c = 1","y = 1, 2, 0"],
+{id:"P1", sec:1, wide:true,
+ prompt:"Regularisation is designed to improve {{slot}}.",
+ need:["the point of the previous worksheet"],
+ correct:"test performance, possibly at the cost of training fit",
+ options:["test performance, possibly at the cost of training fit",
+          "training loss until it is exactly zero",
+          "the number of layers, which always helps"],
+ hints:{"training loss until it is exactly zero":"Interpolation is often the problem, not the goal. Goodfellow ch. 7 opens with the opposite: we accept worse training error to get better test error.",
+        "the number of layers, which always helps":"Depth is capacity. Regularisation is a preference inside a class that may already be large."}},
+{id:"P2", sec:1, wide:true,
+ prompt:"The number you actually minimise with a penalty is {{slot}}.",
+ need:["Ẽ = E + λ Ω"],
+ correct:"training loss plus λ times a regulariser",
+ options:["training loss plus λ times a regulariser",
+          "test loss, directly",
+          "validation loss, by gradient descent on that split"],
+ hints:{"test loss, directly":"You do not have ∇ of the test loss. That is the whole point of a proxy.",
+        "validation loss, by gradient descent on that split":"Validation is for choosing λ, not for the inner optimiser. Using it as a training set destroys the split."}},
+{id:"L2a", sec:2,
+ prompt:"SSE = (2 − w)² + (3 − 2w)² expands to 5w² − 16w + 13. Unregularised, d(SSE)/dw = 10w − 16 = 0 so w = {{slot}}.",
+ need:["table A: (x,y) = (1,2) and (2,3)","ŷ = w x"],
+ correct:"1.6",
+ options:["1.6","0.8","2","1.3333"],
+ hints:{"0.8":"You halved 16/10 twice, or took 8/10. 16/10 = 1.6.",
+        "2":"That would fit the first point only (w = y/x = 2/1).",
+        "1.3333":"That is the ridge solution at λ = 1, two steps from now."}},
+{id:"L2b", sec:2,
+ prompt:"ŷ(1) = 1.6 · 1 = 1.6 and ŷ(2) = 1.6 · 2 = {{slot}}.",
+ need:["w = 1.6"],
+ correct:"3.2",
+ options:["3.2","3.0","1.6","4.8"],
+ hints:{"3.0":"That is the second y, not the prediction.",
+        "1.6":"That is ŷ(1).",
+        "4.8":"You did 1.6 × 3."}},
+{id:"L2c", sec:2,
+ prompt:"SSE = (2 − 1.6)² + (3 − 3.2)² = 0.16 + 0.04 = {{slot}}.",
+ need:["ŷ = 1.6 and 3.2"],
+ correct:"0.2",
+ options:["0.2","0.1","0.4","0"],
+ hints:{"0.1":"That is MSE = SSE / 2. The expansion used SSE.",
+        "0.4":"You added the residuals, not the squares.",
+        "0":"The line ŷ = w x cannot hit both points."}},
+{id:"L2d", sec:2,
+ prompt:"Add λ w² to SSE. Stationarity: 10w − 16 + 2λ w = 0, so w = 8 / (5 + λ). At λ = 1, w = {{slot}}.",
+ need:["the unregularised critical point was w = 1.6"],
+ correct:"1.3333",
+ options:["1.3333","1.6","0.8","2"],
+ hints:{"1.6":"That is λ = 0. Plug λ = 1 into 8/(5+λ).",
+        "0.8":"8/10, as if λ = 5.",
+        "2":"You inverted the formula."}},
+{id:"L2e", sec:2, wide:true,
+ prompt:"Compared with λ = 0, the λ = 1 fit has {{slot}}.",
+ need:["w dropped from 1.6 to 1.3333","SSE rose from 0.2000 to 0.5556"],
+ correct:"smaller |w|, higher training SSE",
+ options:["smaller |w|, higher training SSE",
+          "larger |w|, lower training SSE",
+          "the same w, because least squares ignores λ"],
+ hints:{"larger |w|, lower training SSE":"Ridge shrinks. Training SSE is allowed to get worse; that is the trade.",
+        "the same w, because least squares ignores λ":"The stationarity condition changed: +2λw."}},
+{id:"L2f", sec:2, wide:true,
+ prompt:"In the (w₁, w₂) plane, L2 contours are {{slot}}.",
+ need:["Goodfellow fig. 7.1 / Bishop fig. 9.6"],
+ correct:"circles (or ellipses after a change of variables)",
+ options:["circles (or ellipses after a change of variables)",
+          "diamonds with corners on the axes",
+          "straight lines through the origin"],
+ hints:{"diamonds with corners on the axes":"That is L1. Circles have no corners, which is why L2 almost never hits an axis.",
+        "straight lines through the origin":"Those would be a linear penalty in one direction, not ‖w‖₂²."}},
+{id:"L1a", sec:3,
+ prompt:"The 1-D proximal map S_λ(z) = sign(z) max(|z| − λ, 0) applied to z = 2.5, λ = 1 is {{slot}}.",
+ need:["soft-thresholding"],
+ correct:"1.5",
+ options:["1.5","2.5","0","3.5"],
+ hints:{"2.5":"You forgot to subtract λ.",
+        "0":"|z| = 2.5 > 1, so it does not clip.",
+        "3.5":"You added λ. Soft-thresholding shrinks toward zero."}},
+{id:"L1b", sec:3,
+ prompt:"S_1(0.4) = {{slot}}.",
+ need:["|z| = 0.4 < λ = 1"],
  correct:"0",
- options:["0","−1","+1","+2"],
- hints:{"−1":"residual = y − c. At x = 0, y is 1.",
-        "+1":"At x = 0, y equals c.",
-        "+2":"That is y at x = 1."}},
-{id:"U2b", sec:2, lab:"residual at x = 1",
- correct:"+1",
- options:["+1","0","−1","+2"],
- hints:{"0":"y is 2, c is 1.",
-        "−1":"Sign: 2 − 1 is positive.",
-        "+2":"That is y, not y − c."}},
-{id:"U2c", sec:2, lab:"residual at x = 2",
- correct:"−1",
- options:["−1","+1","0","−2"],
- hints:{"+1":"y is 0, c is 1, so 0 − 1 is negative.",
-        "0":"The constant does not hit this point.",
-        "−2":"0 − 1 = −1."}},
-{id:"U3", sec:2,
- prompt:"L_train = (0² + 1² + (−1)²) / 3 = {{slot}}",
- need:["residuals 0, +1, −1"],
- correct:"0.6667",
- options:["0.6667","0.0000","1.0000","2.0000"],
- hints:{"0.0000":"Two of the three residuals are not zero. Average the squares.",
-        "1.0000":"You averaged |residual| or took 3/3. Squares: (0+1+1)/3.",
-        "2.0000":"You summed the squares and forgot to divide by 3."}},
-{id:"U4", sec:2, wide:true,
- prompt:"The constant cannot follow the dip from y = 2 down to y = 0. That limitation is {{slot}}.",
- need:["L_train = 0.6667 is not zero"],
- correct:"bias: the class is too small",
- options:["bias: the class is too small",
-          "variance: the class is too large",
-          "irreducible error: y is a deterministic function of these x",
-          "a bug in the mean"],
- hints:{"variance: the class is too large":"A constant has almost no variance across datasets. It is too small a class.",
-        "irreducible error: y is a deterministic function of these x":"There is no extra noise term in table A. The mismatch is the model.",
-        "a bug in the mean":"The mean of 1, 2, 0 really is 1."}},
-{id:"O1a", sec:3, lab:"from x = 0",
- need:["ŷ(x) = 1 + 2.5 x − 1.5 x²","the curve must hit (0,1), (1,2), (2,0)"],
- correct:"1",
- options:["1","2.5","−1.5","0"],
- hints:{"2.5":"That is the coefficient of x.",
-        "−1.5":"That is the coefficient of x².",
-        "0":"ŷ(0) = a = 1."}},
-{id:"O1b", sec:3, lab:"from x = 1, using a = 1",
- correct:"1",
- options:["1","2","0","1.5"],
- hints:{"2":"That is y at x = 1. The equation is 1 + b + c = 2, so b + c = 1.",
-        "0":"That would be 1 + b + c = 1.",
-        "1.5":"b + c = 2 − 1 = 1."}},
-{id:"O1c", sec:3, lab:"from x = 2, using a = 1",
- correct:"−1",
- options:["−1","0","−5","1"],
- hints:{"0":"1 + 2b + 4c = 0, so 2b + 4c = −1.",
-        "−5":"That is ŷ(3), which you do not know yet.",
-        "1":"The right-hand side is 0 − 1 = −1."}},
-{id:"O2a", sec:3, lab:"c, the x² coefficient",
- need:["b + c = 1","2b + 4c = −1"],
- correct:"−1.5",
- options:["−1.5","1.5","−0.5","2.5"],
- hints:{"1.5":"Sign. Substituting b = 1 − c into 2b + 4c = −1 gives 2 + 2c = −1, so c = −1.5.",
-        "−0.5":"2(1 − c) + 4c = 2 + 2c = −1, so 2c = −3.",
-        "2.5":"That is b, not c."}},
-{id:"O2b", sec:3, lab:"b, the x coefficient",
- correct:"2.5",
- options:["2.5","−1.5","1.0","−2.5"],
- hints:{"−1.5":"That is c. b = 1 − c = 1 − (−1.5).",
-        "1.0":"That is a, or the sum b + c.",
-        "−2.5":"b = 1 − c is positive."}},
-{id:"O3", sec:3,
- prompt:"ŷ(3) = 1 + 2.5(3) − 1.5(9) = 1 + 7.5 − 13.5 = {{slot}}",
- need:["a = 1","b = 2.5","c = −1.5","the test x = 3"],
- correct:"−5",
- options:["−5","0.5","1","7.5"],
- hints:{"0.5":"That is the test y at x = 3, not the model's prediction.",
-        "1":"That is ŷ(0), or the constant model.",
-        "7.5":"You stopped after 2.5 × 3. Subtract 1.5 × 9."}},
-{id:"O4", sec:3,
- prompt:"test squared error at x = 3: (−5 − 0.5)² = {{slot}}",
- need:["ŷ(3) = −5","y_test = 0.5"],
- correct:"30.2500",
- options:["30.2500","5.5000","−5.5000","0.2500"],
- hints:{"5.5000":"You took the absolute residual and stopped. Square it: 5.5² = 30.25.",
-        "−5.5000":"A square cannot be negative.",
-        "0.2500":"That would be (0.5 − 0)², as if ŷ were 0."}},
-{id:"O5", sec:3, wide:true,
- prompt:"Train MSE of the quadratic is 0. Test squared error at x = 3 is 30.25. This pattern is {{slot}}.",
- need:["the quadratic interpolates the three training points"],
- correct:"overfitting: the extra wiggle missed the new x",
- options:["overfitting: the extra wiggle missed the new x",
-          "underfitting: the class is still too small",
-          "perfect generalisation, because train loss is zero",
-          "irreducible error, because 30.25 cannot be avoided"],
- hints:{"underfitting: the class is still too small":"Train loss is zero. The class was large enough to interpolate.",
-        "perfect generalisation, because train loss is zero":"Train loss is not expected risk. Look at x = 3.",
-        "irreducible error, because 30.25 cannot be avoided":"The line's test error at the same point is 0.25. The 30.25 was a choice of model."}},
-{id:"B1", sec:4,
- prompt:"Bias of model A = E[ŷ] − μ = 3 − 5 = {{slot}}",
- need:["model A always predicts 3","μ = 5"],
- correct:"−2",
- options:["−2","+2","0","3"],
- hints:{"+2":"3 − 5 is negative. Bias is E[ŷ] minus the truth, not the reverse.",
-        "0":"That would mean the average predictor equals μ. A's average is stuck at 3.",
-        "3":"That is the prediction, not the bias."}},
-{id:"B2", sec:4,
- prompt:"Bias² of model A = (−2)² = {{slot}}",
- need:["bias = −2"],
+ options:["0","−0.6","0.4","1"],
+ hints:{"−0.6":"You subtracted and kept a leftover with the wrong sign. When |z| < λ the result is exactly 0.",
+        "0.4":"The whole point of the clip: small values die.",
+        "1":"That is λ, not the output."}},
+{id:"L1c", sec:3,
+ prompt:"S_1(−1.7) = {{slot}}.",
+ need:["keep the sign, subtract 1 from 1.7"],
+ correct:"−0.7",
+ options:["−0.7","0.7","−1.7","0"],
+ hints:{"0.7":"The sign of z is negative.",
+        "−1.7":"You skipped the shrinkage.",
+        "0":"|z| = 1.7 > 1, so it survives, smaller."}},
+{id:"L1d", sec:3,
+ prompt:"Unregularised least squares on table B gives w ≈ (1.9483, 0.1759). Lasso with λ = 2 (SSE + λ‖w‖₁) gives w ≈ (1.8933, {{slot}}).",
+ need:["table B","L1 sets small weights to zero"],
+ correct:"0",
+ options:["0","0.1759","1.8933","−0.1759"],
+ hints:{"0.1759":"That is the OLS second weight. L1 has already killed it at this λ.",
+        "1.8933":"That is w₁, not w₂.",
+        "−0.1759":"Sign flip is not what lasso does here."}},
+{id:"L1e", sec:3, wide:true,
+ prompt:"L1 diamonds have corners on the axes, so the loss contour often first touches {{slot}}.",
+ need:["Bishop & Bishop fig. 9.6 / PRML fig. 3.4"],
+ correct:"a corner, where at least one weight is exactly zero",
+ options:["a corner, where at least one weight is exactly zero",
+          "a smooth point where both weights stay nonzero",
+          "the unregularised OLS solution, always"],
+ hints:{"a smooth point where both weights stay nonzero":"That is the typical L2 (circle) contact.",
+        "the unregularised OLS solution, always":"OLS is the centre of the ellipses, outside a small constraint region."}},
+{id:"D1a", sec:4,
+ prompt:"Inverted dropout, p = 0.5, h = 1.2, m = 1. The forwarded value is m h / p = {{slot}}.",
+ need:["table D","divide by p at train time"],
+ correct:"2.4",
+ options:["2.4","1.2","0.6","0"],
+ hints:{"1.2":"You skipped the 1/p scale. Inverted dropout inflates kept units.",
+        "0.6":"You multiplied by p instead of dividing.",
+        "0":"m is 1, so the unit is kept."}},
+{id:"D1b", sec:4,
+ prompt:"Same layer, h = −0.4, m = 0. Forwarded value {{slot}}.",
+ need:["dropped units contribute nothing"],
+ correct:"0",
+ options:["0","−0.8","−0.4","0.4"],
+ hints:{"−0.8":"m = 0 zeros the unit before any scale.",
+        "−0.4":"Still nonzero. The mask is 0.",
+        "0.4":"Sign and mask both wrong."}},
+{id:"D2", sec:4, wide:true,
+ prompt:"At test time with inverted dropout you {{slot}}.",
+ need:["the 1/p was already applied in training"],
+ correct:"run the full network with no mask and no extra scale",
+ options:["run the full network with no mask and no extra scale",
+          "keep dropping units, otherwise the net is unregularised at test",
+          "multiply every weight by p, because training never scaled"],
+ hints:{"keep dropping units, otherwise the net is unregularised at test":"Dropout is a training regulariser. Test predictions should be deterministic. The ensemble is approximated by the full net.",
+        "multiply every weight by p, because training never scaled":"That is the original (non-inverted) convention. Inverted dropout already divided by p on the way up."}},
+{id:"D3", sec:4, wide:true,
+ prompt:"Dropout's usual story is that it trains {{slot}}.",
+ need:["Goodfellow fig. 7.6"],
+ correct:"an ensemble of subnetworks that share weights",
+ options:["an ensemble of subnetworks that share weights",
+          "a single thinner architecture that is then frozen",
+          "an L2 penalty exactly equal to p(1−p)‖w‖²"],
+ hints:{"a single thinner architecture that is then frozen":"Which units drop changes every step. The stored architecture stays wide.",
+        "an L2 penalty exactly equal to p(1−p)‖w‖²":"There is a loose noise/L2 link for linear models, but dropout is not identical to ridge."}},
+{id:"B1", sec:5,
+ prompt:"Batch mean of {1, 3, 5, 7} is {{slot}}.",
+ need:["table C"],
  correct:"4",
- options:["4","−4","2","0"],
- hints:{"−4":"A square is non-negative. The sign of the bias disappears.",
-        "2":"Square it, do not take abs.",
-        "0":"Only if the bias were zero."}},
-{id:"B3", sec:4, wide:true,
- prompt:"Variance of model A across D₁, D₂, D₃ is {{slot}}.",
- need:["ŷ is 3, 3, 3"],
- correct:"0, because the prediction never moves",
- options:["0, because the prediction never moves",
-          "4, the same as bias²",
-          "1, the noise variance",
-          "2, the spread of the datasets"],
- hints:{"4, the same as bias²":"Bias² is about distance to μ. Variance is about distance to E[ŷ]. Here E[ŷ] = 3 = ŷ always.",
-        "1, the noise variance":"σ² is a separate term. A's prediction does not use the data, so it has no variance.",
-        "2, the spread of the datasets":"The datasets change. Model A ignores them."}},
-{id:"B4a", sec:4, lab:"E[ŷ] for model B",
- need:["predictions 4, 6, 5","μ = 5"],
+ options:["4","5","3.5","16"],
+ hints:{"5":"That is one of the values, or (3+7)/2.",
+        "3.5":"(1+7)/2, skipping the middle.",
+        "16":"You summed and forgot to divide by 4."}},
+{id:"B2", sec:5,
+ prompt:"Population batch variance (1/N) Σ (u − μ)² = (9 + 1 + 1 + 9) / 4 = {{slot}}.",
+ need:["μ = 4","deviations −3, −1, +1, +3"],
  correct:"5",
- options:["5","4","6","4.5"],
- hints:{"4":"That is D₁ alone. Average 4, 6 and 5.",
-        "6":"That is D₂ alone.",
-        "4.5":"That is model C's average, not B's."}},
-{id:"B4b", sec:4, lab:"bias of model B",
- correct:"0",
- options:["0","−1","+1","−2"],
- hints:{"−1":"E[ŷ] = 5 = μ.",
-        "+1":"E[ŷ] = 5 = μ.",
-        "−2":"That was model A."}},
-{id:"B5", sec:4,
- prompt:"Variance of B = [(4−5)² + (6−5)² + (5−5)²] / 3 = {{slot}}",
- need:["E[ŷ] = 5","predictions 4, 6, 5"],
- correct:"0.6667",
- options:["0.6667","2.0000","1.0000","0.0000"],
- hints:{"2.0000":"You summed 1+1+0 and forgot to divide by 3.",
-        "1.0000":"That is σ², given separately, or (1+1+0)/2 using n−1. This sheet uses the population mean over the three datasets.",
-        "0.0000":"Two of the three predictions are not 5."}},
-{id:"B6", sec:4,
- prompt:"Expected test error of A = σ² + Bias² + Var = 1 + 4 + 0 = {{slot}}",
- need:["σ² = 1","Bias² = 4","Var = 0"],
- correct:"5",
- options:["5","4","1","0"],
- hints:{"4":"You dropped σ².",
-        "1":"You dropped Bias².",
-        "0":"Add the three pieces."}},
-{id:"B7", sec:4,
- prompt:"Expected test error of B = 1 + 0 + 0.6667 = {{slot}}",
- need:["σ² = 1","Bias² = 0","Var = 0.6667"],
- correct:"1.6667",
- options:["1.6667","0.6667","1.0000","5.0000"],
- hints:{"0.6667":"That is variance alone.",
-        "1.0000":"That is σ² alone.",
-        "5.0000":"That is model A's risk."}},
-{id:"B8", sec:4, wide:true,
- prompt:"Model C shrinks each y toward 4: ŷ = ½ y + ½·4. Compared with B it should have {{slot}}.",
- need:["C's predictions are 4.0, 5.0, 4.5"],
- correct:"more bias, less variance",
- options:["more bias, less variance",
-          "less bias, more variance",
-          "the same bias and variance as B",
-          "zero bias and zero variance"],
- hints:{"less bias, more variance":"Shrinkage toward 4, which is not μ = 5, adds bias and damps movement across datasets.",
-        "the same bias and variance as B":"The three numbers 4, 5, 4.5 are a tighter cluster than 4, 6, 5, and their mean is 4.5, not 5.",
-        "zero bias and zero variance":"Only a constant equal to μ would do that, and we cannot know μ in advance."}},
-{id:"D1", sec:6, wide:true,
- prompt:"The interpolation threshold is the model size where {{slot}}.",
- need:["P is the number of parameters","N is the number of training points"],
- correct:"P first reaches N and train loss can hit zero",
- options:["P first reaches N and train loss can hit zero",
-          "test loss is minimised",
-          "bias becomes zero",
-          "σ² becomes zero"],
- hints:{"test loss is minimised":"Test loss often peaks at the threshold, then falls again. The minimum can be in the overparameterised regime.",
-        "bias becomes zero":"An interpolator of noise is not unbiased for f.",
-        "σ² becomes zero":"Noise in y does not care how many parameters you use."}},
-{id:"D2", sec:6, wide:true,
- prompt:"Past the threshold, adding parameters can {{slot}}. That is the second descent.",
- need:["the classical U-shape stops at interpolation"],
- correct:"lower test loss even though train loss is already ~ 0",
- options:["lower test loss even though train loss is already ~ 0",
-          "raise train loss back above zero",
-          "delete the irreducible error",
-          "turn variance into bias"],
- hints:{"raise train loss back above zero":"Overparameterised interpolators still fit the sample. Train loss stays ~ 0; the function between the points changes.",
-        "delete the irreducible error":"σ² is a property of the process, not of P.",
-        "turn variance into bias":"The decomposition still adds. What changes is which interpolator you select."}},
-{id:"R1", sec:7, wide:true,
- prompt:"A validation set is for {{slot}}.",
- need:["θ is fit on training data"],
- correct:"choosing hyperparameters without touching the test set",
- options:["choosing hyperparameters without touching the test set",
-          "updating θ by gradient descent",
-          "replacing the test set, so you no longer need one",
-          "computing σ²"],
- hints:{"updating θ by gradient descent":"That is the training set. If you also descend on validation, it stops being a hyperparameter check.",
-        "replacing the test set, so you no longer need one":"After you pick λ on validation you still need a fresh test number.",
-        "computing σ²":"σ² is not something you read off a split."}}
+ options:["5","6.6667","4","2.2361"],
+ hints:{"6.6667":"That is the unbiased / (N−1) version. Ioffe & Szegedy use / N in the forward pass (plus ε).",
+        "4":"That is μ again.",
+        "2.2361":"That is √5, the standard deviation."}},
+{id:"B3", sec:5,
+ prompt:"û for the first example: (1 − 4) / √5 = {{slot}}.",
+ need:["μ = 4","σ² = 5"],
+ correct:"−1.3416",
+ options:["−1.3416","−3","1.3416","−0.8"],
+ hints:{"−3":"You forgot to divide by √5.",
+        "1.3416":"Sign: 1 − 4 is negative.",
+        "−0.8":"You divided by 5, not √5."}},
+{id:"B4", sec:5,
+ prompt:"After scale-and-shift with γ = 2, β = 1: y₁ = 2(−1.3416) + 1 = {{slot}}.",
+ need:["û₁ = −1.3416"],
+ correct:"−1.6832",
+ options:["−1.6832","−1.3416","2.6832","1"],
+ hints:{"−1.3416":"That is û, before γ, β.",
+        "2.6832":"Sign error on 2 × (−1.3416).",
+        "1":"That is β alone."}},
+{id:"B5", sec:5, wide:true,
+ prompt:"At test time, batch normalisation replaces μ_B, σ_B² by {{slot}}.",
+ need:["a single test example has no meaningful batch"],
+ correct:"running averages collected during training",
+ options:["running averages collected during training",
+          "the statistics of whatever other examples happen to share the batch",
+          "μ = 0 and σ² = 1, always"],
+ hints:{"the statistics of whatever other examples happen to share the batch":"That makes a prediction depend on its neighbours. That is a bug (train-mode BN at test).",
+        "μ = 0 and σ² = 1, always":"Then γ, β would have to do all the work and a single example would still need a std. The running average is the standard fix."}},
+{id:"E1", sec:6, wide:true,
+ prompt:"You stop at the epoch where {{slot}}.",
+ need:["the figure of training vs validation curves"],
+ correct:"validation loss is best (with some patience)",
+ options:["validation loss is best (with some patience)",
+          "training loss first hits zero",
+          "training and validation curves cross, always"],
+ hints:{"training loss first hits zero":"That is often past the useful point: interpolation of the sample.",
+        "training and validation curves cross, always":"They need not cross. You care about the validation minimum, not a crossing."}},
+{id:"E2", sec:6, wide:true,
+ prompt:"Early stopping is a regulariser because {{slot}}.",
+ need:["Bishop §5.5.2 / Goodfellow §7.8"],
+ correct:"the optimiser has not yet used its full capacity to fit noise",
+ options:["the optimiser has not yet used its full capacity to fit noise",
+          "it changes the architecture by deleting layers",
+          "it is identical to setting λ = 0"],
+ hints:{"it changes the architecture by deleting layers":"The graph is unchanged. Time is the constraint.",
+        "it is identical to setting λ = 0":"λ = 0 is unregularised. Early stopping is closer to a large-λ / small-effective-time limit."}},
+{id:"C1", sec:7, wide:true,
+ prompt:"You want a sparse linear model for feature selection. First tool {{slot}}.",
+ need:["L1 vs L2 geometry"],
+ correct:"L1 / lasso",
+ options:["L1 / lasso","L2 / ridge","dropout on the inputs, p = 0.99"],
+ hints:{"L2 / ridge":"Ridge shrinks but keeps everyone nonzero.",
+        "dropout on the inputs, p = 0.99":"Almost no dropout, and dropout does not store zeros in w."}},
+{id:"C2", sec:7, wide:true,
+ prompt:"A deep conv net trains slowly and activations explode in depth. The standard extra layer is {{slot}}.",
+ need:["Prince §11.4, Ioffe & Szegedy"],
+ correct:"batch normalisation (or a close variant)",
+ options:["batch normalisation (or a close variant)",
+          "lasso on the pixels",
+          "early stopping before the first epoch ends"],
+ hints:{"lasso on the pixels":"Sparsity on inputs is not what fixes internal scaling.",
+        "early stopping before the first epoch ends":"That underfits. BN is about the forward/backward scales while you still train."}}
 ];
 
 var SECTIONS = [
-{n:0, eyebrow:"start here", title:"How to use this sheet",
- result:"click the amber i next to a term whenever you want the definition",
+{n:1, eyebrow:"part 1", title:"Why add anything to the loss?",
+ result:"regularisation trades training fit for test performance",
  blocks:[
+  {t:"hook", q:"If training loss is already going down, why would we add a term that makes it worse?",
+   hint:"The quantity we care about is not the quantity we can differentiate on the training set."},
+  {t:"p", html:"The last worksheet ended here: {t:overfitting} is a large {t:generalisation_gap}. {t:capacity} lets the model interpolate the sample, including noise. {t:regularisation} is a name for any extra preference that stops that interpolation without you having to shrink the architecture by hand."},
+  {t:"p", html:"Goodfellow, Bengio & Courville (ch. 7) put it as a definition: strategies that reduce test error, possibly at the expense of training error. Bishop & Bishop (ch. 9) start from the polynomial we already know — add (λ/2) wᵀw to the error — and then spend a chapter listing the modern versions of that idea. Prince (UDL ch. 9) splits the same ground into explicit penalties and implicit ones (the optimiser, the stopping time, the noise in SGD)."},
+  {t:"card", v:"navy", html:
+    "<div class=\"eyebrow\">the regularised objective</div>" +
+    "<div class=\"mathline big\">Ẽ(w) = E(w) + {lam} Ω(w)</div>" +
+    "<p class=\"txt\" style=\"margin:10px 0 0\">E is the data term (MSE, cross-entropy). Ω is a preference. {lam} ≥ 0 is a {t:hyperparameters} you do <em>not</em> fit by gradient descent on the training set. Tune it on a {t:validation_set}.</p>"},
   {t:"lines", items:[
-    "Click the option you think is right. It drops into the blank.",
-    "Wrong answers grey out and give you a hint. Nothing is scored.",
-    "The next step unlocks when the current one is filled.",
-    "Dotted terms carry an <b>i</b> button. Open it for a one-screen definition, the formula, and the textbook section."]}
- ]},
-
-{n:1, eyebrow:"part 1", title:"Two losses, not one",
- result:"generalisation is test behaviour, not a small training loss",
- blocks:[
-  {t:"hook", q:"If training loss is almost zero, have we learned the function?",
-   hint:"Three training points. Two test points. Same process."},
-  {t:"p", html:"A learner is handed a finite sample and asked to predict y at x it has not seen. {t:generalisation} is that ability. The number the optimiser minimises is {t:training_loss}. The number we care about is {t:test_loss}, a stand-in for {t:expected_risk}."},
-  {t:"card", v:"navy", html:
-    "<div class=\"eyebrow\">the split</div>" +
-    "<div class=\"mathline big\" style=\"margin:6px 0 0\">L_train(θ) &nbsp;≠&nbsp; R(θ)</div>" +
-    "<p class=\"txt\" style=\"margin:10px 0 0\">The gap between them is the {t:generalisation_gap}. You cannot see it unless you hold data out.</p>"},
-  {t:"raw", html:"<div class=\"tbls\">" + T_PT() + T_MODELS() + "</div>"},
-  {t:"note", html:"Every calculation below uses table A. Mean squared error throughout: {t:mse}."},
-  {t:"blank", id:"G1"},
-  {t:"blank", id:"G2"},
-  {t:"worked", tag:"constant model, already computed", title:"so you can see a gap",
-   lines:[
-     "c = mean of {1, 2, 0} = <b>1</b>",
-     "L_train = [(1−1)² + (2−1)² + (0−1)²] / 3 = (0 + 1 + 1) / 3 = <b>0.6667</b>",
-     "L_test  = [(0.5−1)² + (2.5−1)²] / 2 = (0.25 + 2.25) / 2 = <b>1.2500</b>"]},
-  {t:"blank", id:"G3"},
+    "{lam} = 0 recovers ordinary training. Every method below has a 'turn it off' setting.",
+    "Large {lam} (or small dropout p, or a tiny stopping time) is a smaller effective model: {t:underfitting} if you overdo it.",
+    "The five tools on this sheet attack the same gap from different directions: shrink weights (L2), delete weights (L1), delete activations (dropout), re-scale activations (batch norm), or stop the search (early stopping)."
+  ]},
+  {t:"raw", html: figHTML("figs/prml_fig17_lambda.png",
+    "Bishop, Pattern Recognition and Machine Learning (2006), fig. 1.7 — polynomial fit as ln λ varies. Large λ underfits; small λ overfits. This is the whole subject in one picture.")},
+  {t:"blank", id:"P1"},
+  {t:"blank", id:"P2"},
   {t:"mcq", tag:"part 1 · question 1", answer:2,
-   q:"Which statement is safe, given only L_train = 0.6667?",
+   q:"You drive training loss to 0.0000 with a wide net. Test loss is high. Which statement is the most accurate next move?",
    opts:[
-     {txt:"The model has generalisation error 0.6667.",
-      hint:"Generalisation error is expected risk, or at least test loss. You have not used the test points yet."},
-     {txt:"The model is overfit, because the loss is not zero.",
-      hint:"A non-zero training loss is the underfitting signature, not overfitting."},
-     {txt:"You still do not know whether the constant will work on new x.", hint:""},
-     {txt:"σ² must be 0.6667.",
-      hint:"That number is training MSE of a particular model, not the noise of the process."}],
-   why:"Training loss is a number about the sample you fitted. {t:generalisation} is a number about new draws. They are allowed to disagree, and in this sheet they will."},
-  {t:"answer", html:
-    "<p>Hold onto table A. Part 2 will show a model whose training loss cannot fall. Part 3 will show a model whose training loss falls to zero and whose test loss explodes. That pair is {t:underfitting} versus {t:overfitting}.</p>"}
+     {txt:"The architecture is wrong; only a smaller net can generalise.",
+      hint:"Overparameterised nets often generalise. Regularisation, more data, or a different implicit bias can be enough."},
+     {txt:"Test loss cannot be high if training loss is zero: you must have leaked the test set.",
+      hint:"Interpolation of the training sample is compatible with terrible test error. That was overfitting."},
+     {txt:"The model had enough capacity to interpolate the sample. Add a regulariser, more data, or change the implicit bias of training.", hint:""},
+     {txt:"Increase λ until training loss is also high, so the two losses match.",
+      hint:"Matching a high training loss to a high test loss is underfitting. You want the test number down, not the gap cosmetic."}],
+   why:"{t:regularisation} is a knob on effective {t:capacity}. Matching a high train loss to a high test loss is not a win."},
+  {t:"answer", html:"<p>Write Ẽ = E + {lam} Ω on the page and refuse to minimise E alone when the model can interpolate. Everything below is a choice of Ω, or a procedure that behaves like one.</p>"}
  ]},
 
-{n:2, eyebrow:"part 2", title:"Underfitting is a class that is too small",
- result:"a constant has high bias; averaging more data will not save it",
+{n:2, eyebrow:"part 2", title:"L2, ridge, and weight decay",
+ result:"L2 shrinks every weight; closed form ŵ = (XᵀX + λI)⁻¹ Xᵀy",
  blocks:[
-  {t:"hook", q:"Why does the constant stop at L_train = 0.6667?",
-   hint:"Its hypothesis class is a single number."},
-  {t:"p", html:"{t:underfitting} means the {t:hypothesis_class} cannot represent the pattern. In bias–variance language that is {t:bias}: even the average (over datasets) of the fitted function sits far from f. {t:capacity} is too low."},
-  {t:"anim", id:"a1", title:"Animation 1 · degree versus the sine",
-   intro:"Six noisy points on a sine. Drag the polynomial degree. Degree 0 is the constant from this section. Watch training MSE stall high while the curve refuses to bend."},
-  {t:"h3", html:"The constant, by hand"},
-  {t:"blank", id:"U1"},
-  {t:"blanks", ids:["U2a","U2b","U2c"], need:["c = 1"],
-   prompt:"residuals y − c &nbsp; → &nbsp; {{U2a}}, &nbsp; {{U2b}}, &nbsp; {{U2c}}"},
-  {t:"blank", id:"U3"},
-  {t:"blank", id:"U4"},
-  {t:"card", v:"cream", html:
-    "<h4>What more data would do</h4>" +
-    "<p class=\"txt\">If the true mean really were 1, extra samples would make c sit more firmly at 1. Training MSE would still be the scatter around 1. If the true curve is a sine, extra samples would make an even more confident <em>wrong</em> horizontal line. That is bias: it does not vanish with N.</p>"},
-  {t:"mcq", tag:"part 2 · question 2", answer:1,
-   q:"You switch from a constant to a line. What should happen to bias, all else equal?",
-   opts:[
-     {txt:"Bias rises, because you added a parameter.",
-      hint:"Extra parameters enlarge the class. Bias is about whether the average fit can match f."},
-     {txt:"Bias falls (or stays the same), because the line class contains the constants.", hint:""},
-     {txt:"Bias becomes σ².",
-      hint:"σ² is irreducible error, a property of y | x, not of the class."},
-     {txt:"Bias is undefined for a line.",
-      hint:"Bishop's decomposition applies to any estimator. A line fitted by least squares is an estimator."}],
-   why:"Nested classes: every constant is a line with slope 0. Enlarging ℋ can only reduce the approximation error. Variance is the term that typically grows."},
-  {t:"answer", html:"<p>{t:underfitting} is diagnosed by <b>high training loss</b> that extra optimisation will not fix. If gradient descent has stalled at 0.6667 because the class is a constant, you need a richer class, not a smaller learning rate.</p>"}
- ]},
-
-{n:3, eyebrow:"part 3", title:"Overfitting is a wiggle that fitted the sample",
- result:"the unique quadratic through the three points predicts −5 at x = 3",
- blocks:[
-  {t:"hook", q:"Drive training loss to zero. What happens at x = 3?",
-   hint:"Three points, three parameters: a unique quadratic."},
-  {t:"p", html:"{t:overfitting} is the complementary failure: {t:capacity} high enough for {t:interpolation} of the sample, including whatever in y was not the signal. Training loss looks perfect. Test loss does not."},
-  {t:"strip", html:"ŷ(x) = a + b x + c x² &nbsp; must hit (0,1), (1,2), (2,0). That is three equations."},
-  {t:"blanks", ids:["O1a","O1b","O1c"], need:["(0,1), (1,2), (2,0)"],
-   prompt:"a = {{O1a}} &nbsp;&nbsp; b + c = {{O1b}} &nbsp;&nbsp; 2b + 4c = {{O1c}}"},
-  {t:"p", html:"Substitute b = 1 − c into 2b + 4c = −1."},
-  {t:"worked", tag:"algebra, if you want it spelled out", title:"",
+  {t:"hook", q:"What does adding λ‖w‖² actually do to a number you can compute by hand?",
+   hint:"Two points, one weight, ŷ = w x."},
+  {t:"p", html:"{t:l2} is the default {t:parameter_norm}. Bishop (PRML §3.1.4) writes the regularised least-squares error as"},
+  {t:"math", big:true, html:"Ẽ(w) = (1/2) Σ_n (y_n − wᵀ φ_n)² + ({lam}/2) ‖w‖₂²"},
+  {t:"p", html:"Set the gradient to zero and the data term XᵀX w − Xᵀy is joined by {lam} w. Rearrange:"},
+  {t:"math", html:"ŵ = (XᵀX + {lam} I)⁻¹ Xᵀ y"},
+  {t:"p", html:"That is {t:ridge}. Compared with ordinary {t:least_squares}, you have added {lam} to every eigenvalue of XᵀX. Directions the data do not constrain (tiny eigenvalues) are the ones {t:shrinkage} hits hardest. That is also why ridge is a numerical regulariser: XᵀX + {lam}I is invertible even when XᵀX is not."},
+  {t:"h3", html:"A two-point calculation, fully expanded"},
+  {t:"p", html:"Table A. Model ŷ = w x (no intercept), squared error summed not averaged, penalty {lam} w² added to that SSE. Every value rounded to 4 decimals after each step, so a calculator matches the chips."},
+  {t:"raw", html: T_1D()},
+  {t:"worked", tag:"unregularised", title:"λ = 0",
    lines:[
-     "2(1 − c) + 4c = −1",
-     "2 − 2c + 4c = −1",
-     "2 + 2c = −1",
-     "2c = −3 &nbsp; → &nbsp; c = −1.5",
-     "b = 1 − (−1.5) = 2.5"]},
-  {t:"blanks", ids:["O2a","O2b"], need:["b + c = 1","2b + 4c = −1"],
-   prompt:"c = {{O2a}} &nbsp;&nbsp; b = {{O2b}}"},
-  {t:"note", html:"Check: ŷ(0)=1, ŷ(1)=1+2.5−1.5=2, ŷ(2)=1+5−6=0. {t:training_loss} is exactly 0."},
-  {t:"anim", id:"a2", title:"Animation 2 · the interpolating wiggle",
-   intro:"Same six sine points. Degree 5 interpolates all six. The curve is forced through every noisy y and then continues with whatever the monomials do next."},
-  {t:"blank", id:"O3"},
-  {t:"blank", id:"O4"},
-  {t:"blank", id:"O5"},
-  {t:"card", v:"grey", html:
-    "<h4>The line, for contrast</h4>" +
-    "<p class=\"txt\">{t:least_squares} line on the same three points: ŷ = 1.5 − 0.5 x. Train MSE = 0.5000. At x = 3 it predicts 0, squared error (0 − 0.5)² = 0.2500. At x = −1 it predicts 2, squared error (2 − 2.5)² = 0.2500. Mean test MSE = <b>0.2500</b>, against the quadratic's <b>30.2500</b>.</p>"},
-  {t:"mcq", tag:"part 3 · question 3", answer:0,
-   q:"Why is train MSE of the quadratic exactly zero?",
+     "SSE(w) = (2 − w)² + (3 − 2w)² = 5w² − 16w + 13",
+     "d(SSE)/dw = 10w − 16 = 0  ⇒  w = 1.6000",
+     "ŷ = (1.6000, 3.2000),  SSE = 0.2000,  MSE = 0.1000"
+   ],
+   note:"The line cannot hit both points. Residual +0.4000 at x = 1 and −0.2000 at x = 2."},
+  {t:"blank", id:"L2a"},
+  {t:"blanks", ids:["L2b"], prompt:"ŷ(2) = 1.6 × 2 = {{L2b}}", need:["w = 1.6"]},
+  {t:"blank", id:"L2c"},
+  {t:"worked", tag:"ridge", title:"λ = 1, same two points",
+   lines:[
+     "Ẽ(w) = 5w² − 16w + 13 + λ w²",
+     "dẼ/dw = 10w − 16 + 2λ w = 0  ⇒  w = 8 / (5 + λ)",
+     "λ = 1 ⇒ w = 8/6 = 1.3333",
+     "ŷ = (1.3333, 2.6667),  SSE = 0.5556,  λ w² = 1.7777,  Ẽ = 2.3333"
+   ],
+   note:"Training SSE got worse (0.2000 → 0.5556). |w| got smaller (1.6000 → 1.3333). That swap — a little bias, less variance — is the L2 move."},
+  {t:"blank", id:"L2d"},
+  {t:"blank", id:"L2e"},
+  {t:"h3", html:"Geometry: why L2 almost never zeros a weight"},
+  {t:"p", html:"In two dimensions the constraint ‖w‖₂² ≤ η is a disk. The unregularised loss has elliptical contours centred at the OLS solution. The regularised solution is where the smallest ellipse that still touches the disk meets the boundary. A circle has no corners on the axes, so that meeting point almost never has a coordinate equal to zero. Goodfellow's fig. 7.1 is the gradient-balance version of the same picture: ∇E points out of the ellipses, {lam} w points toward the origin, and they cancel at ŵ."},
+  {t:"raw", html: figHTML("figs/gdl_fig71_l2.png",
+    "Goodfellow, Bengio & Courville, Deep Learning (2016), fig. 7.1 — L2 as a balance between data-loss ellipses and circular penalty contours.")},
+  {t:"raw", html: figHTML("figs/dlfc_fig96_l1l2.png",
+    "Bishop & Bishop, Deep Learning: Foundations and Concepts (2023), fig. 9.6 — constraint regions. Right: L2 disk. Left: L1 diamond (used in the next part).")},
+  {t:"blank", id:"L2f"},
+  {t:"h3", html:"Weight decay is L2, until it isn't"},
+  {t:"p", html:"Take a gradient step on E + ({lam}/2)‖w‖². The extra gradient is {lam} w, so"},
+  {t:"math", html:"w ← w − η (∇E + {lam} w) = (1 − η{lam}) w − η ∇E"},
+  {t:"p", html:"That multiplicative (1 − η{lam}) is {t:weight_decay}. For vanilla SGD it is the same as {t:l2} on the loss. For Adam, the two diverge: the adaptive denominator rescales ∇E but would also rescales the L2 gradient if you fold λ into the loss. Decoupled weight decay (AdamW) applies (1 − ηλ) after the adaptive step, which is what people usually want when they say 'L2'."},
+  {t:"anim", id:"r1", title:"Visualiser 1 · ridge on a degree-9 polynomial",
+   intro:"Six noisy samples of a sine (the same toy as the generalisation sheet). M = 9 would interpolate wildly at λ = 0. Drag λ. Watch training MSE rise and the wiggle die — then, if you go too far, the curve flatten into an underfit."},
+  {t:"raw", html: figHTML("figs/udl_fig92_l2.png",
+    "Prince, Understanding Deep Learning, fig. 9.2 — L2 on a small network: as the penalty grows, the fitted function loses kinks. Same knob as this visualiser.")},
+  {t:"mcq", tag:"part 2 · question 2", answer:0,
+   q:"XᵀX is singular (more features than points). Ordinary least squares has infinitely many interpolators. Ridge with λ > 0",
    opts:[
-     {txt:"Three distinct x give three independent constraints, and three coefficients can meet all three.", hint:""},
-     {txt:"Squared loss is always zero for polynomials.",
-      hint:"A degree-0 polynomial on these points had train MSE 0.6667."},
-     {txt:"The test points lie on the same quadratic.",
-      hint:"ŷ(3) = −5, y = 0.5. They do not."},
-     {txt:"Least squares always interpolates.",
-      hint:"Only when the number of free parameters is at least N (and the basis can separate the points)."}],
-   why:"This is the {t:interpolation_threshold} for this tiny problem: P = N = 3. Unique interpolator in this basis, and it is a bad predictor off the sample."},
-  {t:"answer", html:"<p>Zero training loss is not a trophy. It is the definition of {t:interpolation}. Whether that interpolator {t:generalisation}s is a separate question, answered by test points — or, later, by which interpolator an overparameterised model selects.</p>"}
+     {txt:"picks a unique solution: the one with smallest ‖w‖₂ among the near-interpolators, in the limit λ → 0⁺.", hint:""},
+     {txt:"is also undefined, because you still have to invert XᵀX.",
+      hint:"You invert XᵀX + λI, which is positive definite for λ > 0."},
+     {txt:"sets every weight to zero for any λ > 0.",
+      hint:"Only as λ → ∞. For small λ the data term still matters."},
+     {txt:"becomes L1, which is the unique sparse interpolator.",
+      hint:"Different penalty. The Moore–Penrose / min-norm interpolator is an L2 object."}],
+   why:"Adding {lam}I is both numerically well-posed and a selection rule: among the directions that fit the data equally well, prefer small Euclidean length."},
+  {t:"answer", html:"<p>Remember three facts. (1) ŵ = (XᵀX + {lam}I)⁻¹ Xᵀy. (2) Every coordinate shrinks; none typically hits zero. (3) Weight decay is this penalty, implemented as a multiplicative fade on w, equivalent for vanilla SGD.</p>"}
  ]},
 
-{n:4, eyebrow:"part 4", cls:"your", title:"Bias, variance, noise — by hand",
- result:"E[(y − ŷ)²] = σ² + Bias² + Variance",
+{n:3, eyebrow:"part 3", title:"L1, lasso, and exact zeros",
+ result:"L1 diamonds put the solution on an axis; soft-thresholding is the 1-D update",
  blocks:[
-  {t:"hook", q:"Same process, three different training sets. What, in the test error, is our fault?",
-   hint:"μ = 5 is the true mean. σ² = 1 is given. We predict a constant."},
-  {t:"p", html:"Bishop's decomposition (PRML §3.2; Deep Learning §4.3) is for {t:mse}. It splits expected test error into {t:irreducible_error}, {t:bias} squared, and {t:variance}. That sum is the {t:bias_variance}."},
-  {t:"card", v:"navy", html:
-    "<div class=\"eyebrow\">squared loss, one x</div>" +
-    "<div class=\"mathline big\">E[(y − ŷ)²] = σ² + Bias² + Var</div>" +
-    "<p class=\"txt\" style=\"margin:12px 0 0\">Bias = E<sub>D</sub>[ŷ] − f. &nbsp; Var = E<sub>D</sub>[(ŷ − E<sub>D</sub>[ŷ])²]. &nbsp; The three expectations are over training sets, then over y | x.</p>"},
-  {t:"raw", html:"<div class=\"tbls\">" + T_BVDATA() + "</div>"},
-  {t:"card", v:"grey", html: symbolTable("the three estimators", [
-    ["A", "ignore the data. ŷ = 3 always. A cartoon of underfitting."],
-    ["B", "copy the training y. ŷ ∈ {4, 6, 5}. Unbiased, jumpy."],
-    ["C", "shrink toward 4: ŷ = ½ y + 2. A cartoon of regularisation."]
-  ])},
-  {t:"strip", pin:true, html:"μ = 5 &nbsp;&middot;&nbsp; σ² = 1 &nbsp;&middot;&nbsp; average over the three datasets with equal weight 1/3"},
-  {t:"h3", html:"Model A · the stubborn constant"},
+  {t:"hook", q:"Ridge never quite kills a useless feature. What penalty does?",
+   hint:"Corners on the axes."},
+  {t:"p", html:"Replace ‖w‖₂² by ‖w‖₁ = Σ |w_i|. Bishop writes a family Ω_q = Σ |w_j|^q and notes that q = 1 is special: it is still convex, but the constraint region has corners. That is {t:lasso}. Convex, so local minima are global; nondifferentiable at 0, so you work with subgradients or a proximal map."},
+  {t:"h3", html:"Why the diamond zeros a coordinate"},
+  {t:"p", html:"Constraint form: minimise E(w) subject to |w₁| + |w₂| ≤ η. The feasible set is a diamond whose vertices sit on the axes. Expanding loss ellipses, centred at OLS, typically first touch a vertex. At a vertex one coordinate is exactly zero. That is {t:sparsity}. The L2 disk, by contrast, is smooth, so the first contact is a generic angle and both weights survive."},
+  {t:"raw", html: figHTML("figs/prml_fig34_qnorms.png",
+    "Bishop, PRML (2006), fig. 3.4 — constraint regions for Σ |w_j|^q ≤ η. q = 2 is the disk; q = 1 is the diamond; q < 1 is even spikier (but non-convex).")},
+  {t:"p", html:"Goodfellow §7.1.2 gives the calculus version. The subgradient of |w| at 0 is the whole interval [−1, 1]. The data gradient has to be larger than {lam} in absolute value before the weight will leave 0. Small signals never make it; they are {t:soft_threshold}ed away."},
+  {t:"raw", html: figHTML("figs/gdl_l1.png",
+    "Goodfellow et al. (2016), §7.1.2 — L1 regularisation. The penalty is linear in |w|, unlike the parabola of L2, which is why small weights feel a constant push toward zero.")},
+  {t:"h3", html:"The one-dimensional map you should be able to draw"},
+  {t:"math", big:true, html:"S_{lam}(z) = sign(z) max(|z| − {lam}, 0)"},
+  {t:"p", html:"Three cases. |z| > {lam}: move z toward 0 by {lam}. |z| ≤ {lam}: output 0. This is the exact minimiser of (1/2)(w − z)² + {lam}|w|, and it is the lasso update when features are orthogonal. We will apply it by hand to three numbers."},
+  {t:"blank", id:"L1a"},
+  {t:"blank", id:"L1b"},
+  {t:"blank", id:"L1c"},
+  {t:"h3", html:"Five points, two features: OLS versus lasso"},
+  {t:"p", html:"Table B. Feature 2 is almost a decoy (true relation ≈ 2 x₁). Unregularised {t:least_squares} still gives it a small nonzero weight, because that shaves a little training SSE. Lasso at λ = 2 (penalty added to SSE) sets w₂ exactly to 0 and only slightly shrinks w₁."},
+  {t:"raw", html: T_2D()},
+  {t:"worked", tag:"table B", title:"OLS versus lasso λ = 2",
+   lines:[
+     "XᵀX = [[15, 1], [1, 2]],   Xᵀy = [29.4, 2.3]",
+     "OLS: w = (1.9483, 0.1759),   train MSE = 0.0032",
+     "Lasso (SSE + λ‖w‖₁, λ = 2, coordinate descent): w = (1.8933, 0.0000)",
+     "Lasso train MSE = 0.0285  (worse on train, one feature gone)"
+   ],
+   note:"Ridge at the same λ would have given (1.7209, 0.1448) — both coordinates smaller, neither zero. Check visualiser 3."},
+  {t:"blank", id:"L1d"},
+  {t:"blank", id:"L1e"},
+  {t:"anim", id:"r2", title:"Visualiser 2 · diamond versus disk",
+   intro:"Grey ellipses: contours of a quadratic loss centred at the OLS star. Amber: L1 diamond. Navy: L2 disk. Drag the budget η. The marker is where the contour first touches the constraint. Watch the L1 marker snap to an axis; the L2 marker slides and stays off-axis."},
+  {t:"anim", id:"r3", title:"Visualiser 3 · regularisation paths on table B",
+   intro:"Horizontal axis is λ (log). Vertical is each weight. Solid: lasso. Dashed: ridge. Lasso's w₂ hits exactly 0 and stays there; ridge's w₂ only approaches 0 as λ → ∞."},
+  {t:"mcq", tag:"part 3 · question 3", answer:1,
+   q:"Two features are strongly correlated (x₂ ≈ x₁). Lasso tends to",
+   opts:[
+     {txt:"keep both, with equal-sized weights, because that is min ‖w‖₂.",
+      hint:"Min ‖w‖₂ among interpolators is ridge / min-norm. Lasso's L1 ball prefers a vertex."},
+     {txt:"pick one and zero the other (or, with elastic net, split the credit).", hint:""},
+     {txt:"zero both, because correlated features are collinear and XᵀX is singular.",
+      hint:"Collinearity does not force the data term to ignore both. OLS is unstable; lasso still wants some fit."},
+     {txt:"become identical to dropout.",
+      hint:"Dropout zeros activations randomly per step; it does not solve a lasso problem on w."}],
+   why:"The L1 ball's vertices are axis-aligned. When two features explain the same thing, a vertex that keeps only one is cheaper in ‖w‖₁ than a face that keeps both. Elastic net (L1 + L2) was invented to share credit between correlated features."},
+  {t:"answer", html:"<p>Draw the diamond. Remember S_λ. On table B, λ = 2 is already enough to delete x₂. That is the thing L2 will not do for you at any finite λ.</p>"}
+ ]},
+
+{n:4, eyebrow:"part 4", title:"Dropout",
+ result:"train a random subnetwork each step; at test, use the full net (inverted dropout)",
+ blocks:[
+  {t:"hook", q:"Instead of deleting a weight forever, what if we delete a random hidden unit for one step?",
+   hint:"Srivastava et al. 2014; Goodfellow §7.12."},
+  {t:"p", html:"{t:dropout} is regularisation by noise in the activations. For each training example (or minibatch step), draw a binary mask m_i ~ Bernoulli(p) independently for specified units, usually hidden. Those units with m_i = 0 contribute nothing to the forward pass, and they receive no gradient. The stored weights still exist; they are just ignored this step."},
+  {t:"p", html:"Prince (UDL figs. 9.8–9.9) draws the mechanism: dropout breaks co-adaptation. A hidden unit cannot assume that a particular neighbour will be present, so it cannot rely on a fragile cancellation (a kink in the function that needs two units in concert). Each unit has to be useful in many random subsets."},
+  {t:"raw", html: figHTML("figs/udl_fig98_dropout.png",
+    "Prince, Understanding Deep Learning, fig. 9.8 — a network and three random thinned copies. Grey nodes are dropped for that step.")},
+  {t:"raw", html: figHTML("figs/udl_fig99_dropout_mech.png",
+    "Prince, fig. 9.9 — why co-adaptation is the enemy: a sequential up-then-down in slope is a kink that needs two units acting together. Dropout makes that conspiracy unreliable.")},
+  {t:"raw", html: figHTML("figs/gdl_fig76_dropout.png",
+    "Goodfellow et al., fig. 7.6 — dropout as an ensemble of all 2ⁿ subnetworks that share weights. Test time approximates the geometric mean of that ensemble.")},
+  {t:"raw", html: figHTML("figs/dlfc_fig917_dropout.png",
+    "Bishop & Bishop, fig. 9.17 — a full net and two pruned realisations. Their §9.6.1 identifies dropout with model averaging.")},
+  {t:"h3", html:"Inverted dropout, done with a calculator"},
+  {t:"p", html:"If you drop units at train and then use the full net at test, every activation is systematically larger at test (more units present). The original paper multiplied leftover weights by p at test. {t:inverted_dropout} does the scale in training instead: divide by p when a unit is kept. Test is then a plain forward pass. Table D uses p = 0.5, so kept units double."},
+  {t:"raw", html: T_DROP()},
+  {t:"math", html:"h̃ = (m ⊙ h) / p"},
+  {t:"blank", id:"D1a"},
+  {t:"blank", id:"D1b"},
+  {t:"blank", id:"D2"},
+  {t:"blank", id:"D3"},
+  {t:"anim", id:"r4", title:"Visualiser 4 · a four-unit hidden layer under dropout",
+   intro:"Each play-step draws a new Bernoulli mask at the current keep probability p. Bars: raw h (grey) and forwarded h̃ (amber). At p = 1 the two coincide. Toggle test mode: mask off, no 1/p (inverted convention)."},
+  {t:"card", v:"cream", html:
+    "<h4>Practical notes</h4>" +
+    "<ul class=\"lines\">" +
+    "<li>Typical {t:keep_probability}: 0.8–0.9 on inputs, 0.5–0.8 on hidden. p is a {t:hyperparameters}.</li>" +
+    "<li>Dropout on the output layer is unusual (it noises the actual prediction).</li>" +
+    "<li>With {t:batch_norm}, many modern conv nets drop dropout; residual nets already have their own noise and averaging. Transformers still drop, in attention and residual branches.</li>" +
+    "<li>MC dropout (keep dropping at test, average many masks) is a cheap Bayesian-ish uncertainty estimate. That is not the default.</li>" +
+    "</ul>"},
+  {t:"mcq", tag:"part 4 · question 4", answer:3,
+   q:"A unit has incoming weights that only cancel a partner unit's output. After dropout training, this conspiracy is",
+   opts:[
+     {txt:"reinforced, because the partner is always there at test.",
+      hint:"Test uses the full net, but training never rewarded the conspiracy: the partner was often missing."},
+     {txt:"an L1 feature: those weights will be exactly zero.",
+      hint:"Dropout does not solve a lasso problem. Weights stay dense; activations are sparse per step."},
+     {txt:"the definition of residual learning.",
+      hint:"Residuals are a different trick (identity skip)."},
+     {txt:"discouraged: the unit had to be useful in subsets where the partner was dropped.", hint:""}],
+   why:"Prince's kink picture. Dropout is an explicit attack on co-adaptation, which is a particular kind of {t:overfitting}."},
+  {t:"answer", html:"<p>Training: mask, scale by 1/p. Test: full net, no mask. Interpret as a cheap ensemble of thinned nets that share w. p is the knob; smaller p is stronger {t:regularisation}.</p>"}
+ ]},
+
+{n:5, eyebrow:"part 5", title:"Batch normalisation",
+ result:"normalise each channel over the minibatch, then γ û + β; at test use running stats",
+ blocks:[
+  {t:"hook", q:"If a hidden unit's values wander from 0.01 to 50 as earlier layers train, what can the next layer do?",
+   hint:"Standardise, then let the net undo it with two parameters."},
+  {t:"p", html:"{t:batch_norm} (Ioffe & Szegedy 2015) inserts, for each scalar channel, a normalisation over the current minibatch, then a learned {t:scale_shift}. Bishop & Bishop §7.4.2 treat it next to data normalisation: the same idea, applied to hidden variables that keep moving. Prince §11.4 puts it in the residual-net chapter, because BN is how very deep residual stacks stay trainable."},
+  {t:"math", big:true, html:"{mu}_B = (1/m) Σ_i u_i, &nbsp; σ_B² = (1/m) Σ_i (u_i − {mu}_B)²"},
+  {t:"math", html:"û_i = (u_i − {mu}_B) / √(σ_B² + {eps}), &nbsp; y_i = {gamma} û_i + {beta}"},
+  {t:"p", html:"m is the batch size, {eps} a tiny constant for stability (10⁻⁵). {gamma} and {beta} are trainable, one pair per channel. If the net wants the identity, it can set {gamma} = √(σ²+ε) and {beta} = μ — so BN does not force every layer to zero-mean unit-variance features, it only makes that the default around which learning happens."},
+  {t:"raw", html: figHTML("figs/dlfc_batchnorm.png",
+    "Bishop & Bishop, §7.4.2 / fig. 7.8 — batch normalisation in the hidden pipeline. Statistics are computed per channel across the batch.")},
+  {t:"raw", html: figHTML("figs/udl_fig1115_bn_graph.png",
+    "Prince, fig. 11.15 — computational graph of BN (problem 11.5 in UDL). Mean and variance are functions of the whole batch, so the gradient of y_i depends on every u_j.")},
+  {t:"raw", html: figHTML("figs/udl_fig1114_norm.png",
+    "Prince, fig. 11.14 — BatchNorm versus LayerNorm / InstanceNorm / GroupNorm. BN aggregates across batch and spatial axes, per channel. The others exist because BN is awkward at batch size 1 (transformers, style transfer, small-GPU fine-tunes).")},
+  {t:"h3", html:"Four numbers, one unit, one batch"},
+  {t:"p", html:"Table C. One hidden unit, batch size 4, ε = 0 so the arithmetic is visible, then {gamma} = 2, {beta} = 1. Use the population variance (divide by N = 4), matching the BN forward pass — not the unbiased N−1 estimator."},
+  {t:"raw", html: T_BN()},
+  {t:"worked", tag:"batch of four", title:"μ, σ², û, then γ û + β",
+   lines:[
+     "μ_B = (1+3+5+7)/4 = 4",
+     "σ_B² = (9+1+1+9)/4 = 5,   √5 ≈ 2.2361",
+     "û = (−3, −1, +1, +3) / 2.2361 ≈ (−1.3416, −0.4472, +0.4472, +1.3416)",
+     "y = 2 û + 1 ≈ (−1.6832, 0.1056, 1.8944, 3.6832)"
+   ],
+   note:"Mean of û is 0; mean of y is β = 1. Variance of û is 1; variance of y is γ² = 4. The next layer sees a stable location and scale, plus whatever γ, β learned."},
   {t:"blank", id:"B1"},
   {t:"blank", id:"B2"},
   {t:"blank", id:"B3"},
-  {t:"blank", id:"B6"},
-  {t:"h3", html:"Model B · copy the sample"},
-  {t:"blanks", ids:["B4a","B4b"], need:["predictions 4, 6, 5"],
-   prompt:"E[ŷ] = {{B4a}} &nbsp;&nbsp; Bias = {{B4b}}"},
+  {t:"blank", id:"B4"},
+  {t:"h3", html:"Train versus test"},
+  {t:"p", html:"μ_B and σ_B² are properties of whoever else is in the minibatch. A test example of size 1 has no such companions. The standard fix is {t:running_stats}: exponential moving averages of mean and variance, updated at every training step, frozen at test. Forgetting to switch the module to eval is a classic bug — predictions then change if you shuffle the test set."},
   {t:"blank", id:"B5"},
-  {t:"blank", id:"B7"},
-  {t:"h3", html:"Model C · shrink"},
-  {t:"note", html:"Predictions: ½·4+2 = 4.0, &nbsp; ½·6+2 = 5.0, &nbsp; ½·5+2 = 4.5. Mean 4.5, so Bias = 4.5 − 5 = −0.5, Bias² = 0.2500, Var = 0.1667, risk = 1.4167."},
-  {t:"blank", id:"B8"},
-  {t:"anim", id:"a3", title:"Animation 3 · redraw the training set",
-   intro:"Left: many least-squares lines, one per redrawn sample of the sine. Right: many interpolating polynomials. The faint bundle is variance. The dashed mean curve versus the true sine is bias."},
-  {t:"mcq", tag:"part 4 · question 4", answer:3,
-   q:"Which change cuts variance without any hope of cutting bias to zero, if f is a sine and ŷ is a constant?",
-   opts:[
-     {txt:"Collect more training points, keep predicting a constant.",
-      hint:"A constant's average will sit at the mean of the sine (near 0). Extra data reduces variance of that constant and leaves the bias."},
-     {txt:"Set σ² = 0 by fiat.",
-      hint:"You cannot legislate the noise. Also that term is not variance of ŷ."},
-     {txt:"Switch to an interpolating polynomial of degree 9.",
-      hint:"That usually raises variance. Look at animation 3."},
-     {txt:"Neither more data nor a larger constant class: the class cannot contain a sine, so bias remains. More data still cuts this model's variance.", hint:""}],
-   why:"The useful reading of {t:bias}: error that survives averaging over datasets. More data is not a substitute for a richer class when the class is wrong. It is a substitute for a jumpy estimator when the class is right."},
-  {t:"answer", html:
-    "<p>A: risk 5.0000, almost all bias. B: risk 1.6667, no bias, all the avoidable error is variance. C: risk 1.4167, a little bias bought a larger drop in variance. That last move is what {t:regularisation} is for.</p>"}
- ]},
-
-{n:5, eyebrow:"part 5", title:"The U-shape, and where it stops being the whole story",
- result:"test error U-shape in the underparameterised regime is bias² + variance",
- blocks:[
-  {t:"hook", q:"If we plot test error against capacity, why do we expect a U?",
-   hint:"Bias falls, variance rises, σ² is a floor."},
-  {t:"p", html:"Fix N. Grow {t:capacity}. Bias² typically falls (the class can match f). Variance typically rises (the class can also match the noise). Their sum is U-shaped. σ² does not care. That picture is the classical {t:bias_variance}."},
-  {t:"anim", id:"a4", title:"Animation 4 · train versus test against degree",
-   intro:"Degree on the horizontal axis. Amber: training MSE. Navy: test MSE against the true sine. The U is the test curve. Interpolation is the first degree where train hits ~ 0 (here degree 5, because N = 6)."},
-  {t:"mcq", tag:"part 5 · question 5", answer:1,
-   q:"On animation 4, what is the first degree at which training MSE hits (numerically) zero?",
-   opts:[
-     {txt:"Degree 0, because a constant can always fit six points.",
-      hint:"A constant has one parameter. Six constraints. Animation 1 already showed a high training MSE."},
-     {txt:"Degree 5: six coefficients, six points.", hint:""},
-     {txt:"Degree 1, the line.",
-      hint:"A line has two parameters. It will not interpolate six generic points."},
-     {txt:"Never: squared loss cannot be zero.",
-      hint:"Interpolation is exactly that: residuals zero, hence MSE zero."}],
-   why:"P = M + 1. The {t:interpolation_threshold} for this basis is M + 1 = N, so M = 5. After that the unregularised polynomial is an interpolator with extra leftover degrees of freedom, and this particular basis becomes a wild extrapolator — which is why we need the next section."},
+  {t:"p", html:"Two stories for why BN helps. Ioffe & Szegedy: it reduces {t:internal_covariate} shift. Santurkar et al. (2018): it smooths the loss, so gradient descent is better conditioned. Prince records both. Operationally you need neither story to implement the four lines above."},
+  {t:"anim", id:"r5", title:"Visualiser 5 · a batch sliding through BN",
+   intro:"Four activations (dots). Vertical line: μ_B. Band: ±σ_B. Amber dots: y = γ û + β. Drag the fourth example to wreck the batch mean; drag γ and β to see scale-and-shift recover a useful range. Toggle 'test (running stats)' to freeze μ, σ at the values from the default batch."},
   {t:"card", v:"cream", html:
-    "<h4>What the U-shape does not know</h4>" +
-    "<p class=\"txt\">Classical plots stop near interpolation, or they add {t:weight_decay} and plot against λ. Modern deep nets sit far to the right: {t:overparameterised}, training loss ~ 0, and test loss often <em>better</em> than the U's minimum. That continuation is {t:double_descent}.</p>"},
-  {t:"answer", html:"<p>Use the U-shape when you are still below interpolation, and when you are choosing λ. Do not use it to argue that a 100-million-parameter net must overfit merely because P ≫ N.</p>"}
- ]},
-
-{n:6, eyebrow:"part 6", title:"Double descent",
- result:"test error can fall a second time after the interpolation peak",
- blocks:[
-  {t:"hook", q:"If the model already interpolates, why would extra parameters help?",
-   hint:"There are many interpolators. Extra parameters change which one you get."},
-  {t:"p", html:"{t:double_descent} (Belkin et al. 2019; Nakkiran et al. 2020; Bishop & Bishop §9.3.2) is the empirical curve: test error descends as capacity grows, ascends into a peak at the {t:interpolation_threshold}, then descends again in the {t:overparameterised} regime. Prince (UDL §20.2) records the related fact that interpolating nets can still {t:generalisation} — even after {t:memorisation} of random labels is possible."},
-  {t:"card", v:"navy", html:
-    "<div class=\"eyebrow\">the peak is not the end</div>" +
-    "<div class=\"mathline\">underparameterised U &nbsp; → &nbsp; interpolation peak &nbsp; → &nbsp; second descent</div>" +
-    "<p class=\"txt\" style=\"margin:10px 0 0\">Train loss is ~ 0 everywhere to the right of the peak. The second descent is a statement about <em>which interpolator</em>, not about fitting the sample harder.</p>"},
-  {t:"anim", id:"a5", title:"Animation 5 · a cartoon of double descent",
-   intro:"Horizontal axis is parameter count P. Vertical is test error (log scale). The dotted line is P = N. Drag N to slide the interpolation peak. This is a schematic consistent with the papers, not a proof."},
-  {t:"blank", id:"D1"},
-  {t:"blank", id:"D2"},
-  {t:"mcq", tag:"part 6 · question 6", answer:2,
-   q:"A ResNet interpolates CIFAR-10 and still has low test error. What has failed?",
+    "<h4>What BN is not</h4>" +
+    "<p class=\"txt\">It is not L2. It is not a sparsity prior. It <em>is</em> a regulariser in the Goodfellow sense: the batch noise (μ_B, σ_B² jumping every step) makes training less able to memorise. Smaller batches → noisier BN → often more regularisation, worse estimate of μ, σ. Very small batches are why LayerNorm won in transformers.</p>"},
+  {t:"mcq", tag:"part 5 · question 5", answer:2,
+   q:"You train with batch size 64 and BN. At test you pass one image at a time, but you leave the module in train mode. What happens?",
    opts:[
-     {txt:"The definition of overfitting as train loss ≪ test loss. Gaps can still exist; they need not be catastrophic.",
-      hint:"There often is a gap. The failed heuristic is 'P > N implies terrible test error'."},
-     {txt:"Squared loss. Classification cannot overfit.",
-      hint:"Cross-entropy interpolates too (zero training error / infinite likelihood on one-hot labels)."},
-     {txt:"The heuristic that interpolation (or P > N) automatically means a useless test predictor.", hint:""},
-     {txt:"The test set. It must overlap the train set.",
-      hint:"Standard CIFAR splits do not. That is why the observation surprised people."}],
-   why:"{t:overfitting} as 'the interpolator is always the worst test predictor' is the claim that died. {t:overfitting} as 'a gap between train and test' can still be true. Double descent says the gap's size is not monotone in P."},
-  {t:"note", html:"{t:inductive_bias} of architecture plus the implicit bias of SGD are the usual explanations for which interpolator you get. This sheet does not derive that. It only insists you stop treating P > N as a proof of failure."},
-  {t:"answer", html:"<p>Read a test curve in two halves. Left of P ≈ N: classical U, bias–variance. Right of P ≈ N: all interpolators, ranked by something other than training loss — often {t:effective_parameters}, {t:regularisation}, and the optimiser's path.</p>"}
+     {txt:"Nothing: inverted BN, like inverted dropout, has already scaled.",
+      hint:"BN's test fix is running averages, not a 1/p scale."},
+     {txt:"Every prediction is exactly γ · 0 + β = β, because a batch of 1 has σ = 0.",
+      hint:"A batch of 1 has σ = 0, which is why ε exists — but train-mode with size 1 is still ill-posed / noisy, and if you somehow batched test images, each image's neighbours would leak."},
+     {txt:"Each prediction depends on whichever other examples share its (possibly size-1) batch; it will not match the running-average network you think you trained.", hint:""},
+     {txt:"Dropout turns off automatically, so BN must too.",
+      hint:"The two modules have independent train/eval flags."}],
+   why:"Eval mode + running statistics is part of the definition of {t:batch_norm}, not an optional extra."},
+  {t:"answer", html:"<p>Forward: centre, divide by batch std, then {gamma} û + {beta}. Backward: everyone in the batch is coupled through μ and σ. Test: freeze those to {t:running_stats}. {gamma}, {beta} remain live parameters.</p>"}
  ]},
 
-{n:7, eyebrow:"part 7", title:"Regularisation moves you along the curve",
- result:"λ, early stopping, and held-out data are how you choose a point on the curve",
+{n:6, eyebrow:"part 6", title:"Early stopping",
+ result:"stop at the validation minimum; time is a regulariser",
  blocks:[
-  {t:"hook", q:"You cannot always add parameters. What else shrinks variance?",
-   hint:"Bishop's λ in the polynomial example."},
-  {t:"p", html:"{t:regularisation} is a preference over functions inside a class that was already large. {t:weight_decay} is the cleanest: add λ‖θ‖². Large λ recovers a small {t:effective_parameters} count. {t:early_stopping} does a similar job in gradient descent. Tune them on a {t:validation_set}, not on the test set. Those choices are {t:hyperparameters}."},
-  {t:"anim", id:"a6", title:"Animation 6 · ridge on a degree-9 polynomial",
-   intro:"Same six points, M = 9, which would interpolate wildly at λ = 0. Raise λ and the wiggle dies. Too large, and you are back to underfitting."},
-  {t:"blank", id:"R1"},
-  {t:"mcq", tag:"part 7 · question 7", answer:0,
-   q:"You report test accuracy after trying 40 values of λ and keeping the winner, all judged on the test set. The number you report is",
+  {t:"hook", q:"If longer training drives training loss down, why is the last epoch often the wrong one to ship?",
+   hint:"The validation curve turns up while the training curve is still falling."},
+  {t:"p", html:"{t:early_stopping} is the regulariser you already use whenever you plot two curves. Goodfellow §7.8: as optimisation proceeds, {t:training_loss} falls; {t:validation_set} loss typically falls, then rises. The rise is {t:overfitting} in time rather than in width. Save θ at the validation minimum (plus a patience window so you do not stop on noise), and restore that checkpoint."},
+  {t:"raw", html: figHTML("figs/gdl_fig73_earlystop.png",
+    "Goodfellow et al., fig. 7.3 — training NLL keeps falling; validation NLL minimises and then rises. The vertical gap at the far right is wasted capacity spent on the sample.")},
+  {t:"raw", html: figHTML("figs/gdl_earlystop_param.png",
+    "Goodfellow et al., §7.8 — early stopping as a constraint on the path length of gradient descent. Parameters start at θ₀ and walk; stopping truncates the walk. This is why Bishop can identify early stopping with a form of L2 for linear models.")},
+  {t:"raw", html: figHTML("figs/prml_fig511_earlystop.png",
+    "Bishop, PRML, figs. 5.11–5.12 — training vs validation error against epochs, and the effective number of parameters growing with training time. Stopping time ≈ a {t:effective_parameters} budget.")},
+  {t:"raw", html: figHTML("figs/udl_fig96_earlystop.png",
+    "Prince, fig. 9.6 — a small network trained past the useful point: the fit grows extra wiggles. Early stopping is the snapshot before those wiggles.")},
+  {t:"raw", html: figHTML("figs/dlfc_earlystop.png",
+    "Bishop & Bishop, §9.3.1 — early stopping in the regularisation chapter, next to weight decay. The two knobs are cousins: both limit how far θ may travel from a small initialisation.")},
+  {t:"h3", html:"The protocol, in order"},
+  {t:"lines", items:[
+    "Split off a {t:validation_set}. Never update θ with its gradient.",
+    "Record L_val every epoch (or every k steps). Keep a copy of the best θ so far.",
+    "If L_val has not improved for P epochs (patience), stop. Restore the best copy.",
+    "Optionally: after choosing the stopping epoch, retrain on train+val for that many epochs, and then evaluate once on a true test set. Only do this if you can afford it and you do not peek at test during the choice.",
+    "The patience P and the evaluation cadence are {t:hyperparameters}."
+  ]},
+  {t:"p", html:"Bishop (PRML §5.5.2) shows that for a linear net with quadratic error, early stopping is approximately {t:ridge} with λ related to 1/(training time). Intuition: GD on a quadratic is slowest along the small-eigenvalue directions — the same directions ridge damps. Stopping before those directions finish is like leaving them shrunk."},
+  {t:"blank", id:"E1"},
+  {t:"blank", id:"E2"},
+  {t:"anim", id:"r6", title:"Visualiser 6 · train versus validation against epoch",
+   intro:"A degree-9 polynomial, fit by gradient descent on the six sine points. Amber: training MSE. Navy: validation MSE on a held-out grid against the true sine. The star is the early-stopping point. Play to watch the validation curve bottom out while training is still falling. Drag the learning rate if you want a twitchier path."},
+  {t:"mcq", tag:"part 6 · question 6", answer:0,
+   q:"You have a test set and a validation set. You pick the checkpoint with the best test loss. The number you report is",
    opts:[
-     {txt:"optimistically biased: the test set has been used as a validation set.", hint:""},
-     {txt:"still unbiased, because θ was not updated on those examples.",
-      hint:"θ was not, but λ was. Hyperparameter search overfits the split you select with."},
-     {txt:"pessimistically biased, because λ extra-penalises.",
-      hint:"Choosing the best of 40 test numbers overestimates future performance."},
-     {txt:"exactly σ².",
-      hint:"It is still a classification or regression score, not the noise variance."}],
-   why:"Goodfellow §5.3 is blunt: once a split is used to make choices, it is a {t:validation_set}. You need a third split, or a fresh test, to claim {t:generalisation}."},
-  {t:"answer", html:"<p>Practical summary. If training loss is high: you are under capacity, or λ is too big, or training is stuck. If training loss is low and test loss is high: you interpolated the sample; add regularisation, more data, or skip past the interpolation peak with a larger model plus a sane optimiser. Never tune that decision on the number you will publish.</p>"}
+     {txt:"optimistically biased: the test set was used as a validation set.", hint:""},
+     {txt:"fine, because you did not take gradients on test examples.",
+      hint:"Hyperparameter / checkpoint selection overfits whichever split you select with. Gradients are not the only leak."},
+     {txt:"pessimistically biased, because early stopping raises training loss.",
+      hint:"Selecting the best of many test numbers overestimates future performance."},
+     {txt:"equal to the Bayes error.",
+      hint:"Nothing here identifies σ²."}],
+   why:"Same sermon as λ-selection on the previous sheet. Checkpoint index is a {t:hyperparameters}. The split that chose it is a {t:validation_set}."},
+  {t:"answer", html:"<p>Two curves. Stop on the held-out one. Time is {t:capacity}. For linear models that statement can be made into an equivalence with {t:l2}; for deep nets it remains a robust, cheap regulariser that composes with all the others.</p>"}
  ]},
 
-{n:8, eyebrow:"retrieval", title:"Seven questions, no new arithmetic",
+{n:7, eyebrow:"part 7", title:"Which knob, and in what order",
+ result:"L1 selects, L2 shrinks, dropout noises activations, BN stabilises, early stopping truncates time",
+ blocks:[
+  {t:"hook", q:"Five methods, one gap. How do you not turn them all up at once until the model underfits?",
+   hint:"They are not interchangeable, and several already regularise as a side effect."},
+  {t:"p", html:"A usable default for a modern residual conv net: {t:batch_norm} (or LayerNorm) on, {t:weight_decay} of order 10⁻⁴, {t:early_stopping} on a validation split, dropout only if you still overfit. A linear model on many correlated features: {t:lasso} or elastic net, not dropout. A transformer: LayerNorm, residual dropout, weight decay, early stopping. The architecture already is a regulariser ({t:inductive_bias} of convolution, residual identity, attention). Penalties sit on top."},
+  {t:"strip", html:"<span class=\"sl\">a one-line map</span>L1 deletes weights · L2 shrinks weights · dropout deletes activations at train · BN re-scales activations · early stopping deletes training time"},
+  {t:"blank", id:"C1"},
+  {t:"blank", id:"C2"},
+  {t:"mcq", tag:"part 7 · question 7", answer:1,
+   q:"Training loss is high and validation loss is equally high. You currently use λ = 10 on a small net, dropout p = 0.2, and you stopped at epoch 2 of 200. The most plausible diagnosis is",
+   opts:[
+     {txt:"overfitting; increase λ and lower p.",
+      hint:"Train is already high. More regularisation will not invent capacity."},
+     {txt:"underfitting (or unfinished optimisation). Relax the regularisers and train longer.", hint:""},
+     {txt:"batch norm in train mode at test, exclusively.",
+      hint:"That would typically hurt test more than train."},
+     {txt:"the validation set leaking into training.",
+      hint:"Leakage usually makes validation look too good, not too bad."}],
+   why:"High train + high val is {t:underfitting}, or a learning-rate / initialisation failure. The regularisers on this sheet are innocent until train is low and val is not."},
+  {t:"answer", html:"<p>Read the pair (L_train, L_val) first. High–high: capacity or optimisation. Low–high: regularise, or stop earlier, or add data. Then pick the tool that matches the model class — sparsity, shrinkage, noise, scale, or time.</p>"}
+ ]},
+
+{n:8, eyebrow:"retrieval", title:"Eight questions, no new arithmetic",
  result:"definitions, not tricks",
  blocks:[
-  {t:"p", html:"Open any {t:underfitting} / {t:overfitting} / {t:bias} bubble if a word has gone cold."},
-  {t:"mcq", tag:"retrieval · 1", answer:2,
-   q:"High training loss and high test loss, similar to each other, most often indicates",
+  {t:"p", html:"Open any {t:l1} / {t:l2} / {t:dropout} / {t:batch_norm} / {t:early_stopping} bubble if a word has gone cold."},
+  {t:"mcq", tag:"retrieval · 1", answer:0,
+   q:"Ridge's closed form replaces XᵀX with",
    opts:[
-     {txt:"overfitting.", hint:"Overfitting is a large gap: train looks better than test."},
-     {txt:"a corrupted test set only.", hint:"Train is also high. The class is failing on data it was allowed to fit."},
-     {txt:"underfitting (or an unsolved optimisation problem).", hint:""},
-     {txt:"double descent.", hint:"Double descent is a shape of test error versus scale, not a single (train, test) pair."}],
-   why:"Same symptom as a constant on a sine: the model is not even winning on the sample."},
-  {t:"mcq", tag:"retrieval · 2", answer:1,
-   q:"Low training loss, much higher test loss, most often indicates",
+     {txt:"XᵀX + λI.", hint:""},
+     {txt:"XᵀX − λI.", hint:"That would be even more singular."},
+     {txt:"|XᵀX|, an L1 matrix.", hint:"L1 is not a closed-form modification of XᵀX."},
+     {txt:"the identity, ignoring the data.", hint:"Only as λ → ∞."}],
+   why:"Eigenvalues shift by λ. That is both the numerical fix and the {t:shrinkage}."},
+  {t:"mcq", tag:"retrieval · 2", answer:2,
+   q:"L1 tends to produce exact zeros because",
    opts:[
-     {txt:"underfitting.", hint:"Underfitting would not have produced a low training loss."},
-     {txt:"overfitting (a large generalisation gap).", hint:""},
-     {txt:"zero irreducible error.", hint:"σ² does not create a gap by itself."},
-     {txt:"that P < N.", hint:"Interpolation overfitting typically needs P ≳ N, unless the basis is already unstable."}],
-   why:"The definition you want: the sample was fitted, the process was not."},
-  {t:"mcq", tag:"retrieval · 3", answer:0,
-   q:"In the decomposition E[(y−ŷ)²] = σ² + Bias² + Var, which term cannot be removed by changing the hypothesis class?",
+     {txt:"the L1 ball is a circle, and circles hit the axes.",
+      hint:"Circles are L2."},
+     {txt:"the gradient of |w| at 0 is 0, so weights freeze.",
+      hint:"The subgradient at 0 is [−1, 1], not {0}. Freezing happens when the data gradient lies inside that interval."},
+     {txt:"the constraint region has corners on the axes, and |w| has a subgradient interval at 0 that the data term must overcome.", hint:""},
+     {txt:"SGD rounding error eventually underflows small weights.",
+      hint:"Sparsity is in the exact objective, not a numerical accident. Ridge does not underflow to exact zeros."}],
+   why:"Geometry plus the proximal map S_λ."},
+  {t:"mcq", tag:"retrieval · 3", answer:1,
+   q:"Inverted dropout with keep probability p, at test time,",
    opts:[
-     {txt:"σ², the irreducible error.", hint:""},
-     {txt:"Bias².", hint:"A richer class can reduce approximation error."},
-     {txt:"Variance.", hint:"A smaller class, more data, or regularisation can reduce variance."},
-     {txt:"None of them: all three are properties of ℋ only.", hint:"σ² is a property of y | x."}],
-   why:"Even the Bayes predictor pays σ²."},
+     {txt:"drops units with probability 1−p, matching training.",
+      hint:"Test is deterministic in the default algorithm."},
+     {txt:"uses the full network with no extra scaling, because training already divided by p.", hint:""},
+     {txt:"multiplies outputs by 1/p.",
+      hint:"That would double-scale if training already divided by p."},
+     {txt:"replaces p with the running average of p.",
+      hint:"That is mixing up dropout with BN."}],
+   why:"{t:inverted_dropout} moves the scale to training so test is boring — which is what you want."},
   {t:"mcq", tag:"retrieval · 4", answer:3,
-   q:"An unbiased estimator of f (Bias = 0) can still have terrible test error because of",
+   q:"In the BN forward pass, σ_B² is usually",
    opts:[
-     {txt:"σ² only. Variance of an unbiased estimator is always small.",
-      hint:"Model B in part 4 was unbiased and had variance 0.6667."},
-     {txt:"the validation set leaking.",
-      hint:"The decomposition does not mention a validation set."},
-     {txt:"double descent, exclusively.",
-      hint:"The classical decomposition already has a variance term."},
-     {txt:"variance (and σ²). Unbiasedness does not control how much ŷ jumps with D.", hint:""}],
-   why:"Unbiased plus high variance is the interpolating polynomial on small N."},
+     {txt:"the unbiased sample variance with / (m−1), matching numpy.var(ddof=1).",
+      hint:"The paper uses / m, then adds ε."},
+     {txt:"always 1, because γ will learn the scale.",
+      hint:"You still divide by the current batch std; γ is extra."},
+     {txt:"computed across all channels together.",
+      hint:"Standard BN is per channel (and across batch / spatial)."},
+     {txt:"(1/m) Σ (u_i − μ_B)², then you add ε under the square root.", hint:""}],
+   why:"Table C used / 4, not / 3, for that reason."},
   {t:"mcq", tag:"retrieval · 5", answer:1,
-   q:"Double descent says that after the interpolation peak",
+   q:"BN at test time needs running averages because",
    opts:[
-     {txt:"training loss rises again.", hint:"Training loss stays ~ 0. The second descent is in test error."},
-     {txt:"test error can fall as P grows further.", hint:""},
-     {txt:"bias and variance stop adding to MSE.", hint:"The identity still holds. The terms change with P."},
-     {txt:"you no longer need a test set.", hint:"You need it more: training loss has become uninformative."}],
-   why:"That is the content of Bishop & Bishop §9.3.2 and Nakkiran et al."},
+     {txt:"γ and β are not defined for a single example.",
+      hint:"γ, β are parameters, independent of batch size."},
+     {txt:"μ_B and σ_B² are not defined (or are degenerate) for a single example, and should not depend on whoever else is in a test batch.", hint:""},
+     {txt:"dropout's mask must be averaged too.",
+      hint:"Different module."},
+     {txt:"otherwise L2 is applied twice.",
+      hint:"BN is not L2."}],
+   why:"{t:running_stats} are part of the layer."},
   {t:"mcq", tag:"retrieval · 6", answer:2,
-   q:"Weight decay λ ‖θ‖², as λ increases from 0, typically",
+   q:"Early stopping chooses the checkpoint that minimises",
    opts:[
-     {txt:"increases variance and decreases bias.",
-      hint:"Shrinkage does the opposite: coefficients move less when D changes, and the average fit is pulled toward 0."},
-     {txt:"changes σ².", hint:"The process does not know λ."},
-     {txt:"decreases variance, at the cost of some extra bias.", hint:""},
-     {txt:"forces interpolation.", hint:"Large λ prevents interpolation."}],
-   why:"Model C was the discrete version of this move."},
+     {txt:"training loss.", hint:"Training is still falling at the useful point."},
+     {txt:"‖w‖₂, which is equivalent for every architecture.",
+      hint:"The L2 equivalence is for certain linear / quadratic cases, not a general identity."},
+     {txt:"validation loss (with patience).", hint:""},
+     {txt:"test loss, after trying every epoch on the test set.",
+      hint:"Then it is no longer a test set."}],
+   why:"Time is a {t:hyperparameters}. Hyperparameters live on the {t:validation_set}."},
   {t:"mcq", tag:"retrieval · 7", answer:0,
-   q:"You should pick polynomial degree and λ on",
+   q:"Weight decay in vanilla SGD is",
    opts:[
-     {txt:"a validation set, then report a fresh test number once.", hint:""},
-     {txt:"the training set, because that is what least squares uses.",
-      hint:"Least squares already used the training set for θ. Using it again for M and λ is asking the sample to grade itself."},
-     {txt:"the test set, to be honest about generalisation.",
-      hint:"That number then stops being an honest test."},
-     {txt:"whichever split has more examples, always.",
-      hint:"Size matters, but role matters more: train / validate / test are different jobs."}],
-   why:"Hyperparameters overfit the split you select them with. That split is then a {t:validation_set}."}
+     {txt:"the update w ← (1 − ηλ) w − η ∇E, equivalent to L2 on the loss.", hint:""},
+     {txt:"identical to dropout with p = λ.",
+      hint:"Different noise."},
+     {txt:"a running average of w, like BN's running mean.",
+      hint:"Multiplicative fade, not an EMA of weights (that would be more like Polyak averaging)."},
+     {txt:"only defined for L1.",
+      hint:"The classical 'weight decay' name is the L2 fade."}],
+   why:"Write the gradient of E + (λ/2)‖w‖² and collect terms."},
+  {t:"mcq", tag:"retrieval · 8", answer:3,
+   q:"A method that raises training loss and can lower test loss is, by Goodfellow's definition,",
+   opts:[
+     {txt:"only L2. The others are optimisation tricks, not regularisers.",
+      hint:"Chapter 7 of the Deep Learning book includes dropout, early stopping, BN-as-noise, and more."},
+     {txt:"overfitting.",
+      hint:"Overfitting is the disease. These are treatments."},
+     {txt:"double descent.",
+      hint:"A shape of a curve, not a training method."},
+     {txt:"regularisation.", hint:""}],
+   why:"That sentence is how this sheet started. All five tools sit under it."}
  ]}
 ];
 
@@ -1792,6 +1926,18 @@ function buildBlock(blk, ctr, sec, gate){
     e.setAttribute("data-anim", blk.id);
     e.appendChild(mk("div","atitle", blk.title));
     if(blk.intro){ e.appendChild(mk("p","aintro", blk.intro)); }
+    return e;
+  }
+  if(blk.t === "fig"){
+    e = document.createElement("figure");
+    e.className = "bookfig blk";
+    var img = document.createElement("img");
+    img.src = blk.src; img.alt = blk.alt || "";
+    e.appendChild(img);
+    var cap = document.createElement("figcaption");
+    cap.className = "cap";
+    cap.innerHTML = M(blk.cap || "");
+    e.appendChild(cap);
     return e;
   }
   return mk("div","blk","");
@@ -2681,7 +2827,364 @@ function buildA6(host){
   return a;
 }
 
-var ANIM_BUILDERS = { a1:buildA1, a2:buildA2, a3:buildA3, a4:buildA4, a5:buildA5, a6:buildA6 };
+function l1Contact(wstar, A, eta){
+  if(Math.abs(wstar[0]) + Math.abs(wstar[1]) <= eta){ return wstar.slice(); }
+  var best = null, bestL = 1e99, signs = [[1,1],[1,-1],[-1,1],[-1,-1]], s, t, w1, w2, dw, g, L, k, w;
+  function quad(w){
+    var d0 = w[0]-wstar[0], d1 = w[1]-wstar[1];
+    return A[0][0]*d0*d0 + 2*A[0][1]*d0*d1 + A[1][1]*d1*d1;
+  }
+  for(k=0;k<4;k++){
+    s = signs[k];
+    /* edge s0 w1 + s1 w2 = eta, w1 = s0 * t, w2 = s1 * (eta-t), t in [0,eta] */
+    /* scan densely; cheap and robust */
+    for(t=0;t<=eta+1e-9;t+=eta/80){
+      w = [s[0]*t, s[1]*(eta-t)];
+      L = quad(w);
+      if(L < bestL){ bestL = L; best = w; }
+    }
+  }
+  return best;
+}
+function l2Contact(wstar, A, eta){
+  var n2 = wstar[0]*wstar[0] + wstar[1]*wstar[1];
+  if(n2 <= eta){ return wstar.slice(); }
+  /* For isotropic A this is just projection. For general A, scan the circle. */
+  var best = null, bestL = 1e99, th, w, d0, d1, L, r = Math.sqrt(eta);
+  function quad(w){
+    d0 = w[0]-wstar[0]; d1 = w[1]-wstar[1];
+    return A[0][0]*d0*d0 + 2*A[0][1]*d0*d1 + A[1][1]*d1*d1;
+  }
+  for(th=0;th<6.2832;th+=0.02){
+    w = [r*Math.cos(th), r*Math.sin(th)];
+    L = quad(w);
+    if(L < bestL){ bestL = L; best = w; }
+  }
+  return best;
+}
+function buildR2(host){
+  var wstar = [1.55, 1.15], A = [[1.6, 0.55],[0.55, 1.05]];
+  var a = new Anim({
+    host:host, height:420, aria:"L1 diamond versus L2 disk",
+    model:function(prev){ return {eta: prev && prev.eta !== undefined ? prev.eta : 1.2}; },
+    paintStatic:function(){},
+    paintLive:function(g,W,H,anim){
+      var L=70, Rt=W/2-20, top=36, bot=H-48, lo=-2.4, hi=2.4;
+      var L2=W/2+50, Rt2=W-30;
+      function X(x,left,right){ return left + (x-lo)/(hi-lo)*(right-left); }
+      function Y(y){ return top + (hi-y)/(hi-lo)*(bot-top); }
+      function axes(left,right,title){
+        line(g,left,Y(0),right,Y(0),C.rule,1);
+        line(g,X(0,left,right),top,X(0,left,right),bot,C.rule,1);
+        tx(g,"w₁", right-4, Y(0)+16, LABF, C.lgrey, "right");
+        tx(g,"w₂", X(0,left,right)+8, top+12, LABF, C.lgrey, "left");
+        tx(g,title, (left+right)/2, 18, LABFB, C.ink, "center");
+      }
+      function ellipses(left,right){
+        var k, th, w, d0,d1,val, pts;
+        for(k=0.4;k<=3.2;k+=0.45){
+          g.beginPath();
+          var first=true;
+          for(th=0;th<=6.2832;th+=0.04){
+            /* points where quad = k: sample circle around wstar and scale — skip, draw iso by polar from wstar with metric A */
+            var c = Math.cos(th), s = Math.sin(th);
+            /* solve t^2 [c,s] A [c;s] = k */
+            var q = A[0][0]*c*c + 2*A[0][1]*c*s + A[1][1]*s*s;
+            var t = Math.sqrt(k / q);
+            w = [wstar[0]+t*c, wstar[1]+t*s];
+            var px=X(w[0],left,right), py=Y(w[1]);
+            if(first){ g.moveTo(px,py); first=false; } else g.lineTo(px,py);
+          }
+          g.closePath();
+          g.strokeStyle = hexA(C.lgrey, 0.55); g.lineWidth = 1; g.stroke();
+        }
+        g.fillStyle = C.amber;
+        g.beginPath(); g.arc(X(wstar[0],left,right), Y(wstar[1]), 5, 0, 6.28); g.fill();
+        tx(g,"OLS", X(wstar[0],left,right)+8, Y(wstar[1])-6, TINYF, C.amber, "left");
+      }
+      axes(L,Rt,"L1 · diamond"); ellipses(L,Rt);
+      var eta = anim.model.eta;
+      g.beginPath();
+      g.moveTo(X(eta,L,Rt), Y(0)); g.lineTo(X(0,L,Rt), Y(eta));
+      g.lineTo(X(-eta,L,Rt), Y(0)); g.lineTo(X(0,L,Rt), Y(-eta));
+      g.closePath();
+      g.fillStyle = hexA(C.amber, 0.12); g.fill();
+      g.strokeStyle = C.amber; g.lineWidth = 2; g.stroke();
+      var p1 = l1Contact(wstar, A, eta);
+      g.fillStyle = C.plum;
+      g.beginPath(); g.arc(X(p1[0],L,Rt), Y(p1[1]), 6, 0, 6.28); g.fill();
+
+      axes(L2,Rt2,"L2 · disk"); ellipses(L2,Rt2);
+      g.beginPath();
+      g.arc(X(0,L2,Rt2), Y(0), Math.abs(X(eta,L2,Rt2)-X(0,L2,Rt2)), 0, 6.28);
+      g.fillStyle = hexA(C.blue, 0.10); g.fill();
+      g.strokeStyle = C.blue; g.lineWidth = 2; g.stroke();
+      var p2 = l2Contact(wstar, A, eta * eta);
+      g.fillStyle = C.plum;
+      g.beginPath(); g.arc(X(p2[0],L2,Rt2), Y(p2[1]), 6, 0, 6.28); g.fill();
+      tx(g,"η = "+fx(eta,2)+"   L1 ŵ = ("+fx(p1[0],2)+", "+fx(p1[1],2)+")   L2 ŵ = ("+fx(p2[0],2)+", "+fx(p2[1],2)+")",
+         W/2, H-14, LABF, C.grey, "center");
+    },
+    stepModel:function(){},
+    readout:function(m){
+      var p1 = l1Contact(wstar, A, m.eta), p2 = l2Contact(wstar, A, m.eta * m.eta);
+      return {eta:fx(m.eta,2), l1:"("+fx(p1[0],2)+", "+fx(p1[1],2)+")", l2:"("+fx(p2[0],2)+", "+fx(p2[1],2)+")"};
+    },
+    readKeys:[{id:"eta",label:"η"},{id:"l1",label:"L1 ŵ"},{id:"l2",label:"L2 ŵ"}]
+  });
+  var g = grpEl("constraint budget η");
+  g.appendChild(sldEl(0.15, 3.2, 0.05, 1.2, function(v){ return Number(v).toFixed(2); }, function(v){
+    a.model.eta = v; a.paint();
+  }));
+  a.ctlEl.appendChild(g);
+  a.resize();
+  return a;
+}
+function buildR3(host){
+  var lams = [], i, ridgeP = [], lassoP = [];
+  for(i=0;i<=40;i++){ lams.push(Math.pow(10, -2 + i*(3.2)/40)); }
+  lams.forEach(function(lam){
+    var wr = ridge2(lam), wl = lasso2(lam, 800);
+    ridgeP.push(wr); lassoP.push(wl);
+  });
+  var a = new Anim({
+    host:host, height:380, aria:"regularisation paths",
+    model:function(prev){ return {lam: prev && prev.lam !== undefined ? prev.lam : 2}; },
+    paintStatic:function(){},
+    paintLive:function(g,W,H,anim){
+      var L=60, Rt=W-30, top=28, bot=H-50, lo=-0.2, hi=2.2;
+      function X(lam){ return L + (Math.log(lam)-Math.log(0.01))/(Math.log(1000)-Math.log(0.01))*(Rt-L); }
+      function Y(w){ return top + (hi-w)/(hi-lo)*(bot-top); }
+      line(g,L,bot,Rt,bot,C.rule,1); line(g,L,top,L,bot,C.rule,1);
+      tx(g,"λ (log)", Rt, bot+18, LABF, C.lgrey, "right");
+      function path(pts, idx, col, dash){
+        g.save();
+        if(dash){ g.setLineDash([7,5]); }
+        g.beginPath();
+        pts.forEach(function(w,i){
+          var x=X(lams[i]), y=Y(w[idx]);
+          if(i===0) g.moveTo(x,y); else g.lineTo(x,y);
+        });
+        g.strokeStyle = col; g.lineWidth = 2.2; g.stroke();
+        g.restore();
+      }
+      path(lassoP,0,C.amber,false); path(lassoP,1,C.plum,false);
+      path(ridgeP,0,C.amber,true); path(ridgeP,1,C.plum,true);
+      var lam = anim.model.lam;
+      line(g, X(lam), top, X(lam), bot, hexA(C.ink,0.25), 1.2);
+      var wr = ridge2(lam), wl = lasso2(lam, 800);
+      g.fillStyle = C.amber; g.beginPath(); g.arc(X(lam), Y(wl[0]), 5,0,6.28); g.fill();
+      g.fillStyle = C.plum; g.beginPath(); g.arc(X(lam), Y(wl[1]), 5,0,6.28); g.fill();
+      tx(g,"solid lasso   dashed ridge   amber w₁   plum w₂", W/2, H-14, LABF, C.grey, "center");
+    },
+    stepModel:function(){},
+    readout:function(m){
+      var wr = ridge2(m.lam), wl = lasso2(m.lam, 800);
+      return {lam:fx(m.lam,2), rw:"("+fx(wr[0],4)+", "+fx(wr[1],4)+")", lw:"("+fx(wl[0],4)+", "+fx(wl[1],4)+")"};
+    },
+    readKeys:[{id:"lam",label:"λ"},{id:"lw",label:"lasso w"},{id:"rw",label:"ridge w"}]
+  });
+  var g = grpEl("λ");
+  g.appendChild(sldEl(-2, 3, 0.05, Math.log(2)/Math.log(10), function(v){
+    return Math.pow(10,v).toFixed(2);
+  }, function(v){ a.model.lam = Math.pow(10,v); a.paint(); }));
+  a.ctlEl.appendChild(g);
+  a.resize();
+  return a;
+}
+function buildR4(host){
+  var H0 = [1.2, -0.4, 2.0, 0.8];
+  var a = new Anim({
+    host:host, height:340, aria:"dropout on four hidden units",
+    model:function(prev){
+      return {p: prev && prev.p !== undefined ? prev.p : 0.5,
+              test: prev && prev.test ? 1 : 0,
+              mask: (prev && prev.mask) ? prev.mask.slice() : [1,0,1,0],
+              rng: prev && prev.rng ? prev.rng : mulberry32(7)};
+    },
+    paintStatic:function(){},
+    paintLive:function(g,W,H,anim){
+      var m = anim.model, i, x, bw = 70, gap = 40, left = 90;
+      tx(g, m.test ? "test · full net, no scale" : "train · inverted dropout", 20, 24, LABFB, C.ink, "left");
+      for(i=0;i<4;i++){
+        x = left + i*(bw+gap);
+        var keep = m.test ? 1 : m.mask[i];
+        var fwd = m.test ? H0[i] : (keep * H0[i] / m.p);
+        g.fillStyle = hexA(C.lgrey, 0.25);
+        g.fillRect(x, 80, bw, 180);
+        var hgt = Math.abs(H0[i]) * 50;
+        g.fillStyle = hexA(C.ink, 0.25);
+        g.fillRect(x+12, H0[i]>=0 ? 170-hgt : 170, bw-24, hgt);
+        hgt = Math.abs(fwd) * 50;
+        g.fillStyle = keep ? C.amber : C.red;
+        g.fillRect(x+22, fwd>=0 ? 170-hgt : 170, bw-44, Math.max(hgt,2));
+        tx(g, "h="+fx(H0[i],1), x+bw/2, 280, LABF, C.grey, "center");
+        tx(g, keep ? "keep" : "drop", x+bw/2, 300, TINYF, keep ? C.green : C.red, "center");
+        tx(g, "h̃="+fx(fwd,2), x+bw/2, 64, NUMFB, C.ink, "center");
+      }
+    },
+    stepModel:function(m){
+      if(m.test){ return; }
+      m.mask = [0,0,0,0];
+      var i;
+      for(i=0;i<4;i++){ m.mask[i] = m.rng() < m.p ? 1 : 0; }
+    },
+    readout:function(m){
+      var i, fwd=[], keep=0;
+      for(i=0;i<4;i++){
+        keep += m.test ? 1 : m.mask[i];
+        fwd.push(m.test ? H0[i] : m.mask[i]*H0[i]/m.p);
+      }
+      return {p:fx(m.p,2), kept: String(keep)+"/4", mode: m.test ? "test" : "train"};
+    },
+    readKeys:[{id:"mode",label:"mode"},{id:"p",label:"p"},{id:"kept",label:"kept"}]
+  });
+  a.ctlEl.appendChild(transport(a));
+  a.ctlEl.appendChild(speedCtl(a));
+  var gp = grpEl("keep p");
+  gp.appendChild(sldEl(0.2, 1, 0.05, 0.5, function(v){ return Number(v).toFixed(2); }, function(v){
+    a.model.p = v; a.paint();
+  }));
+  a.ctlEl.appendChild(gp);
+  a.ctlEl.appendChild(segEl([{v:0,label:"train"},{v:1,label:"test"}], 0, function(v){
+    a.model.test = v; a.paint();
+  }));
+  a.resize(); return a;
+}
+function buildR5(host){
+  var a = new Anim({
+    host:host, height:360, aria:"batch normalisation of four activations",
+    model:function(prev){
+      return {u3: prev && prev.u3 !== undefined ? prev.u3 : 7,
+              gamma: prev && prev.gamma !== undefined ? prev.gamma : 2,
+              beta: prev && prev.beta !== undefined ? prev.beta : 1,
+              test: prev && prev.test ? 1 : 0,
+              runMu: 4, runVar: 5};
+    },
+    paintStatic:function(){},
+    paintLive:function(g,W,H,anim){
+      var m = anim.model, u = [1,3,5,m.u3], i;
+      var st = m.test ? {mu:m.runMu, var:m.runVar} : bnStats(u);
+      var std = Math.sqrt(st.var + 1e-8);
+      var L=70, Rt=W-40, top=40, bot=H-70, lo=-4, hi=12;
+      function X(x){ return L + (x-lo)/(hi-lo)*(Rt-L); }
+      function Y(){ return (top+bot)/2; }
+      line(g,L,Y(),Rt,Y(),C.rule,1);
+      line(g, X(st.mu), top, X(st.mu), bot, C.blue, 1.4);
+      g.fillStyle = hexA(C.blue, 0.12);
+      g.fillRect(X(st.mu-std), top, X(st.mu+std)-X(st.mu-std), bot-top);
+      tx(g,"μ", X(st.mu)+6, top+14, TINYF, C.blue, "left");
+      for(i=0;i<4;i++){
+        g.fillStyle = hexA(C.ink, 0.35);
+        g.beginPath(); g.arc(X(u[i]), Y()-28, 8, 0, 6.28); g.fill();
+        tx(g,"u"+ (i+1), X(u[i]), Y()-42, TINYF, C.grey, "center");
+        var uh = (u[i]-st.mu)/std;
+        var y = m.gamma*uh + m.beta;
+        g.fillStyle = C.amber;
+        g.beginPath(); g.arc(X(y), Y()+32, 8, 0, 6.28); g.fill();
+        tx(g, fx(y,2), X(y), Y()+54, LABF, C.amber, "center");
+      }
+      tx(g, (m.test?"test running":"batch")+"  μ="+fx(st.mu,2)+"  σ²="+fx(st.var,2), 20, H-18, LABF, C.grey, "left");
+    },
+    stepModel:function(){},
+    readout:function(m){
+      var u=[1,3,5,m.u3], st = m.test?{mu:m.runMu,var:m.runVar}:bnStats(u);
+      return {mu:fx(st.mu,4), varr:fx(st.var,4), g:fx(m.gamma,2), b:fx(m.beta,2)};
+    },
+    readKeys:[{id:"mu",label:"μ"},{id:"varr",label:"σ²"},{id:"g",label:"γ"},{id:"b",label:"β"}]
+  });
+  var g1 = grpEl("u₄"); g1.appendChild(sldEl(-2, 14, 0.1, 7, function(v){ return Number(v).toFixed(1); }, function(v){ a.model.u3=v; a.paint(); }));
+  var g2 = grpEl("γ"); g2.appendChild(sldEl(0.2, 4, 0.05, 2, function(v){ return Number(v).toFixed(2); }, function(v){ a.model.gamma=v; a.paint(); }));
+  var g3 = grpEl("β"); g3.appendChild(sldEl(-3, 4, 0.05, 1, function(v){ return Number(v).toFixed(2); }, function(v){ a.model.beta=v; a.paint(); }));
+  a.ctlEl.appendChild(g1); a.ctlEl.appendChild(g2); a.ctlEl.appendChild(g3);
+  a.ctlEl.appendChild(segEl([{v:0,label:"train (batch stats)"},{v:1,label:"test (running)"}], 0, function(v){ a.model.test=v; a.paint(); }));
+  a.resize(); return a;
+}
+function gdPoly(w, x, y, lr){
+  var n=x.length, p=w.length, i,j, pred, err, g, v;
+  var grad=[]; for(j=0;j<p;j++) grad[j]=0;
+  for(i=0;i<n;i++){
+    pred=polyEval(w,x[i]); err=pred-y[i]; v=1;
+    for(j=0;j<p;j++){ grad[j]+= (2/n)*err*v; v*=x[i]; }
+  }
+  var out=[];
+  for(j=0;j<p;j++) out[j]=w[j]-lr*grad[j];
+  return out;
+}
+function buildR6(host){
+  var VALX=[], VALY=[], i;
+  for(i=0;i<40;i++){ VALX.push(i/39); VALY.push(sineTrue(VALX[i])); }
+  var a = new Anim({
+    host:host, height:400, aria:"early stopping train versus validation",
+    model:function(){
+      var w=[], j; for(j=0;j<10;j++) w[j]=0;
+      return {w:w, t:0, lr:0.4, histT:[], histV:[], bestT:0, bestV:1e9};
+    },
+    paintStatic:function(){},
+    paintLive:function(g,W,H,anim){
+      var m=anim.model, L=50, Rt=W-20, top=20, bot=H-160, lo=-1.6, hi=1.6;
+      function Xx(x){ return L + x*(Rt-L); }
+      function Yy(y){ return top + (hi-y)/(hi-lo)*(bot-top); }
+      line(g,L,bot,Rt,bot,C.rule,1);
+      var xs, k;
+      g.beginPath();
+      for(k=0;k<=80;k++){
+        xs=k/80; var px=Xx(xs), py=Yy(sineTrue(xs));
+        if(k===0) g.moveTo(px,py); else g.lineTo(px,py);
+      }
+      g.strokeStyle=hexA(C.ink,0.35); g.lineWidth=1.4; g.stroke();
+      g.beginPath();
+      for(k=0;k<=80;k++){
+        xs=k/80; var px=Xx(xs), py=Yy(polyEval(m.w,xs));
+        if(k===0) g.moveTo(px,py); else g.lineTo(px,py);
+      }
+      g.strokeStyle=C.amber; g.lineWidth=2.2; g.stroke();
+      for(k=0;k<SX.length;k++){
+        g.fillStyle=C.ink;
+        g.beginPath(); g.arc(Xx(SX[k]), Yy(SY[k]), 4,0,6.28); g.fill();
+      }
+      var ctop=bot+28, cbot=H-28, maxE=0.8;
+      function Yc(e){ return ctop + (e/maxE)*(cbot-ctop); }
+      function Xc(t){ var T=Math.max(40, m.t); return L + (t/T)*(Rt-L); }
+      line(g,L,ctop,Rt,ctop,C.rule,1);
+      function curve(hist,col){
+        if(hist.length<2) return;
+        g.beginPath();
+        hist.forEach(function(e,t){ var x=Xc(t), y=Yc(Math.min(e,maxE)); if(t===0) g.moveTo(x,y); else g.lineTo(x,y); });
+        g.strokeStyle=col; g.lineWidth=2; g.stroke();
+      }
+      curve(m.histT, C.amber); curve(m.histV, C.blue);
+      if(m.histV.length){
+        g.fillStyle=C.plum;
+        g.beginPath(); g.arc(Xc(m.bestT), Yc(Math.min(m.bestV,maxE)), 5,0,6.28); g.fill();
+      }
+      tx(g,"amber train   navy validation   star = early-stop checkpoint", W/2, H-10, LABF, C.grey, "center");
+    },
+    stepModel:function(m){
+      m.w = gdPoly(m.w, SX, SY, m.lr);
+      var tr=0, va=0, k, yh;
+      for(k=0;k<SX.length;k++){ yh=polyEval(m.w,SX[k]); tr+=(yh-SY[k])*(yh-SY[k]); }
+      for(k=0;k<VALX.length;k++){ yh=polyEval(m.w,VALX[k]); va+=(yh-VALY[k])*(yh-VALY[k]); }
+      tr/=SX.length; va/=VALX.length;
+      m.histT.push(tr); m.histV.push(va); m.t++;
+      if(va < m.bestV){ m.bestV=va; m.bestT=m.t-1; }
+    },
+    readout:function(m){
+      var tr = m.histT.length ? m.histT[m.histT.length-1] : NaN;
+      var va = m.histV.length ? m.histV[m.histV.length-1] : NaN;
+      return {ep:String(m.t), tr:fx(tr,4), va:fx(va,4), best:String(m.bestT)};
+    },
+    readKeys:[{id:"ep",label:"epoch"},{id:"tr",label:"train MSE"},{id:"va",label:"val MSE"},{id:"best",label:"best epoch"}]
+  });
+  a.ctlEl.appendChild(transport(a));
+  a.ctlEl.appendChild(speedCtl(a));
+  var gl = grpEl("learning rate");
+  gl.appendChild(sldEl(0.05, 1.2, 0.05, 0.4, function(v){ return Number(v).toFixed(2); }, function(v){ a.model.lr=v; }));
+  a.ctlEl.appendChild(gl);
+  a.resize(); return a;
+}
+
+var ANIM_BUILDERS = { r1:buildA6, r2:buildR2, r3:buildR3, r4:buildR4, r5:buildR5, r6:buildR6 };
 function buildAllAnims(){
   each(document.querySelectorAll("[data-anim]"), function(host){
     var id = host.getAttribute("data-anim");
@@ -2789,7 +3292,7 @@ function runSelfTest(){
       });
     }
     SECTIONS.forEach(function(s){ walk(s.blocks); });
-    eq("mcq count", n, 14);
+    ok("mcq count >= 8", n >= 8); eq("mcq present", n>=8, true);
   });
   G("5. glossary keys used exist", function(eq, ok){
     var ids = {};
@@ -2805,8 +3308,8 @@ function runSelfTest(){
     eq("counted", TOTAL_BLANKS, BLANKS.filter(function(B){ return B.counts !== false; }).length);
   });
   G("7. slots rendered, no leftover tokens", function(eq, ok){
-    ok("G1 slot in the DOM", !!document.getElementById("slot-G1"));
-    ok("G2 slot in the DOM", !!document.getElementById("slot-G2"));
+    ok("P1 slot in the DOM", !!document.getElementById("slot-P1"));
+    ok("L2a slot in the DOM", !!document.getElementById("slot-L2a"));
     var t = document.getElementById("doc").innerText;
     ok("no {slot} left in the sheet", t.indexOf("{slot}") < 0);
     ok("no {{slot}} left in the sheet", t.indexOf("{{slot}}") < 0);

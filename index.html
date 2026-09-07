@@ -4,16 +4,43 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Deep Learning worksheets</title>
-<meta http-equiv="refresh" content="0; url=worksheet_generalisation.html">
 <style>
-body{font-family:Calibri,"Segoe UI",system-ui,sans-serif;margin:48px auto;max-width:640px;color:#555}
-a{color:#3A5DA1}
-h1{font-family:Cambria,Georgia,serif;color:#16213D}
+:root{--ink:#16213D;--blue:#3A5DA1;--amber:#C8801F;--cream:#FEF3E1;--creamb:#E2C58C;--grey:#555;--rule:#DDD}
+*{box-sizing:border-box}
+body{margin:0;font-family:Calibri,"Segoe UI",system-ui,sans-serif;color:var(--grey);background:#fff}
+.wrap{max-width:860px;margin:0 auto;padding:48px 28px 80px}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--amber)}
+h1{font-family:Cambria,Georgia,serif;color:var(--ink);font-size:38px;line-height:1.15;margin:8px 0 10px}
+.lede{max-width:640px;margin:0 0 32px;font-size:17px;line-height:1.5}
+.cards{display:grid;grid-template-columns:1fr;gap:16px}
+@media (min-width:720px){.cards{grid-template-columns:1fr 1fr}}
+a.card{display:block;text-decoration:none;color:inherit;border:1.5px solid var(--rule);border-radius:8px;padding:22px 24px;background:#fff}
+a.card:hover{border-color:var(--amber);background:#FFFBF3}
+a.card h2{font-family:Cambria,Georgia,serif;color:var(--ink);font-size:24px;margin:4px 0 8px}
+a.card p{margin:0;font-size:15.5px;line-height:1.45}
+.tag{display:inline-block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--amber);border:1px solid var(--creamb);background:var(--cream);border-radius:99px;padding:3px 10px}
+.foot{margin-top:36px;font-size:14px;color:#9A9A9A}
+.foot a{color:var(--blue)}
 </style>
 </head>
 <body>
-<p>deep learning worksheets</p>
-<h1>Generalisation</h1>
-<p><a href="worksheet_generalisation.html">Worksheet · underfitting, overfitting, bias–variance, double descent</a></p>
+<div class="wrap">
+  <div class="eyebrow">deep learning worksheets</div>
+  <h1>Worksheets</h1>
+  <p class="lede">Click-to-fill sheets with worked numbers, glossary bubbles, textbook figures, and interactive visualisers. Nothing is scored. Anyone with the link can open them.</p>
+  <div class="cards">
+    <a class="card" href="worksheet_generalisation.html">
+      <span class="tag">worksheet 1</span>
+      <h2>Generalisation</h2>
+      <p>Underfitting, overfitting, the bias–variance decomposition, and double descent.</p>
+    </a>
+    <a class="card" href="worksheet_regularisation.html">
+      <span class="tag">worksheet 2</span>
+      <h2>Regularisation</h2>
+      <p>L1, L2 / weight decay, dropout, batch normalisation, and early stopping.</p>
+    </a>
+  </div>
+  <p class="foot">Hosted from <a href="https://github.com/ashwin-tewary/dl-worksheets">ashwin-tewary/dl-worksheets</a>.</p>
+</div>
 </body>
 </html>
