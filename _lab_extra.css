@@ -9,10 +9,46 @@
     .prose + .prose{margin-top:0}
     .teach{margin:18px 0;border-left:3px solid var(--teal);background:rgba(8,127,120,.07);padding:14px 16px;color:var(--ink);font-size:16px;line-height:1.55}
     .teach b{display:block;margin-bottom:4px;color:var(--teal);font-size:11px;letter-spacing:.14em;text-transform:uppercase}
+    .given{margin:16px 0;border:1px dashed rgba(23,44,53,.2);border-radius:14px;background:#fff;padding:14px 16px}
+    .given span{display:block;color:var(--muted);font-size:11px;font-weight:850;letter-spacing:.12em;text-transform:uppercase}
+    .given p{margin:8px 0 0;color:var(--ink);font:650 15px/1.55 ui-monospace,monospace}
+    .fold{margin:16px 0 22px;border:1px solid rgba(23,44,53,.14);border-radius:16px;background:rgba(255,253,247,.9)}
+    .fold>summary{cursor:pointer;list-style:none;padding:14px 16px;color:var(--ink);font:750 14px/1.4 ui-sans-serif,system-ui}
+    .fold>summary::-webkit-details-marker{display:none}
+    .fold>summary::before{content:"▸ ";color:var(--teal);font-weight:900}
+    .fold[open]>summary::before{content:"▾ "}
+    .fold>summary small{display:block;margin-top:3px;color:var(--muted);font-weight:600;letter-spacing:0;text-transform:none}
+    .fold-body{padding:0 16px 16px}
     .worked{margin:18px 0;border:1px solid rgba(23,44,53,.12);border-radius:16px;background:#fff;padding:16px 18px}
     .worked span{display:block;color:var(--muted);font-size:11px;font-weight:850;letter-spacing:.12em;text-transform:uppercase}
     .worked ol{margin:8px 0 0;padding-left:18px;color:var(--ink);font:650 15px/1.55 ui-monospace,monospace}
     .worked p{margin:10px 0 0;color:var(--muted);font-size:14px;line-height:1.5}
+    .qkind{display:inline-block;margin:0 0 8px;border-radius:99px;padding:3px 9px;font:850 10px/1 ui-sans-serif,system-ui;letter-spacing:.12em;text-transform:uppercase}
+    .qkind.theory{background:rgba(8,127,120,.12);color:var(--teal)}
+    .qkind.number{background:rgba(242,107,79,.12);color:var(--coral)}
+    .quiz{border-top:1px solid rgba(23,44,53,.1);padding:8px 30px 28px}
+    .quiz .question{margin-top:22px}
+    .question.q-locked{opacity:.32;pointer-events:none;filter:grayscale(.2)}
+    .qwait{display:none}
+    .stage{display:grid;grid-template-columns:minmax(210px,.8fr) minmax(0,1.45fr);gap:22px;align-items:start;margin:12px 0 6px}
+    .stage-fig{position:sticky;top:84px;border:1px solid rgba(23,44,53,.12);border-radius:16px;background:#fff;padding:18px 16px}
+    .stage-fig h3{margin:4px 0 10px;font:700 22px/1.2 Georgia,serif}
+    .stage-fig p{margin:0;color:var(--muted);font-size:14px;line-height:1.5}
+    .stage-fig .turn{display:block;margin:0 0 6px;color:var(--coral);font-size:11px;font-weight:850;letter-spacing:.14em;text-transform:uppercase}
+    .stage-body{min-width:0}
+    .step{border-left:3px solid transparent;padding:12px 4px 16px 16px;margin:4px 0;border-radius:0 12px 12px 0}
+    .step.active{border-left-color:var(--coral);background:linear-gradient(90deg,rgba(242,107,79,.08),transparent 72%)}
+    .step.done{border-left-color:rgba(8,127,120,.45)}
+    .step.q-locked{opacity:.28;pointer-events:none;filter:saturate(.45)}
+    .step.q-locked .answers{display:flex}
+    .need{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin:0 0 10px}
+    .need .nl{font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:850;color:var(--coral)}
+    .need code{font-family:Georgia,serif;font-size:16px;color:var(--ink);background:rgba(242,107,79,.08);border:1px solid rgba(242,107,79,.28);border-radius:6px;padding:3px 10px}
+    .prompt{margin:0;font:700 22px/1.35 Georgia,serif;color:var(--ink)}
+    .chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+    .chips .answer{font:700 17px/1.4 Georgia,serif;border-radius:8px;padding:9px 14px}
+    .chips .answer span{display:none}
+    @media(max-width:800px){.stage{grid-template-columns:1fr}.stage-fig{position:static}}
     .bookfig{margin:18px 0;border:1px solid rgba(23,44,53,.12);border-radius:16px;overflow:hidden;background:#fff}
     .bookfig img{width:100%;display:block;background:#f7f8fa}
     .bookfig figcaption{margin:0;padding:10px 14px 12px;color:var(--muted);font-size:13px;font-style:italic;line-height:1.45}
@@ -22,8 +58,8 @@
     .wt caption{caption-side:top;text-align:left;padding:0 0 8px;color:var(--muted);font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
     .wt th,.wt td{border-bottom:1px solid rgba(23,44,53,.12);padding:7px 8px;text-align:right}
     .wt th:first-child,.wt td:first-child{text-align:left}
-    @media(max-width:800px){.toc{grid-template-columns:1fr 1fr}}
-    @media print{.toc,.teach{break-inside:avoid}.bookfig{break-inside:avoid}}
+    @media(max-width:800px){.toc{grid-template-columns:1fr 1fr}.quiz{padding:8px 20px 24px}.stage{grid-template-columns:1fr}.stage-fig{position:static}}
+    @media print{.toc,.teach{break-inside:avoid}.bookfig{break-inside:avoid}.fold>.fold-body,.fold .bookfig{display:block!important}.question.q-locked,.step.q-locked{opacity:1;pointer-events:auto;filter:none}.stage{break-inside:avoid;grid-template-columns:200px 1fr}}
     .drop-units{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px}
     .drop-unit{border:1px solid rgba(23,44,53,.13);border-radius:14px;padding:12px 8px;text-align:center;background:#fff}
     .drop-unit.dropped{opacity:.38;background:rgba(242,107,79,.08)}

@@ -2,13 +2,13 @@
   const NS = "http://www.w3.org/2000/svg";
   const solved = new Set();
   const requirements = [
-    ["split"],
-    ["l2-shrink", "l2-diag"],
-    ["l1-zero", "l1-corr"],
-    ["drop-test", "drop-coadapt"],
-    ["bn-test", "bn-mode"],
-    ["es-keep", "es-why"],
-    ["kit-best"],
+    ["split", "obj-form", "obj-num"],
+    ["l2-shrink", "l2-form", "l2-w0", "l2-w1", "l2-diag"],
+    ["l1-zero", "l1-form", "l1-soft0", "l1-soft1", "l1-corr"],
+    ["drop-test", "drop-form", "drop-h1", "drop-h2", "drop-coadapt"],
+    ["bn-mu-form", "bn-mu", "bn-var", "bn-y", "bn-test", "bn-mode"],
+    ["es-keep", "es-form", "es-num", "es-why"],
+    ["kit-best", "kit-map"],
     ["case-a", "case-b", "case-c", "case-d"]
   ];
   let kitRuns = 0;
@@ -29,6 +29,19 @@
     document.querySelector("#progress-percent").textContent = `${pct}%`;
     document.querySelector("#progress-bar").style.width = pct + "%";
     document.querySelector("#completion").classList.toggle("show", labDone(8));
+    document.querySelectorAll(".lab").forEach((lab) => {
+      const qs = [...lab.querySelectorAll(".question[data-step]")];
+      let opened = false;
+      qs.forEach((q, i) => {
+        const ready = i === 0 || solved.has(qs[i - 1].dataset.q);
+        const done = solved.has(q.dataset.q);
+        q.classList.toggle("q-locked", !ready);
+        q.classList.toggle("done", done);
+        const active = ready && !done && !opened;
+        q.classList.toggle("active", active);
+        if (active) opened = true;
+      });
+    });
   }
 
   document.querySelectorAll(".question").forEach((q) => {
