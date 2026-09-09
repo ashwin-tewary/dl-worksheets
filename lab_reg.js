@@ -22,9 +22,10 @@
       const lab = document.querySelector(`[data-lab="${i}"]`);
       lab.classList.toggle("complete", labDone(i));
       if (i === 1 || labDone(i - 1)) lab.classList.remove("locked");
+      else lab.classList.add("locked");
     }
     const pct = Math.round((count / 8) * 100);
-    document.querySelector("#progress-copy").textContent = `${count} of 8 labs`;
+    document.querySelector("#progress-copy").textContent = `${count} of 8 sections`;
     document.querySelector("#progress-percent").textContent = `${pct}%`;
     document.querySelector("#progress-bar").style.width = pct + "%";
     document.querySelector("#completion").classList.toggle("show", labDone(8));
@@ -56,7 +57,7 @@
 
   document.getElementById("print").addEventListener("click", () => window.print());
   document.getElementById("reset").addEventListener("click", () => {
-    if (confirm("Reset the worksheet? Completed labs will lock again.")) location.reload();
+    if (confirm("Reset answers? Later sections will lock again.")) location.reload();
   });
 
   const svgNode = (name, attrs = {}) => {

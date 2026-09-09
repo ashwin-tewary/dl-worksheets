@@ -10,7 +10,7 @@ html = f"""<!DOCTYPE html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>The Regularisation Lab · L2 → L1 → Dropout → BN → Early Stopping</title>
+<title>Regularisation · Lecture notes · L2 → L1 → Dropout → BN → Early Stopping</title>
 <style>
 {css}
 {extra}
