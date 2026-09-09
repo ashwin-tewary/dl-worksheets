@@ -1,0 +1,16 @@
+    .home-link{color:var(--teal);font-size:12px;font-weight:850;text-decoration:none;white-space:nowrap}
+    .drop-units{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px}
+    .drop-unit{border:1px solid rgba(23,44,53,.13);border-radius:14px;padding:12px 8px;text-align:center;background:#fff}
+    .drop-unit.dropped{opacity:.38;background:rgba(242,107,79,.08)}
+    .drop-unit b{display:block;font:800 20px ui-monospace,monospace}
+    .drop-unit span{display:block;margin-top:4px;color:var(--muted);font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+    .geom-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .geom-grid svg{display:block;width:100%;height:auto;background:#fff;border-radius:14px}
+    .bn-line{display:block;width:100%;height:auto;background:#fff;border-radius:14px}
+    .readout-row{display:flex;justify-content:space-between;gap:8px;margin-top:10px;color:var(--muted);font-size:13px;font-weight:800}
+    .readout-row b{color:var(--ink);font-family:ui-monospace,monospace}
+    .metric.three{grid-template-columns:1fr 1fr 1fr}
+    .split-grid.five{grid-template-columns:repeat(5,1fr)}
+    .split-grid.five p{min-height:72px}
+    @media(max-width:800px){.geom-grid,.split-grid.five{grid-template-columns:1fr 1fr}.drop-units{grid-template-columns:1fr 1fr}}
+    @media(max-width:520px){.split-grid.five{grid-template-columns:1fr}}

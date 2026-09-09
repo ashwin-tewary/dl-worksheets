@@ -13,7 +13,7 @@ body{margin:0;font-family:Calibri,"Segoe UI",system-ui,sans-serif;color:var(--gr
 h1{font-family:Cambria,Georgia,serif;color:var(--ink);font-size:38px;line-height:1.15;margin:8px 0 10px}
 .lede{max-width:640px;margin:0 0 32px;font-size:17px;line-height:1.5}
 .cards{display:grid;grid-template-columns:1fr;gap:16px}
-@media (min-width:720px){.cards{grid-template-columns:1fr 1fr}}
+@media (min-width:720px){.cards{grid-template-columns:1fr 1fr 1fr}}
 a.card{display:block;text-decoration:none;color:inherit;border:1.5px solid var(--rule);border-radius:8px;padding:22px 24px;background:#fff}
 a.card:hover{border-color:var(--amber);background:#FFFBF3}
 a.card h2{font-family:Cambria,Georgia,serif;color:var(--ink);font-size:24px;margin:4px 0 8px}
@@ -27,7 +27,7 @@ a.card p{margin:0;font-size:15.5px;line-height:1.45}
 <div class="wrap">
   <div class="eyebrow">deep learning worksheets</div>
   <h1>Worksheets</h1>
-  <p class="lede">Click-to-fill sheets with worked numbers, glossary bubbles, textbook figures, and interactive visualisers. Nothing is scored. Anyone with the link can open them.</p>
+  <p class="lede">Click-to-fill sheets and locked lab walkthroughs. Nothing is scored. Anyone with the link can open them.</p>
   <div class="cards">
     <a class="card" href="worksheet_generalisation.html">
       <span class="tag">worksheet 1</span>
@@ -37,7 +37,12 @@ a.card p{margin:0;font-size:15.5px;line-height:1.45}
     <a class="card" href="worksheet_regularisation.html">
       <span class="tag">worksheet 2</span>
       <h2>Regularisation</h2>
-      <p>L1, L2 / weight decay, dropout, batch normalisation, and early stopping.</p>
+      <p>L1, L2 / weight decay, dropout, batch normalisation, and early stopping. Worked numbers.</p>
+    </a>
+    <a class="card" href="lab_regularisation.html">
+      <span class="tag">lab</span>
+      <h2>The Regularisation Lab</h2>
+      <p>Gamified labs: predict first, unlock in order, hints on a miss. Same five tools, visual evidence.</p>
     </a>
   </div>
   <p class="foot">Hosted from <a href="https://github.com/ashwin-tewary/dl-worksheets">ashwin-tewary/dl-worksheets</a>.</p>

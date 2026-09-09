@@ -1,0 +1,461 @@
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="mark" aria-hidden="true">λ</div>
+    <div class="brand"><small>Deep learning · worksheet 05</small><strong>The Regularisation Lab</strong></div>
+    <div class="progress-wrap" aria-label="Worksheet progress">
+      <div class="progress-copy"><span id="progress-copy">0 of 8 labs</span><span id="progress-percent">0%</span></div>
+      <div class="progress-track"><div id="progress-bar"></div></div>
+    </div>
+    <a class="home-link" href="index.html">all sheets</a>
+    <button class="tool" id="print" title="Print worksheet" aria-label="Print worksheet">⌕</button>
+    <button class="tool" id="reset" title="Reset worksheet" aria-label="Reset worksheet">↻</button>
+  </div>
+</header>
+
+<main class="page">
+  <section class="hero">
+    <div>
+      <p class="eyebrow">✦ Regularisation, made visible</p>
+      <h1>Spend capacity<br><em>more slowly.</em></h1>
+    </div>
+    <div class="intro"><b>START</b>One noisy sine. Five knobs: L2 shrinks weights, L1 deletes some, dropout deletes activations, batch norm re-scales a minibatch, and early stopping deletes time. Predict first. Then read the plot.</div>
+  </section>
+
+  <section class="orientation" aria-label="How to use the worksheet">
+    <div><span>01</span><strong>Predict first</strong><p>Commit to an answer before the result is explained.</p></div>
+    <div><span>02</span><strong>Read the evidence</strong><p>Use plots and losses—not the name of the method alone.</p></div>
+    <div><span>03</span><strong>Nothing is scored</strong><p>A wrong answer becomes a targeted hint.</p></div>
+  </section>
+
+  <section class="lab" data-lab="1" id="lab-1">
+    <div class="lab-head"><span class="lab-num">01</span><div><span class="kicker">the knob</span><h2>Who is allowed to pick λ?</h2></div><span class="done">✓ complete</span></div>
+    <div class="lockbox">🔒 <div><strong>Lab locked</strong><p>Complete the lab immediately above.</p></div></div>
+    <div class="lab-content card pad">
+      <p class="theory">Regularisation is any extra preference that stops a model from using its full capacity on the training sample. The usual writing is <strong>Ẽ(θ) = E(θ) + λ Ω(θ)</strong>. E is the data term. Ω is the preference. <strong>λ is a hyperparameter</strong>: the inner optimiser does not fit it by gradient descent on the training set.</p>
+      <div class="split-grid">
+        <article><i class="dot train"></i><h3>Training set</h3><p>Updates the weights. If you also use it to pick λ, the regulariser will be tuned to memorise.</p><code>updates θ</code></article>
+        <article><i class="dot val"></i><h3>Validation set</h3><p>Compared while you choose λ, dropout p, patience, architecture. Never trained on.</p><code>chooses λ</code></article>
+        <article><i class="dot test"></i><h3>Test set</h3><p>Opened once, after the knobs are frozen. Repeated peeks quietly turn it into validation.</p><code>final report</code></article>
+      </div>
+      <div class="question" data-q="split" data-success="Correct. Validation estimates how the regulariser transfers. The test set stays unused until the last report.">
+        <strong>You will compare λ = 0, λ = 0.1, and λ = 10 on the same wide network. Which split should choose λ?</strong>
+        <div class="answers">
+          <button class="answer" data-value="training" data-hint="Training loss prefers λ = 0, which is exactly the unregularised interpolator.">The training set <span>→</span></button>
+          <button class="answer" data-value="validation" data-correct>The validation set <span>→</span></button>
+          <button class="answer" data-value="test" data-hint="If you retune λ after every test look, the test number is no longer an unbiased report.">The test set after every trial <span>→</span></button>
+        </div>
+        <p class="feedback"></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="lab locked" data-lab="2" id="lab-2">
+    <div class="lab-head"><span class="lab-num">02</span><div><span class="kicker">L2 · ridge · weight decay</span><h2>Shrink every weight</h2></div><span class="done">✓ complete</span></div>
+    <div class="lockbox">🔒 <div><strong>Lab locked</strong><p>Complete the lab immediately above.</p></div></div>
+    <div class="lab-content card">
+      <div class="two-col">
+        <div class="visual">
+          <span class="kicker">ridge explorer</span>
+          <h3>Turn the λ dial</h3>
+          <svg class="chart" id="ridge-svg" viewBox="0 0 640 250" role="img" aria-label="Polynomial fit as lambda changes"></svg>
+          <p class="caption">Dashed = true sine. Dots = six noisy training points. Solid = degree-9 ridge fit.</p>
+        </div>
+        <div class="control">
+          <span class="kicker">penalty</span>
+          <h3>How hard to pull toward 0</h3>
+          <div class="control-row"><div><span class="label">λ</span><div class="big" id="lam-output">0</div></div></div>
+          <div class="cap-buttons">
+            <button class="cap-btn active" data-lam="0">0<span>OLS</span></button>
+            <button class="cap-btn" data-lam="0.01">0.01<span>mild</span></button>
+            <button class="cap-btn" data-lam="10">10<span>harsh</span></button>
+          </div>
+          <div class="metrics">
+            <div class="metric"><span>train MSE</span><b id="ridge-train">—</b></div>
+            <div class="metric"><span>validation MSE</span><b id="ridge-val">—</b></div>
+          </div>
+          <div class="ribbon" id="ridge-note">Training interpolates. Validation does not.</div>
+          <div class="formula"><span>closed form</span><b>ŵ = (XᵀX + λ I)⁻¹ Xᵀ y</b></div>
+        </div>
+      </div>
+      <div class="question-row">
+        <div class="question" data-q="l2-shrink" data-success="Yes. L2 shrinks every coordinate toward zero. None typically hits exactly zero.">
+          <strong>As λ grows from 0 to 10, the fitted curve</strong>
+          <div class="answers">
+            <button class="answer" data-value="wilder" data-hint="Look at λ = 10: the wiggles die. Extra penalty is less flexibility, not more.">gains more wiggles <span>→</span></button>
+            <button class="answer" data-value="flatter" data-correct>gets smoother, then too flat <span>→</span></button>
+            <button class="answer" data-value="zeros" data-hint="Exact zeros are an L1 geometry. L2’s disk has no corners on the axes.">sets most weights exactly to 0 <span>→</span></button>
+          </div>
+          <p class="feedback"></p>
+        </div>
+        <div class="question" data-q="l2-diag" data-success="Harsh L2 is a smaller effective model. Matching two high losses is underfitting, not a win.">
+          <strong>At λ = 10 both errors are high. The diagnosis is</strong>
+          <div class="answers">
+            <button class="answer" data-value="over" data-hint="Overfitting is a large gap: train low, validation high. Here both are high.">overfitting <span>→</span></button>
+            <button class="answer" data-value="under" data-correct>underfitting <span>→</span></button>
+            <button class="answer" data-value="good" data-hint="A good fit has both errors low and close. Click λ = 0.01.">a good fit <span>→</span></button>
+          </div>
+          <p class="feedback"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="lab locked" data-lab="3" id="lab-3">
+    <div class="lab-head"><span class="lab-num">03</span><div><span class="kicker">L1 · lasso</span><h2>Delete some of them</h2></div><span class="done">✓ complete</span></div>
+    <div class="lockbox">🔒 <div><strong>Lab locked</strong><p>Complete the lab immediately above.</p></div></div>
+    <div class="lab-content card">
+      <div class="two-col">
+        <div class="visual">
+          <span class="kicker">constraint geometry</span>
+          <h3>Diamond versus disk</h3>
+          <div class="geom-grid">
+            <svg id="l1-svg" viewBox="0 0 280 280" aria-label="L1 diamond"></svg>
+            <svg id="l2-svg" viewBox="0 0 280 280" aria-label="L2 disk"></svg>
+          </div>
+          <p class="caption">Grey ellipses: loss contours around OLS. Marker: first contact with the constraint. Drag η.</p>
+          <input class="curve-range" id="eta-range" type="range" min="0.35" max="2.6" step="0.05" value="1.15">
+          <div class="curve-scale"><span>tight budget</span><span>loose budget</span></div>
+        </div>
+        <div class="control">
+          <span class="kicker">budget η</span>
+          <h3>Where the contour first touches</h3>
+          <div class="metrics">
+            <div class="metric"><span>L1 ŵ</span><b id="l1-w">—</b></div>
+            <div class="metric"><span>L2 ŵ</span><b id="l2-w">—</b></div>
+          </div>
+          <p class="callout" style="margin-top:22px">The L1 feasible set is a diamond whose vertices sit on the axes. Expanding ellipses typically hit a vertex first, so one coordinate is exactly zero. The L2 disk is smooth, so both weights survive.</p>
+          <div class="formula"><span>1-D lasso map</span><b>S<sub>λ</sub>(z) = sign(z) max(|z| − λ, 0)</b></div>
+        </div>
+      </div>
+      <div class="question-row">
+        <div class="question" data-q="l1-zero" data-success="Corners on the axes are the whole point of the diamond. Soft-thresholding is that fact in one dimension.">
+          <strong>Which penalty can set a useless feature’s weight to exactly zero at a finite λ?</strong>
+          <div class="answers">
+            <button class="answer" data-value="l2" data-hint="Ridge shrinks continuously. w₂ on a ridge path only approaches 0 as λ → ∞.">L2 / ridge <span>→</span></button>
+            <button class="answer" data-value="l1" data-correct>L1 / lasso <span>→</span></button>
+            <button class="answer" data-value="wd" data-hint="Weight decay is L2 implemented as a multiplicative fade on w.">weight decay only <span>→</span></button>
+          </div>
+          <p class="feedback"></p>
+        </div>
+        <div class="question" data-q="l1-corr" data-success="When two features explain the same thing, an L1 vertex that keeps only one is cheaper than a face that keeps both.">
+          <strong>Two features are strongly correlated. Lasso tends to</strong>
+          <div class="answers">
+            <button class="answer" data-value="both" data-hint="Sharing credit equally is closer to min ‖w‖₂ — a ridge / min-norm move.">keep both, equally <span>→</span></button>
+            <button class="answer" data-value="one" data-correct>pick one and zero the other <span>→</span></button>
+            <button class="answer" data-value="none" data-hint="Collinearity makes OLS unstable; lasso still wants some fit.">zero both <span>→</span></button>
+          </div>
+          <p class="feedback"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="lab locked" data-lab="4" id="lab-4">
+    <div class="lab-head"><span class="lab-num">04</span><div><span class="kicker">dropout</span><h2>Delete activations for a step</h2></div><span class="done">✓ complete</span></div>
+    <div class="lockbox">🔒 <div><strong>Lab locked</strong><p>Complete the lab immediately above.</p></div></div>
+    <div class="lab-content card">
+      <div class="two-col">
+        <div class="visual">
+          <span class="kicker">inverted dropout</span>
+          <h3>A four-unit hidden layer</h3>
+          <div class="drop-units" id="drop-units"></div>
+          <p class="caption">Grey label = raw h. Big number = forwarded h̃ = m h / p in train, or h at test.</p>
+        </div>
+        <div class="control">
+          <span class="kicker">keep probability</span>
+          <h3>How often a unit survives</h3>
+          <div class="control-row"><div><span class="label">p</span><div class="big" id="p-output">0.5</div></div></div>
+          <div class="cap-buttons">
+            <button class="cap-btn" data-p="0.3">0.3<span>harsh</span></button>
+            <button class="cap-btn active" data-p="0.5">0.5<span>typical</span></button>
+            <button class="cap-btn" data-p="1">1<span>off</span></button>
+          </div>
+          <div class="model-buttons" style="margin-top:12px">
+            <button class="model-btn active" data-mode="train">train<span>mask + 1/p</span></button>
+            <button class="model-btn" data-mode="test">test<span>full net</span></button>
+          </div>
+          <button class="action" id="resample-drop" type="button">⚗ Draw a new mask</button>
+          <p class="callout" style="margin-top:18px">A unit cannot rely on a particular neighbour being present, so fragile cancellations (kinks that need two units in concert) are discouraged. Stored weights stay dense; sparsity is in the activations, per step.</p>
+        </div>
+      </div>
+      <div class="question-row">
+        <div class="question" data-q="drop-test" data-success="Inverted dropout scales during training. Test is a plain forward pass of the full net.">
+          <strong>At test time, inverted dropout</strong>
+          <div class="answers">
+            <button class="answer" data-value="keepmask" data-hint="Keeping the random mask would make predictions noisy and depend on the last minibatch.">keeps the last training mask <span>→</span></button>
+            <button class="answer" data-value="full" data-correct>uses the full net, no 1/p <span>→</span></button>
+            <button class="answer" data-value="zero" data-hint="Dropout does not solve a lasso problem. Weights are not stored as zeros.">writes zeros into w <span>→</span></button>
+          </div>
+          <p class="feedback"></p>
+        </div>
+        <div class="question" data-q="drop-coadapt" data-success="Training never rewarded the conspiracy: the partner was often missing. That is the attack on co-adaptation.">
+          <strong>Two hidden units that only work as a cancelling pair will, after dropout training, be</strong>
+          <div class="answers">
+            <button class="answer" data-value="rewarded" data-hint="Test uses the full net, but training did not pay for a pair that was often broken.">reinforced <span>→</span></button>
+            <button class="answer" data-value="discouraged" data-correct>discouraged <span>→</span></button>
+            <button class="answer" data-value="lasso" data-hint="That would be L1 on w. Dropout never sets stored weights to exact zero by itself.">exactly zeroed in w <span>→</span></button>
+          </div>
+          <p class="feedback"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="lab locked" data-lab="5" id="lab-5">
+    <div class="lab-head"><span class="lab-num">05</span><div><span class="kicker">batch normalisation</span><h2>Re-scale the minibatch</h2></div><span class="done">✓ complete</span></div>
+    <div class="lockbox">🔒 <div><strong>Lab locked</strong><p>Complete the lab immediately above.</p></div></div>
+    <div class="lab-content card">
+      <div class="two-col">
+        <div class="visual">
+          <span class="kicker">one channel, batch of four</span>
+          <h3>μ, σ, then γ û + β</h3>
+          <svg class="bn-line" id="bn-svg" viewBox="0 0 640 220" aria-label="Batch normalisation number line"></svg>
+          <p class="caption">Navy band = ±σ around μ. Coral = raw u. Teal = y after scale-and-shift. Drag u₄.</p>
+          <input class="curve-range" id="u4-range" type="range" min="-2" max="14" step="0.1" value="7">
+          <div class="curve-scale"><span>u₄ = −2</span><span>u₄ = 14</span></div>
+        </div>
+        <div class="control">
+          <span class="kicker">affine undo</span>
+          <h3>Let the net keep a useful range</h3>
+          <div class="config-group">
+            <span>γ (scale)</span>
+            <input class="curve-range" id="gamma-range" type="range" min="0.2" max="4" step="0.05" value="2">
+          </div>
+          <div class="config-group">
+            <span>β (shift)</span>
+            <input class="curve-range" id="beta-range" type="range" min="-3" max="4" step="0.05" value="1">
+          </div>
+          <div class="model-buttons">
+            <button class="model-btn active" data-bn="train">train<span>batch stats</span></button>
+            <button class="model-btn" data-bn="test">test<span>running stats</span></button>
+          </div>
+          <div class="metrics" style="grid-template-columns:1fr 1fr">
+            <div class="metric"><span>μ used</span><b id="bn-mu">4.00</b></div>
+            <div class="metric"><span>σ² used</span><b id="bn-var">5.00</b></div>
+          </div>
+          <p class="callout" style="margin-top:18px">A test example of size 1 has no batch companions. Freeze exponential moving averages collected during training. Forgetting to switch to eval makes predictions depend on whoever else is in the batch.</p>
+        </div>
+      </div>
+      <div class="question-row">
+        <div class="question" data-q="bn-test" data-success="Running mean and variance are the standard test-time stand-in for μ_B and σ_B².">
+          <strong>You pass one image at test. Batch norm should normalise with</strong>
+          <div class="answers">
+            <button class="answer" data-value="batch1" data-hint="A batch of one has undefined or degenerate σ. That is why running stats exist.">that image as a batch of 1 <span>→</span></button>
+            <button class="answer" data-value="run" data-correct>running mean and variance <span>→</span></button>
+            <button class="answer" data-value="trainlast" data-hint="The last training batch is an accident of shuffle order, not a population estimate.">the last training batch <span>→</span></button>
+          </div>
+          <p class="feedback"></p>
+        </div>
+        <div class="question" data-q="bn-mode" data-success="Train-mode BN on a batch of one (or a shuffled test loader) makes the prediction depend on the other items in the batch.">
+          <strong>You leave BN in train mode and test one image at a time. What happens?</strong>
+          <div class="answers">
+            <button class="answer" data-value="fine" data-hint="Train mode recomputes μ, σ from the current batch. A batch of one is not the training distribution.">Nothing — γ and β already freeze the scale <span>→</span></button>
+            <button class="answer" data-value="bad" data-correct>Predictions become batch-dependent or degenerate <span>→</span></button>
+            <button class="answer" data-value="l2" data-hint="BN is not L2. It is normalisation plus a learned affine, plus noise from batch stats.">The layer silently becomes L2 <span>→</span></button>
+          </div>
+          <p class="feedback"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="lab locked" data-lab="6" id="lab-6">
+    <div class="lab-head"><span class="lab-num">06</span><div><span class="kicker">early stopping</span><h2>Delete training time</h2></div><span class="done">✓ complete</span></div>
+    <div class="lockbox">🔒 <div><strong>Lab locked</strong><p>Complete the lab immediately above.</p></div></div>
+    <div class="lab-content card">
+      <div class="two-col">
+        <div class="visual">
+          <span class="kicker">training timeline</span>
+          <h3>Watch the two losses separate</h3>
+          <svg class="chart" id="es-svg" viewBox="0 0 640 250" aria-label="Train and validation loss over epochs"></svg>
+          <p class="caption">Coral = training MSE. Teal = validation MSE. The star is the checkpoint early stopping would keep.</p>
+        </div>
+        <div class="control">
+          <span class="kicker">checkpoint</span>
+          <h3>When would you stop?</h3>
+          <div class="control-row"><div><span class="label">epoch</span><div class="big" id="es-epoch">1</div></div></div>
+          <div class="timeline-buttons" id="es-buttons"></div>
+          <div class="metrics">
+            <div class="metric"><span>train MSE</span><b id="es-train">—</b></div>
+            <div class="metric"><span>validation MSE</span><b id="es-val">—</b></div>
+          </div>
+          <p class="callout" style="margin-top:18px">The optimiser never sees validation points. Their loss tells you whether improvement still transfers. Patience waits a window after the best validation point, then restores those weights.</p>
+        </div>
+      </div>
+      <div class="question-row">
+        <div class="question" data-q="es-keep" data-success="Keep the weights at the best validation point, not the last epoch and not the lowest training loss.">
+          <strong>Which checkpoint should early stopping keep?</strong>
+          <div class="answers">
+            <button class="answer" data-value="1" data-hint="Epoch 1 has not fitted the signal yet. Both errors are still high.">Epoch 1 <span>→</span></button>
+            <button class="answer" data-value="80" data-correct>Epoch 80 <span>→</span></button>
+            <button class="answer" data-value="300" data-hint="By 300, training is near zero and validation has risen. That is the overfit regime.">Epoch 300 <span>→</span></button>
+          </div>
+          <p class="feedback"></p>
+        </div>
+        <div class="question" data-q="es-why" data-success="Early stopping is a regulariser because the search has not had time to fit every noise wiggle. It is equivalent, roughly, to a shrinking effective step count.">
+          <strong>Early stopping regularises because</strong>
+          <div class="answers">
+            <button class="answer" data-value="l1" data-hint="It does not put an L1 penalty on w. It truncates the optimisation path.">it is exactly lasso <span>→</span></button>
+            <button class="answer" data-value="time" data-correct>the optimiser has not finished interpolating noise <span>→</span></button>
+            <button class="answer" data-value="test" data-hint="You must not peek at the test set to decide when to stop.">it uses the test set as a stopping signal <span>→</span></button>
+          </div>
+          <p class="feedback"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="lab locked" data-lab="7" id="lab-7">
+    <div class="lab-head"><span class="lab-num">07</span><div><span class="kicker">toolkit</span><h2>Pick the tool, then train</h2></div><span class="done">✓ complete</span></div>
+    <div class="lockbox">🔒 <div><strong>Lab locked</strong><p>Complete the lab immediately above.</p></div></div>
+    <div class="lab-content card pad">
+      <p class="theory">The five tools attack the same gap from different directions. In this controlled toy, train a wide interpolating net with one regulariser at a time and watch train / validation error. The preferred setting is the one with low unseen error—not the lowest training loss.</p>
+      <div class="builder-grid">
+        <div class="architecture-stage">
+          <span class="kicker">your regulariser</span>
+          <h3>Apply one knob</h3>
+          <svg id="kit-svg" viewBox="0 0 640 240" aria-label="Fit under the chosen regulariser"></svg>
+          <p class="architecture-note">Same six points every run. The dashed line is the simulator’s sine.</p>
+        </div>
+        <div class="builder-controls">
+          <span class="kicker">configuration</span>
+          <h3>Choose before training</h3>
+          <div class="config-group" data-config="tool">
+            <span>method</span>
+            <div class="config-options" style="grid-template-columns:repeat(5,1fr)">
+              <button class="config-btn active" data-value="none">none<small>λ = 0</small></button>
+              <button class="config-btn" data-value="l2">L2<small>ridge</small></button>
+              <button class="config-btn" data-value="l1">L1<small>lasso</small></button>
+              <button class="config-btn" data-value="drop">drop<small>p = 0.5</small></button>
+              <button class="config-btn" data-value="stop">stop<small>epoch 80</small></button>
+            </div>
+          </div>
+          <div class="config-group" data-config="strength">
+            <span>strength</span>
+            <div class="config-options three">
+              <button class="config-btn" data-value="weak">weak<small>barely on</small></button>
+              <button class="config-btn active" data-value="mid">mid<small>typical</small></button>
+              <button class="config-btn" data-value="strong">strong<small>harsh</small></button>
+            </div>
+          </div>
+          <button class="action" id="train-kit" type="button">▶ Train &amp; evaluate</button>
+        </div>
+      </div>
+      <div class="builder-results">
+        <div class="result-panel">
+          <div class="diagnosis" id="kit-diagnosis">Not evaluated</div>
+          <div class="result-metrics">
+            <div><span>Training error</span><b id="kit-train">—</b></div>
+            <div><span>Validation error</span><b id="kit-val">—</b></div>
+          </div>
+          <p class="builder-message" id="kit-message">Select a method and a strength, then train.</p>
+          <p class="test-count" id="kit-count">0 configurations evaluated</p>
+        </div>
+        <div class="formula">
+          <span>what “best” looks like here</span>
+          <b>L2 at mid strength: both errors low and close.</b>
+        </div>
+      </div>
+      <div class="question" data-q="kit-best" data-success="You need some regulariser, but not a brutal one. Mid L2 is the sweet spot on this toy. Harsh L1 / dropout / stop underfits.">
+        <strong>On this dataset, which setting has the lowest validation error with a small gap?</strong>
+        <div class="answers">
+          <button class="answer" data-value="none" data-hint="No regulariser interpolates the six points and validation stays high. Train it and read the numbers.">none <span>→</span></button>
+          <button class="answer" data-value="l2mid" data-correct>L2 · mid <span>→</span></button>
+          <button class="answer" data-value="l1strong" data-hint="Strong L1 zeros too much and both errors rise. That is underfitting.">L1 · strong <span>→</span></button>
+          <button class="answer" data-value="dropstrong" data-hint="Harsh dropout on a tiny net deletes the signal along with the co-adaptation.">dropout · strong <span>→</span></button>
+        </div>
+        <p class="feedback"></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="lab locked" data-lab="8" id="lab-8">
+    <div class="lab-head"><span class="lab-num">08</span><div><span class="kicker">final checkpoint</span><h2>Diagnose from evidence</h2></div><span class="done">✓ complete</span></div>
+    <div class="lockbox">🔒 <div><strong>Lab locked</strong><p>Complete the lab immediately above.</p></div></div>
+    <div class="lab-content card pad">
+      <p class="theory">Your rule: compare seen and unseen error, look at whether weights hit zero or merely shrink, and ask whether the noise was in w, in activations, in batch statistics, or in training time.</p>
+      <div class="cases">
+        <article class="case">
+          <div class="case-letter">A</div>
+          <code>train .210</code> <code>val .238</code>
+          <p class="callout" style="margin-top:12px">Both losses plateau high. λ is huge.</p>
+          <div class="question" data-q="case-a" data-success="High train + high validation is underfitting: too much regularisation or too little capacity.">
+            <strong>Diagnosis</strong>
+            <div class="answers">
+              <button class="answer" data-value="under" data-correct>Underfit <span>→</span></button>
+              <button class="answer" data-value="over" data-hint="Overfit is a large gap: train low, validation high.">Overfit <span>→</span></button>
+              <button class="answer" data-value="good" data-hint="A good fit has both numbers low and close.">Good fit <span>→</span></button>
+            </div>
+            <p class="feedback"></p>
+          </div>
+        </article>
+        <article class="case">
+          <div class="case-letter">B</div>
+          <code>train .003</code> <code>val .146</code>
+          <p class="callout" style="margin-top:12px">Degree 9, λ = 0, 300 epochs.</p>
+          <div class="question" data-q="case-b" data-success="A large generalisation gap after interpolation is overfitting. Add a regulariser or stop earlier.">
+            <strong>Diagnosis</strong>
+            <div class="answers">
+              <button class="answer" data-value="under" data-hint="Training error is tiny. The model had enough capacity.">Underfit <span>→</span></button>
+              <button class="answer" data-value="over" data-correct>Overfit <span>→</span></button>
+              <button class="answer" data-value="bn" data-hint="Batch norm is a method, not a diagnosis of this gap.">Need BN only <span>→</span></button>
+            </div>
+            <p class="feedback"></p>
+          </div>
+        </article>
+        <article class="case">
+          <div class="case-letter">C</div>
+          <code>w = (1.89, 0.00)</code>
+          <p class="callout" style="margin-top:12px">Two features; the second is a decoy.</p>
+          <div class="question" data-q="case-c" data-success="An exact zero at finite λ is lasso / L1. Ridge would have left a small nonzero w₂.">
+            <strong>Which regulariser did this?</strong>
+            <div class="answers">
+              <button class="answer" data-value="l2" data-hint="Ridge almost never hits exact zero at finite λ. Check the diamond.">L2 / ridge <span>→</span></button>
+              <button class="answer" data-value="l1" data-correct>L1 / lasso <span>→</span></button>
+              <button class="answer" data-value="drop" data-hint="Dropout zeros activations per step; stored w stays dense.">dropout <span>→</span></button>
+            </div>
+            <p class="feedback"></p>
+          </div>
+        </article>
+        <article class="case">
+          <div class="case-letter">D</div>
+          <code>train mask · test full net</code>
+          <p class="callout" style="margin-top:12px">Predictions change if you forget to switch mode.</p>
+          <div class="question" data-q="case-d" data-success="Both dropout and BN have a train/test mismatch if you leave the training behaviour on. The ‘full net, no 1/p’ story is dropout; running stats is BN. Here the mask language is dropout.">
+            <strong>This train/test pair is</strong>
+            <div class="answers">
+              <button class="answer" data-value="drop" data-correct>inverted dropout <span>→</span></button>
+              <button class="answer" data-value="es" data-hint="Early stopping restores a checkpoint; it does not mask units.">early stopping <span>→</span></button>
+              <button class="answer" data-value="l2" data-hint="L2 is the same penalty at train and test.">L2 weight decay <span>→</span></button>
+            </div>
+            <p class="feedback"></p>
+          </div>
+        </article>
+      </div>
+      <div class="completion" id="completion">
+        <b>Worksheet complete</b>
+        <h3>You can now pick a regulariser from evidence—and explain why the diagnosis changes across λ, masks, batches, and time.</h3>
+      </div>
+    </div>
+  </section>
+
+  <section class="reference">
+    <div>
+      <span class="kicker">pocket reference</span>
+      <h2>Five ideas to keep</h2>
+    </div>
+    <dl>
+      <div><dt>L2 / ridge</dt><dd>Shrinks every weight. Closed form ŵ = (XᵀX + λI)⁻¹ Xᵀy. Almost never exact zeros.</dd></div>
+      <div><dt>L1 / lasso</dt><dd>Diamond corners. Soft-thresholding. Sparse w at finite λ.</dd></div>
+      <div><dt>Dropout</dt><dd>Random subnetwork each step; inverted scale 1/p at train; full net at test.</dd></div>
+      <div><dt>Batch norm</dt><dd>Normalise over the minibatch, then γ û + β. Test uses running statistics.</dd></div>
+      <div><dt>Early stopping</dt><dd>Keep θ at the best validation epoch. A regulariser on search time.</dd></div>
+      <div><dt>The split</dt><dd>Tune λ, p, patience on validation. Report test once.</dd></div>
+    </dl>
+  </section>
+
+  <footer>
+    <span>Nothing is scored. Hints are the pedagogy.</span>
+    <a href="worksheet_regularisation.html">click-to-fill sheet with worked numbers →</a>
+  </footer>
+</main>
