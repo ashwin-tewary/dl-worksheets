@@ -1,51 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Deep Learning worksheets</title>
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Interactive deep learning presentation sheets for lectures and practice sheets for reasoning, calculations, and exploration."><title>Deep Learning · Presentation & Practice Sheets</title>
 <style>
-:root{--ink:#16213D;--blue:#3A5DA1;--amber:#C8801F;--cream:#FEF3E1;--creamb:#E2C58C;--grey:#555;--rule:#DDD}
-*{box-sizing:border-box}
-body{margin:0;font-family:Calibri,"Segoe UI",system-ui,sans-serif;color:var(--grey);background:#fff}
-.wrap{max-width:860px;margin:0 auto;padding:48px 28px 80px}
-.eyebrow{font-size:12px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--amber)}
-h1{font-family:Cambria,Georgia,serif;color:var(--ink);font-size:38px;line-height:1.15;margin:8px 0 10px}
-.lede{max-width:640px;margin:0 0 32px;font-size:17px;line-height:1.5}
-.cards{display:grid;grid-template-columns:1fr;gap:16px}
-@media (min-width:720px){.cards{grid-template-columns:1fr 1fr 1fr}}
-a.card{display:block;text-decoration:none;color:inherit;border:1.5px solid var(--rule);border-radius:8px;padding:22px 24px;background:#fff}
-a.card:hover{border-color:var(--amber);background:#FFFBF3}
-a.card h2{font-family:Cambria,Georgia,serif;color:var(--ink);font-size:24px;margin:4px 0 8px}
-a.card p{margin:0;font-size:15.5px;line-height:1.45}
-.tag{display:inline-block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--amber);border:1px solid var(--creamb);background:var(--cream);border-radius:99px;padding:3px 10px}
-.foot{margin-top:36px;font-size:14px;color:#9A9A9A}
-.foot a{color:var(--blue)}
-</style>
-</head>
-<body>
-<div class="wrap">
-  <div class="eyebrow">deep learning worksheets</div>
-  <h1>Worksheets</h1>
-  <p class="lede">Lecture notes and click-to-fill sheets. Nothing is scored. Anyone with the link can open them.</p>
-  <div class="cards">
-    <a class="card" href="worksheet_generalisation.html">
-      <span class="tag">worksheet 1</span>
-      <h2>Generalisation</h2>
-      <p>Underfitting, overfitting, the bias–variance decomposition, and double descent.</p>
-    </a>
-    <a class="card" href="worksheet_regularisation.html">
-      <span class="tag">worksheet 2</span>
-      <h2>Regularisation · worked numbers</h2>
-      <p>L1, L2 / weight decay, dropout, batch normalisation, and early stopping.</p>
-    </a>
-    <a class="card" href="lab_regularisation.html">
-      <span class="tag">lecture notes</span>
-      <h2>Regularisation</h2>
-      <p>Theory, textbook figures, and live plots to deliver the lecture. Same five tools.</p>
-    </a>
-  </div>
-  <p class="foot">Hosted from <a href="https://github.com/ashwin-tewary/dl-worksheets">ashwin-tewary/dl-worksheets</a>.</p>
-</div>
-</body>
-</html>
+:root{--ink:#183c35;--teal:#12655b;--muted:#596e64;--line:#cdd7c9;--paper:#f6f4ed}*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.65 system-ui,sans-serif}main{max-width:1060px;margin:auto;padding:65px 28px}a{color:var(--teal)}.eyebrow{font-size:12px;letter-spacing:.15em;text-transform:uppercase;font-weight:700}h1{font:500 clamp(38px,6vw,64px)/1.1 Georgia,serif;letter-spacing:-.03em;margin:14px 0 23px}.lede{font-size:18px;max-width:710px;color:var(--muted)}nav{display:flex;gap:22px;margin:28px 0 45px}section{border-top:1px solid var(--line);padding-top:28px;margin-top:38px}h2{font:500 30px Georgia,serif;margin:0 0 8px}section>p{color:var(--muted);margin:0 0 23px}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}.card{display:block;text-decoration:none;color:inherit;background:#fffefa;border:1px solid var(--line);border-radius:12px;padding:24px}.card:hover{border-color:var(--teal);background:#edf2e6}.tag{color:var(--teal);font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase}.card h3{font:500 26px Georgia,serif;margin:10px 0}.card p{font-size:15px;color:var(--muted);margin:0}.open{display:block;margin-top:23px;color:var(--teal);font-size:14px;font-weight:600}footer{border-top:1px solid var(--line);padding-top:25px;margin-top:50px;color:var(--muted);font-size:13px}a:focus-visible{outline:3px solid #b77928;outline-offset:5px}html{scroll-behavior:smooth}@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}@media(max-width:600px){main{padding:36px 20px}nav{flex-wrap:wrap}}
+</style></head><body><main><div class="eyebrow">Deep learning · interactive teaching materials</div><h1>Present the idea.<br>Practice the reasoning.</h1><p class="lede">Presentation sheets for teaching in a lecture, and practice sheets for exploring the same ideas through questions, calculations, and interactive visuals.</p><nav aria-label="Sheet categories"><a href="#presentations">Lecture presentation sheets</a><a href="#practice">Practice sheets</a></nav>
+<section id="presentations"><h2>Lecture presentation sheets</h2><p>Teach from the page: concise theory, live plots, textbook figures, and discussion prompts.</p><div class="cards"><a class="card" href="presentations/regularisation/"><span class="tag">Lecture presentation</span><h3>Regularisation</h3><p>L2, L1, dropout, batch normalisation, and early stopping. Reveal derivations and figures as the lecture unfolds.</p><span class="open">Open presentation sheet ↗</span></a></div></section>
+<section id="practice"><h2>Practice sheets</h2><p>Work through examples during a lecture or revisit them independently. Feedback and progress support learning; these are not graded assessments.</p><div class="cards"><a class="card" href="practice/generalisation/"><span class="tag">Click-to-fill practice</span><h3>Generalisation</h3><p>Underfitting, overfitting, the bias–variance decomposition, and double descent.</p><span class="open">Open practice sheet ↗</span></a><a class="card" href="practice/regularisation/"><span class="tag">Worked numerical practice</span><h3>Regularisation</h3><p>Calculate the effects of weight decay, sparsity, dropout, batch normalisation, and early stopping.</p><span class="open">Open practice sheet ↗</span></a><a class="card" href="practice/initialization/"><span class="tag">Animated visual practice</span><h3>Weight initialization</h3><p>Explore symmetry, signal scale, Xavier, and He with rotatable 3D visuals, guided animations, and eleven checks.</p><span class="open">Open practice sheet ↗</span></a></div></section>
+<footer>By Ashwin Tewary · <a href="https://github.com/ashwin-tewary/dl-worksheets">Source & teaching material</a>. Previous worksheet links continue to work.</footer></main></body></html>

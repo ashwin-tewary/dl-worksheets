@@ -1,0 +1,10 @@
+const {test}=require('node:test'),assert=require('node:assert/strict'),M=require('./model.js');
+const near=(a,b,e=1e-10)=>assert.ok(Math.abs(a-b)<e,`${a} ≠ ${b}`);
+test('worked numerical examples',()=>{near(M.weightVariance('random',64,64),1);near(M.propagate({init:'random',nIn:64,nOut:64,depth:1}).rows[1].variance,64);near(Math.sqrt(M.weightVariance('xavier',256,512)),Math.sqrt(2/768));near(M.weightVariance('he',100,100)/M.weightVariance('xavier',100,100),2);});
+test('Xavier preserves equal-width linear second moment',()=>near(M.propagate({depth:50}).rows[50].q,1));
+test('He preserves ReLU second moment and does not equate it with variance',()=>{const r=M.propagate({init:'he',activation:'relu',depth:50}).rows[50];near(r.q,1);near(r.variance,1-1/Math.PI);assert.ok(r.mean>0);});
+test('Xavier on ReLU decays by half per layer',()=>near(M.propagate({activation:'relu',depth:10}).rows[10].q,2**-10));
+test('Leaky ReLU gain compensation',()=>near(M.propagate({init:'he',activation:'leaky',alpha:.1,depth:50}).rows[50].q,1));
+test('tanh stays bounded even when preactivation variance is huge',()=>{const r=M.propagate({init:'random',activation:'tanh',sigma:2,nIn:512,depth:50}).rows.at(-1);assert.ok(r.q<=1&&r.q>0);assert.ok(r.saturation>.9);});
+test('uniform rows stay symmetric; perturbation breaks equality',()=>{for(const c of [0,2])for(const row of M.symmetry(c,10))assert.equal(new Set(row).size,1);assert.ok(new Set(M.symmetry(0,3,true)[0]).size>1);});
+test('display samples are reproducible',()=>assert.deepEqual(M.normalSamples(42,100),M.normalSamples(42,100)));

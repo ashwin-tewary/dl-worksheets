@@ -1,11 +1,7 @@
 # -*- coding: utf-8 -*-
 from pathlib import Path
-root = Path(__file__).resolve().parent
-css_path = root / "_extracted.css"
-if not css_path.exists():
-    html0 = (root / "worksheet_generalisation.html").read_text(encoding="utf-8")
-    css_path.write_text(html0.split("<style>", 1)[1].split("</style>", 1)[0], encoding="utf-8")
-css = css_path.read_text(encoding="utf-8")
+root = Path(__file__).resolve().parents[1]
+css = (root / "src/practice/theme.css").read_text(encoding="utf-8")
 extra = r"""
 /* ---------- info bubbles on theory terms ---------- */
 .termwrap{position:relative;display:inline;white-space:nowrap}
@@ -80,7 +76,7 @@ def build(out_name, parts, title, tb, eyebrow, h1, lede, cite):
   </div>
 </div>
 <div class="wrap">
-  <p class="wsnav"><a href="index.html">all worksheets</a></p>
+  <p class="wsnav"><a href="index.html">all sheets</a></p>
   <header class="mast">
     <div class="eyebrow">{eyebrow}</div>
     <h1>{h1}</h1>
@@ -110,14 +106,16 @@ def build(out_name, parts, title, tb, eyebrow, h1, lede, cite):
 </html>
 """
     out = root / out_name
+    out.parent.mkdir(parents=True, exist_ok=True)
+    html = html.replace('"figs/', '"../../figs/').replace('href="index.html"', 'href="../../index.html"')
     out.write_text(html, encoding="utf-8")
     print("wrote", out, "bytes", out.stat().st_size)
 
 build(
-    "worksheet_generalisation.html",
-    [root / "ws_part_engine.js", root / "ws_part_content.js", root / "ws_part_ui.js"],
-    "Generalisation · Worksheet · Underfit → Overfit → Bias–Variance → Double Descent",
-    "Generalisation · Worksheet · Underfit → Overfit → Bias–Variance → Double Descent",
+    "practice/generalisation/index.html",
+    [root / "src/practice/generalisation/engine.js", root / "src/practice/generalisation/content.js", root / "src/practice/generalisation/ui.js"],
+    "Generalisation · Practice sheet · Underfit → Overfit → Bias–Variance → Double Descent",
+    "Generalisation · Practice sheet · Underfit → Overfit → Bias–Variance → Double Descent",
     "deep learning · generalisation",
     "Underfitting, Overfitting, and the Second Descent",
     "Why a small training loss is not the same as having learned the function, how bias and variance split the blame, and why interpolating models are not automatically useless. Fill every blank by clicking. Nothing here is scored. Dotted terms carry an <b>i</b> — open it.",
@@ -129,10 +127,10 @@ build(
 )
 
 build(
-    "worksheet_regularisation.html",
-    [root / "reg_part_engine.js", root / "reg_part_content.js", root / "reg_part_ui.js"],
-    "Regularisation · Worksheet · L2 → L1 → Dropout → Batch Norm → Early Stopping",
-    "Regularisation · Worksheet · L2 → L1 → Dropout → BN → Early Stopping",
+    "practice/regularisation/index.html",
+    [root / "src/practice/regularisation/engine.js", root / "src/practice/regularisation/content.js", root / "src/practice/regularisation/ui.js"],
+    "Regularisation · Practice sheet · L2 → L1 → Dropout → Batch Norm → Early Stopping",
+    "Regularisation · Practice sheet · L2 → L1 → Dropout → BN → Early Stopping",
     "deep learning · regularisation",
     "Five ways to spend capacity more slowly",
     "L2 shrinks every weight, L1 deletes some of them, dropout deletes activations for a step, batch normalisation re-scales a minibatch, and early stopping deletes training time. Fill every blank by clicking. Nothing here is scored. Dotted terms carry an <b>i</b> — open it. Textbook figures are screenshots of the cited pages.",

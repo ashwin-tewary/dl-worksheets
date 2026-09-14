@@ -1,0 +1,11 @@
+{
+  "name": "weight-initialization-practice",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test": "node --test model.test.cjs interactions.test.cjs"
+  },
+  "devDependencies": {
+    "jsdom": "^29.1.1"
+  }
+}
