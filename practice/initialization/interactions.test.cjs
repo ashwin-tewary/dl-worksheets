@@ -45,3 +45,17 @@ test('guided playback scrubs, steps, replays and animates every scene',()=>{
  input(w,'walk-he',100);assert.match(d.getElementById('readout-he').textContent,/He · q at L10/);assert.match(d.getElementById('readout-he').textContent,/9.77e-4/);
  input(w,'he-depth',20);assert.equal(w.__testScenes.he.phase,0);assert.equal(d.getElementById('walk-label-he').textContent,'Input');dom.window.close();
 });
+test('each visualization is preceded by visible theory, an example and a prediction',()=>{
+ const dom=load(),d=dom.window.document;
+ assert.ok(d.querySelector('.theory-primer .notation-grid'));
+ for(const key of ['symmetry','random','xavier','he']){
+  const section=d.getElementById(key),theory=section.querySelector('.theory-section'),experiment=section.querySelector('.experiment');
+  assert.equal(theory.nextElementSibling,experiment);
+  assert.equal(theory.querySelectorAll('.theory-reasoning li').length,3);
+  assert.ok(theory.querySelector('.theory-example p').textContent.length>100);
+  assert.ok(theory.querySelector('.prediction summary'));
+  assert.ok(theory.querySelector('.observation-task p'));
+  assert.equal(theory.closest('details'),null);
+ }
+ dom.window.close();
+});
