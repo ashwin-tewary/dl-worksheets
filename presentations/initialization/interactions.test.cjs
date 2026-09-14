@@ -59,3 +59,15 @@ test('each visualization is preceded by visible theory, an example and a predict
  }
  dom.window.close();
 });
+test('lecture index classification and explanations beside formulas',()=>{
+ const dom=load(),d=dom.window.document;
+ for(const key of ['symmetry','random','xavier','he']){
+  const formula=d.querySelector(`#${key} .minute .equation`);
+  assert.ok(formula.nextElementSibling.classList.contains('formula-explanation'));
+  assert.ok(formula.nextElementSibling.textContent.length>250);
+ }
+ const home=new JSDOM(fs.readFileSync('../../index.html','utf8')).window.document;
+ assert.ok(home.querySelector('#presentations a[href="presentations/initialization/"]'));
+ assert.equal(home.querySelector('#practice a[href*="initialization"]'),null);
+ dom.window.close();
+});

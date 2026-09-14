@@ -14,3 +14,4 @@
 @media(max-width:800px){.notation-grid{grid-template-columns:1fr;gap:12px}.notation-grid>div+div{border-top:1px solid var(--line);padding-top:12px}}
 @media(max-width:640px){.theory-section,.theory-primer{padding:20px}.theory-section>h3{font-size:23px}.theory-primer h2{font-size:26px}.theory-reasoning{padding-left:20px}.theory-reasoning li{padding-left:3px}.theory-example{padding:15px}}
 @media print{.theory-section,.theory-primer{background:white;border-radius:0;padding:12pt}.theory-section{break-inside:auto}.theory-reasoning li,.theory-example,.observation-task{break-inside:avoid}.theory-reasoning p{font-size:11pt}.prediction>p{display:block!important}}
+.minute .formula-explanation{font:15px/1.8 var(--sans);margin:16px 0 0;padding:16px 18px;background:#fffefa99;border:1px solid #ccd6c6;border-radius:8px;color:var(--ink)}.formula-explanation>b{display:block;color:var(--teal);margin-bottom:5px}
