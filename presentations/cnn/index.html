@@ -1,0 +1,564 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#124b47">
+<meta name="description" content="Interactive CNN lecture sheet: kernels, stride, padding, feature maps, pooling, receptive field, translation invariance, AlexNet and VGG. Type answers, then watch the convolution.">
+<title>See locally, share globally · Convolutional Networks Lecture Sheet</title>
+<link rel="stylesheet" href="styles.css">
+<script defer src="model.js"></script>
+<script defer src="app.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to worksheet</a>
+<header class="topbar"><a class="brand" href="#main"><span class="logo">λ</span><span>DEEP LEARNING<span class="brand-sub">Presentation &amp; practice sheets</span></span></a><div class="progress"><div><span id="progress-label">0 of 10 sections complete</span><span id="progress-percent">0%</span></div><progress id="progress" max="1" value="0" aria-label="Correct filled answers"></progress></div><button class="text-btn" id="reset-progress">Reset progress</button></header>
+<div class="layout">
+<aside class="sidebar">
+<div class="eyebrow">LECTURE / CONVOLUTION</div>
+<nav aria-label="Worksheet sections">
+<a class="active" href="#kernels"><span>01</span>Filters / kernels<i></i></a>
+<a href="#stride"><span>02</span>Stride<i></i></a>
+<a href="#padding"><span>03</span>Padding<i></i></a>
+<a href="#maps"><span>04</span>Feature maps<i></i></a>
+<a href="#pooling"><span>05</span>Pooling<i></i></a>
+<a href="#field"><span>06</span>Receptive field<i></i></a>
+<a href="#invariance"><span>07</span>Translation<i></i></a>
+<a href="#alexnet"><span>08</span>AlexNet<i></i></a>
+<a href="#vgg"><span>09</span>VGG<i></i></a>
+<a href="#check"><span>10</span>Check yourself<i></i></a>
+</nav>
+<div class="sidebar-note"><span class="tiny-cross">+</span><p>A small template,<br>reused everywhere.</p></div>
+<a class="source-link" href="#references">Reading ↗</a>
+</aside>
+<main id="main" class="prose">
+<div class="intro">
+<a class="source-link" href="../../index.html">← All presentation &amp; practice sheets</a>
+<div class="eyebrow">CONVOLUTIONAL NETWORKS</div>
+<h1>See locally,<br>share <em>globally.</em><span class="title-dot">●</span></h1>
+<p>An image is not a bag of pixels. Nearby pixels belong together, and the same pattern can appear anywhere.</p>
+<div class="intro-meta"><span>8 visual labs</span><span>Typed checks</span><span>Explore at your own pace</span></div>
+</div>
+<div class="orientation">
+<div><b>01 / READ</b><span>A short argument, then a calculation.</span></div>
+<div><b>02 / FILL</b><span>Type the number. Press Check. Open Show answer only after that.</span></div>
+<div><b>03 / WATCH</b><span>Slide the kernel. Change stride, pad, pool.</span></div>
+</div>
+
+<section class="theory-primer" aria-labelledby="primer-title">
+<span class="eyebrow">BEFORE YOU START</span>
+<h2 id="primer-title">What a convolution is for</h2>
+<p>A fully connected layer treats every pixel as a separate feature and learns a different weight for every pair of positions. That wastes parameters and throws away the fact that a cat’s ear looks the same in the top-left as in the bottom-right. A <strong>convolution</strong> uses a small shared <strong>kernel</strong> (also called a filter) and slides it across the image.</p>
+<div class="notation-grid">
+<div><b>Kernel K</b><p>A k × k array of weights. Typical teaching sizes are 3×3 and 5×5. AlexNet’s first layer used 11×11.</p></div>
+<div><b>Geometry</b><p>S is stride, the hop in pixels. P is padding, zeros (or a repeat of the border) added around the input.</p></div>
+<div><b>Output size</b><p>H<sub>out</sub> = ⌊(H + 2P − K)/S⌋ + 1. The same formula applies independently to width.</p></div>
+</div>
+<p class="theory-assumption"><b>Model assumptions.</b> The labs use small integer images and fixed kernels so every number is checkable by hand. Real networks learn the kernels. Unless a control says otherwise, there is one input channel and one output channel, and no bias.</p>
+<div class="howto box note" style="margin-top:8px"><p><b>How to use this sheet.</b> Read one section at a time. Type answers into the boxes and press <b>Check</b>; open <b>Show answer</b> only after that. Each part has a live grid. Nothing is scored.</p></div>
+</section>
+
+<section id="kernels" data-section="0" class="lab">
+<div class="section-heading"><span class="section-number">01</span><div><span class="eyebrow">FILTERS / KERNELS</span><h2>A small template.<br>A sliding inner product.</h2></div><span class="completion">Complete ✓</span></div>
+<div class="minute">
+<span class="eyebrow">IN ONE MINUTE</span>
+<p>At each location the kernel is laid on a patch of the same size. Multiply aligned entries and add. That scalar is one output pixel. Then the kernel moves and the same weights are used again. <strong>The detector is shared; only the patch changes.</strong></p>
+<div class="equation">z<sub>ij</sub> = Σ<sub>uv</sub> K<sub>uv</sub> x<sub>i+u, j+v</sub><span>One output cell · valid placement · one input channel</span></div>
+<p class="formula-explanation"><b>Read the sum.</b> The indices u, v run over the kernel. i, j choose where the top-left of the kernel sits on the input. Every output cell uses the same K. If you had a different K at every location you would have rebuilt a fully connected layer on patches, and you would have lost translation sharing. A bias b, when present, is added after the sum and is also shared across space.</p>
+</div>
+
+<h3><span class="n">1.1</span>Why share the weights?</h3>
+<p>Suppose a 32×32 image and a 3×3 kernel. A fully connected layer from all 1024 pixels to a 30×30 map would use 1024 × 900 weights. The convolution uses 9. The 9 are reused at every one of the 900 placements.</p>
+<div class="box key"><span class="tag">Key idea</span><p>Weight sharing is not a trick for speed only. It is the claim that the world is stationary: the same pattern is legal everywhere.</p></div>
+
+<h3><span class="n">1.2</span>Work the inner product</h3>
+<p>Patch and kernel below. Compute each row’s contribution, then the total. This is exactly one output pixel.</p>
+<div class="tscroll"><table class="wt small"><caption>Patch × kernel</caption>
+<thead><tr><th>Patch</th><th>Kernel</th></tr></thead>
+<tbody>
+<tr><td>1 2 0</td><td>1 0 −1</td></tr>
+<tr><td>0 1 2</td><td>1 0 −1</td></tr>
+<tr><td>3 0 1</td><td>1 0 −1</td></tr>
+</tbody></table></div>
+<div class="box hand">
+<span class="tag">Try it by hand</span>
+<p>Row 1 contributes <input class="qin" id="q-k1" data-a="1">. Row 2 contributes <input class="qin" id="q-k2" data-a="-2">. Row 3 contributes <input class="qin" id="q-k3" data-a="2">. The output pixel is <input class="qin" id="q-k4" data-a="1">.</p>
+<div class="chkrow"><button class="chkbtn" type="button">Check</button><span class="chkmsg"></span>
+<details class="ans"><summary>Show answer</summary><div class="a"><p>1·1 + 2·0 + 0·(−1) = 1. Then 0 − 2 + 0 = −2. Then 3 + 0 − 1 = 2. Total 1 − 2 + 2 = 1. An edge kernel of this shape is a vertical first difference: bright on the left, dark on the right, gives a positive response.</p></div></details></div>
+</div>
+
+<h3><span class="n">1.3</span>Watch it slide</h3>
+<p>The vertical edge image is 1s on the left, 0s on the right. Try identity (copies the centre), blur (local average), and the two edge kernels.</p>
+<article class="theory-section" aria-labelledby="theory-kernel">
+<span class="eyebrow">THEORY · BEFORE THE VISUALIZATION</span>
+<h3 id="theory-kernel">Three things to separate</h3>
+<ol class="theory-reasoning">
+<li><strong>The arithmetic</strong><p>Each placement is an inner product. If you can do one by hand, you can do the layer.</p></li>
+<li><strong>The sharing</strong><p>The kernel does not change as it moves. Different output cells are different patches, not different detectors.</p></li>
+<li><strong>The meaning</strong><p>Learned kernels become texture and part detectors. The presets here are the classical ones, so you can predict the map.</p></li>
+</ol>
+<div class="theory-example"><b>WORKED EXAMPLE</b><p>On a 7×7 input with a 3×3 kernel, stride 1 and no padding, there are 5×5 = 25 placements. Each uses the same nine weights. The lab highlights one placement at a time and writes the inner product on the output grid.</p></div>
+<details class="prediction"><summary>Predict before you play: Will the vertical-edge kernel fire in the middle of the left-hand block of 1s?</summary><p>No. Inside a constant block every 3×3 of 1s gives 1+1+1 − (1+1+1) = 0. The kernel fires at the light-to-dark transition.</p></details>
+<div class="observation-task"><b>WHAT TO LOOK FOR</b><p>Switch to edge x. The coral window should light up only at the boundary. Identity should copy the bright blob of 1s, trimmed by one pixel all round.</p></div>
+</article>
+<div class="experiment lab-shell">
+<div class="visual-pane">
+<div class="pane-heading"><div><span class="eyebrow">2D GRID / SLIDING KERNEL</span><h3>One patch at a time.</h3></div><span class="live-label">INTERACTIVE</span></div>
+<canvas id="cv-kernel" class="scene grid-scene" tabindex="0" role="img" aria-label="Input grid, kernel, and output feature map with a moving window."></canvas>
+<div class="scene-tools"><span>The coral frame is the current patch</span><button type="button" data-replay="cv-kernel">↻ Replay</button><button type="button" data-motion="cv-kernel">Pause</button></div>
+<p class="visual-note">Numbers on the cells are the actual values, not a metaphor.</p>
+<div id="read-kernel" class="walk-readout"></div>
+</div>
+<div class="controls">
+<span class="eyebrow">YOUR EXPERIMENT</span>
+<h3>Choose a detector.</h3>
+<label for="k-kernel">Kernel</label>
+<select id="k-kernel">
+<option value="edgex">Vertical edge · Sobel-x style</option>
+<option value="edgey">Horizontal edge</option>
+<option value="identity">Identity · centre 1</option>
+<option value="blur">Box blur · 1/9</option>
+<option value="sharpen">Sharpen</option>
+</select>
+<div class="try"><b>TRY THIS</b><p>Predict the edge-x map, then switch the kernel. Does blur shrink the jump at the boundary?</p></div>
+</div>
+</div>
+<div class="box warn"><span class="tag">Common mistake</span><p>“Convolution in deep learning is the same as the mathematical convolution.” Libraries implement <em>cross-correlation</em>: they do not flip the kernel. The name stuck. For learning, an unflipped kernel is simply a different parameterisation.</p></div>
+</section>
+
+<section id="stride" data-section="1" class="lab">
+<div class="section-heading"><span class="section-number">02</span><div><span class="eyebrow">STRIDE</span><h2>How far the<br>template hops.</h2></div><span class="completion">Complete ✓</span></div>
+<div class="minute">
+<span class="eyebrow">IN ONE MINUTE</span>
+<p>Stride S = 1 visits every legal placement. S = 2 skips every other origin, so the output is about half as tall and half as wide. <strong>Stride is downsampling by skipping, not by pooling.</strong></p>
+<div class="equation">H<sub>out</sub> = ⌊(H + 2P − K)/S⌋ + 1<span>Integer division · independent of the kernel values</span></div>
+<p class="formula-explanation"><b>Read the hop.</b> Increasing S makes the output smaller and makes each output cell look at a patch whose top-left is farther from its neighbours. The receptive-field jump (Part 6) is multiplied by S. A large stride in the first layer, as in AlexNet, is a deliberate decision to throw away fine spatial grid while keeping a large field of view.</p>
+</div>
+<h3><span class="n">2.1</span>Count the placements</h3>
+<p>H = 7, K = 3, P = 0. The last legal top-left row index is 7 − 3 = 4, so stride 1 visits rows 0,1,2,3,4 — five of them.</p>
+<div class="box hand">
+<span class="tag">Try it by hand</span>
+<p>Same H = 7, K = 3, P = 0. Stride 1 gives H<sub>out</sub> = <input class="qin" id="q-s1" data-a="5">. Stride 2 gives <input class="qin" id="q-s2" data-a="3">. Stride 3 gives <input class="qin" id="q-s3" data-a="2">.</p>
+<div class="chkrow"><button class="chkbtn" type="button">Check</button><span class="chkmsg"></span>
+<details class="ans"><summary>Show answer</summary><div class="a"><p>⌊(7 − 3)/1⌋ + 1 = 5. ⌊4/2⌋ + 1 = 3. ⌊4/3⌋ + 1 = 2. The origins for stride 2 are (0,0), (0,2), (0,4) and the three matching rows 2 and 4 — nine visits, not 25.</p></div></details></div>
+</div>
+<article class="theory-section">
+<span class="eyebrow">THEORY · BEFORE THE VISUALIZATION</span>
+<h3>Skipped origins are simply not computed</h3>
+<ol class="theory-reasoning">
+<li><strong>Start at (0,0)</strong><p>Then add S to the row or column until the kernel would hang off the (padded) input.</p></li>
+<li><strong>The formula is not optional</strong><p>If (H + 2P − K) is not divisible by S, the leftover border is unused. That is what the floor is for.</p></li>
+<li><strong>Do not confuse with pooling</strong><p>Stride in a convolution still computes a learned inner product. Pooling (Part 5) summarises a patch with max or mean and has no kernel weights.</p></li>
+</ol>
+<div class="theory-example"><b>WORKED EXAMPLE</b><p>AlexNet’s first layer: H = 227, K = 11, S = 4, P = 0. H<sub>out</sub> = ⌊(227 − 11)/4⌋ + 1 = 55. The 224-pixel convention with P = 2 gives 54 after flooring, which is why people quote both 224 and 227.</p></div>
+<details class="prediction"><summary>Predict before you play: If we raise stride from 1 to 2 on the 7×7 blob, does any output cell still see the peak?</summary><p>Yes, if a stride-2 origin still covers the peak in its 3×3. Watch which coral windows appear — several centres are never visited.</p></details>
+<div class="observation-task"><b>WHAT TO LOOK FOR</b><p>The output grid should shrink as you drag stride. Count the coral visits: 25, then 9, then 4.</p></div>
+</article>
+<div class="experiment lab-shell">
+<div class="visual-pane">
+<div class="pane-heading"><div><span class="eyebrow">2D GRID / STRIDE</span><h3>Fewer hops, smaller map.</h3></div></div>
+<canvas id="cv-stride" class="scene grid-scene" tabindex="0" role="img" aria-label="Convolution with adjustable stride."></canvas>
+<div class="scene-tools"><span>Identity kernel, so the output copies each window centre</span><button type="button" data-replay="cv-stride">↻ Replay</button><button type="button" data-motion="cv-stride">Pause</button></div>
+<p class="visual-note">Identity makes geometry visible: you are seeing which centres were sampled.</p>
+<div id="read-stride" class="walk-readout"></div>
+</div>
+<div class="controls">
+<span class="eyebrow">YOUR EXPERIMENT</span>
+<h3>Change the hop.</h3>
+<label for="k-stride">Stride S <output id="k-stride-value">1 px</output></label>
+<input id="k-stride" type="range" min="1" max="3" value="1">
+<div class="try"><b>TRY THIS</b><p>Set S = 2. How many output cells remain? Check it against the formula.</p></div>
+</div>
+</div>
+</section>
+
+<section id="padding" data-section="2" class="lab">
+<div class="section-heading"><span class="section-number">03</span><div><span class="eyebrow">PADDING</span><h2>Keep the border<br>in the conversation.</h2></div><span class="completion">Complete ✓</span></div>
+<div class="minute">
+<span class="eyebrow">IN ONE MINUTE</span>
+<p>A valid convolution (P = 0) shrinks the map by K − 1. <strong>Same padding</strong> for odd K and stride 1 uses P = (K − 1)/2 so H<sub>out</sub> = H. The extra cells are usually zeros.</p>
+<div class="equation">P<sub>same</sub> = (K − 1)/2<span>Odd kernels, stride 1 · VGG’s default</span></div>
+<p class="formula-explanation"><b>Read the halo.</b> Padding is not a trick to invent data. It is a decision about whether corner pixels get to be window centres. Without it, every layer eats the border and a deep stack silently crops the image. With it, spatial size stays a design choice of stride and pooling, not of kernel size. Zero padding is the default; it can create a faint “border artefact” that later layers sometimes exploit.</p>
+</div>
+<h3><span class="n">3.1</span>Restore the size</h3>
+<div class="box hand">
+<span class="tag">Try it by hand</span>
+<p>For H = 5, K = 3, S = 1, the P that keeps H<sub>out</sub> = 5 is <input class="qin" id="q-p1" data-a="1">. For H = 7, K = 5, S = 1, P = <input class="qin" id="q-p2" data-a="2">. With H = 7, K = 3, S = 1, P = 0, H<sub>out</sub> = <input class="qin" id="q-p3" data-a="5">.</p>
+<div class="chkrow"><button class="chkbtn" type="button">Check</button><span class="chkmsg"></span>
+<details class="ans"><summary>Show answer</summary><div class="a"><p>P = (3−1)/2 = 1 and (5−1)/2 = 2. Unpadded 7 with 3×3 is ⌊(7−3)/1⌋+1 = 5, which is why the identity lab without padding loses a one-pixel frame.</p></div></details></div>
+</div>
+<article class="theory-section">
+<span class="eyebrow">THEORY · BEFORE THE VISUALIZATION</span>
+<h3>Zeros around the picture</h3>
+<ol class="theory-reasoning">
+<li><strong>Write the padded array</strong><p>A 2×2 block with P = 1 becomes 4×4, with the original numbers in the centre and zeros on the rim.</p></li>
+<li><strong>Run the usual formula on the padded size</strong><p>H′ = H + 2P, then H<sub>out</sub> = ⌊(H′ − K)/S⌋ + 1, which is the same as the compact formula.</p></li>
+<li><strong>Same is a policy, not a miracle</strong><p>It holds for stride 1 and odd K. Stride 2 with “same” padding in frameworks is a slightly different rounding convention; always print the tensor shape.</p></li>
+</ol>
+<div class="theory-example"><b>WORKED EXAMPLE</b><p>Input [[1,2],[3,4]] with P = 1. The padded grid is a 4×4 of zeros with that block in the centre. A 3×3 identity then returns a 2×2 — the original image — because each original pixel can sit at a window centre.</p></div>
+<details class="prediction"><summary>Predict before you play: With P = 1 on the 7×7 blob, is the output 7×7 or 9×9?</summary><p>7×7. Padding adds two rows, the 3×3 then removes two, and you are back to 7. You do not keep the extra halo in the output.</p></details>
+<div class="observation-task"><b>WHAT TO LOOK FOR</b><p>Grey-beige cells are zeros. At P = 0 the blob is cropped. At P = 1 the output size matches the input.</p></div>
+</article>
+<div class="experiment lab-shell">
+<div class="visual-pane">
+<div class="pane-heading"><div><span class="eyebrow">2D GRID / PADDING</span><h3>A halo of zeros.</h3></div></div>
+<canvas id="cv-pad" class="scene grid-scene" tabindex="0" role="img" aria-label="Convolution with adjustable zero padding."></canvas>
+<div class="scene-tools"><span>Identity kernel again, so size changes are the whole story</span><button type="button" data-replay="cv-pad">↻ Replay</button><button type="button" data-motion="cv-pad">Pause</button></div>
+<p class="visual-note">The input drawn here includes the padded zeros when P &gt; 0.</p>
+<div id="read-pad" class="walk-readout"></div>
+</div>
+<div class="controls">
+<span class="eyebrow">YOUR EXPERIMENT</span>
+<h3>Add a border.</h3>
+<label for="k-pad">Padding P <output id="k-pad-value">0 px</output></label>
+<input id="k-pad" type="range" min="0" max="2" value="0">
+<div class="try"><b>TRY THIS</b><p>Set P = 1. Confirm the output is 7×7. Then P = 2: now it grows, because you over-padded relative to a 3×3.</p></div>
+</div>
+</div>
+</section>
+
+<section id="maps" data-section="3" class="lab">
+<div class="section-heading"><span class="section-number">04</span><div><span class="eyebrow">FEATURE MAPS</span><h2>One kernel,<br>one channel.</h2></div><span class="completion">Complete ✓</span></div>
+<div class="minute">
+<span class="eyebrow">IN ONE MINUTE</span>
+<p>A layer with C<sub>out</sub> kernels produces C<sub>out</sub> feature maps. If the input already has C<sub>in</sub> channels, each kernel is a C<sub>in</sub> × K × K volume. <strong>Depth of the stack is “how many detectors,” not “how deep the network is.”</strong></p>
+<div class="equation">#params = C<sub>out</sub> · C<sub>in</sub> · K · K <span>+ C<sub>out</sub> if you count biases</span></div>
+<p class="formula-explanation"><b>Read the volume.</b> For a colour image C<sub>in</sub> = 3 at the first layer. After that, C<sub>in</sub> is whatever the previous layer emitted. Doubling C<sub>out</sub> doubles both compute and parameters. Spatial size (H, W) does not appear in the parameter count — that is the point of sharing — but it does appear in the multiply-adds, which are H<sub>out</sub> W<sub>out</sub> times the parameter count, before bias.</p>
+</div>
+<h3><span class="n">4.1</span>Count the weights</h3>
+<div class="box hand">
+<span class="tag">Try it by hand</span>
+<p>16 kernels, 3 input channels, 3×3, no bias: <input class="qin" id="q-m1" data-a="432"> weights. With a bias per kernel: <input class="qin" id="q-m2" data-a="448">. VGG’s first layer, 64 kernels on RGB 3×3, no bias: <input class="qin" id="q-m3" data-a="1728">.</p>
+<div class="chkrow"><button class="chkbtn" type="button">Check</button><span class="chkmsg"></span>
+<details class="ans"><summary>Show answer</summary><div class="a"><p>16 × 3 × 9 = 432, plus 16 biases = 448. 64 × 3 × 9 = 1728. A fully connected layer from 224×224×3 to 64 maps of similar size would be millions of weights; the convolution stays at 1728.</p></div></details></div>
+</div>
+<article class="theory-section">
+<span class="eyebrow">THEORY · BEFORE THE VISUALIZATION</span>
+<h3>Maps are stacked, not mixed in the drawing</h3>
+<ol class="theory-reasoning">
+<li><strong>One detector, one plane</strong><p>Edge-x, edge-y and blur are three independent inner products. Early layers of a CNN learn similar low-level detectors, then mix them.</p></li>
+<li><strong>Next layer sees the stack</strong><p>Its kernels have thickness C<sub>in</sub>. A 3×3 “on 64 maps” is 64 × 3 × 3 = 576 weights per output channel.</p></li>
+<li><strong>1×1 convolutions</strong><p>K = 1 still mixes channels at a single location. That is a cheap learned change of C, used heavily after VGG (Network-in-Network, Inception, ResNet bottlenecks).</p></li>
+</ol>
+<div class="theory-example"><b>WORKED EXAMPLE</b><p>The lab input is 7×7. Three 3×3 kernels at stride 1, no pad, give three 5×5 maps — a 5×5×3 volume. The animation does not learn; it only shows that different kernels light up different structure in the same picture.</p></div>
+<details class="prediction"><summary>Predict before you play: Will the blur map look like a softer copy of the edge, or like a softer copy of the image?</summary><p>A softer copy of the image. Blur averages the 3×3; it is not an edge detector. Edge-x should be quiet inside the white block and loud at the vertical jump.</p></details>
+<div class="observation-task"><b>WHAT TO LOOK FOR</b><p>Compare the three maps side by side. Thickness of the stack is the number of maps, not the spatial size.</p></div>
+</article>
+<div class="experiment lab-shell">
+<div class="visual-pane">
+<div class="pane-heading"><div><span class="eyebrow">2D GRID / THREE MAPS</span><h3>Same image, three stories.</h3></div><span class="live-label">COMPARE</span></div>
+<canvas id="cv-maps" class="scene grid-scene" tabindex="0" role="img" aria-label="One input and three feature maps from three kernels."></canvas>
+<p class="visual-note">Left: input. Then kernel and its map, three times.</p>
+<div id="read-maps" class="walk-readout"></div>
+</div>
+<div class="controls">
+<span class="eyebrow">YOUR EXPERIMENT</span>
+<h3>Read the volume.</h3>
+<p class="control-note">There is no extra dial here: the three kernels are the experiment. Later layers will mix these maps with thicker kernels.</p>
+<div class="try"><b>REMEMBER</b><p>C<sub>out</sub> is a design choice. VGG doubles it after most downsamples (64 → 128 → 256 → 512).</p></div>
+</div>
+</div>
+</section>
+
+<section id="pooling" data-section="4" class="lab">
+<div class="section-heading"><span class="section-number">05</span><div><span class="eyebrow">POOLING</span><h2>Summarise,<br>then move on.</h2></div><span class="completion">Complete ✓</span></div>
+<div class="minute">
+<span class="eyebrow">IN ONE MINUTE</span>
+<p>A pooling window takes max or mean over a small neighbourhood and usually hops with stride equal to its size. <strong>No weights are learned.</strong> The map gets cheaper, a little more invariant to tiny shifts, and a little vaguer about exact position.</p>
+<div class="equation">y = max{ x<sub>window</sub> } &nbsp; or &nbsp; mean{ x<sub>window</sub> }<span>Typical: 2×2, stride 2 · AlexNet used overlapping 3×3, stride 2</span></div>
+<p class="formula-explanation"><b>Read the summarise.</b> Max pooling keeps the strongest detector response in the window and forgets where inside the window it was, up to the window size. Average pooling keeps mass instead of peaks. Neither replaces a convolution: you still need a learned kernel to decide what “strong” means. Modern nets (ResNet and after) often prefer stride-2 convolutions to explicit pooling in the main path, but the geometry is the same idea.</p>
+</div>
+<h3><span class="n">5.1</span>A 4×4 by hand</h3>
+<p>Input:</p>
+<div class="tscroll"><table class="wt small"><tr><td>1</td><td>3</td><td>2</td><td>0</td></tr><tr><td>4</td><td>1</td><td>0</td><td>2</td></tr><tr><td>2</td><td>2</td><td>8</td><td>1</td></tr><tr><td>0</td><td>5</td><td>1</td><td>3</td></tr></table></div>
+<div class="box hand">
+<span class="tag">Try it by hand</span>
+<p>2×2 max, stride 2. Top-left <input class="qin" id="q-o1" data-a="4">, top-right <input class="qin" id="q-o2" data-a="2">, bottom-left <input class="qin" id="q-o3" data-a="5">, bottom-right <input class="qin" id="q-o4" data-a="8">. Top-left average is <input class="qin" id="q-o5" data-a="2.25" data-tol="0.02">.</p>
+<div class="chkrow"><button class="chkbtn" type="button">Check</button><span class="chkmsg"></span>
+<details class="ans"><summary>Show answer</summary><div class="a"><p>max(1,3,4,1)=4, max(2,0,0,2)=2, max(2,2,0,5)=5, max(8,1,1,3)=8. Average of the first window (1+3+4+1)/4 = 2.25.</p></div></details></div>
+</div>
+<article class="theory-section">
+<span class="eyebrow">THEORY · BEFORE THE VISUALIZATION</span>
+<h3>Downsample without new parameters</h3>
+<ol class="theory-reasoning">
+<li><strong>Partition the map</strong><p>Non-overlapping 2×2 stride 2 is a partition. Overlapping 3×3 stride 2 (AlexNet) lets neighbouring windows share pixels.</p></li>
+<li><strong>Reduce H and W, keep C</strong><p>Pooling is applied per feature map. You still have the same number of detectors, on a coarser grid.</p></li>
+<li><strong>Invariance is local</strong><p>A 1-pixel shift that stays inside the same window can leave the max unchanged. A shift that crosses a window boundary does not. True invariance is built by stacking this with later layers, not by one pool.</p></li>
+</ol>
+<div class="theory-example"><b>WORKED EXAMPLE</b><p>The lab uses the table above. Switch max and average: 8 dominates the bottom-right for max; average reports 3.25 there instead. The window animation shows which four cells feed each output.</p></div>
+<details class="prediction"><summary>Predict before you play: If we change the 8 to a 1, which max-pool cell changes?</summary><p>Only the bottom-right, which becomes max(1,1,1,3)=3. The other three windows do not contain that entry.</p></details>
+<div class="observation-task"><b>WHAT TO LOOK FOR</b><p>Toggle max versus average. Max tracks peaks; average tracks mass. Neither redraws the 4×4 as a convolution would.</p></div>
+</article>
+<div class="experiment lab-shell">
+<div class="visual-pane">
+<div class="pane-heading"><div><span class="eyebrow">2D GRID / POOLING</span><h3>Four cells become one.</h3></div></div>
+<canvas id="cv-pool" class="scene grid-scene" tabindex="0" role="img" aria-label="Max or average pooling on a 4 by 4 grid."></canvas>
+<div class="scene-tools"><span>Coral: current 2×2</span><button type="button" data-replay="cv-pool">↻ Replay</button><button type="button" data-motion="cv-pool">Pause</button></div>
+<p class="visual-note">Pooling has no kernel grid to show — only the window and the summary.</p>
+<div id="read-pool" class="walk-readout"></div>
+</div>
+<div class="controls">
+<span class="eyebrow">YOUR EXPERIMENT</span>
+<h3>Max or mean.</h3>
+<label for="k-pool">Pooling</label>
+<select id="k-pool"><option value="max">Max</option><option value="avg">Average</option></select>
+<div class="try"><b>TRY THIS</b><p>Find the 8. Confirm it becomes the bottom-right max and is diluted by averaging.</p></div>
+</div>
+</div>
+</section>
+
+<section id="field" data-section="5" class="lab">
+<div class="section-heading"><span class="section-number">06</span><div><span class="eyebrow">RECEPTIVE FIELD</span><h2>What can this<br>unit actually see?</h2></div><span class="completion">Complete ✓</span></div>
+<div class="minute">
+<span class="eyebrow">IN ONE MINUTE</span>
+<p>The receptive field of a unit is the input region that can affect it. After a stack of layers it is much larger than one kernel. <strong>Each layer adds (K − 1) × jump, then multiplies the jump by the stride.</strong></p>
+<div class="equation">RF<sub>ℓ</sub> = RF<sub>ℓ−1</sub> + (K<sub>ℓ</sub> − 1) · J<sub>ℓ−1</sub>, &nbsp; J<sub>ℓ</sub> = J<sub>ℓ−1</sub> · S<sub>ℓ</sub><span>Start from RF = 1, J = 1 on the pixels</span></div>
+<p class="formula-explanation"><b>Read the growth.</b> Jump J is the spacing, in input pixels, between adjacent units at the current layer. A stride-2 layer doubles that spacing. Padding changes which pixels exist, not the theoretical field size of a unit in the bulk. A 1×1 convolution does not grow RF at all. Pooling with K = 2, S = 2 grows RF by 1 × J and then doubles J — the same recurrence, with no learned weights.</p>
+</div>
+<h3><span class="n">6.1</span>Stack 3×3s</h3>
+<div class="box hand">
+<span class="tag">Try it by hand</span>
+<p>Three stride-1 3×3 layers: RF = <input class="qin" id="q-r1" data-a="7">. AlexNet’s first layer, K = 11, S = 4: RF = <input class="qin" id="q-r2" data-a="11"> and jump = <input class="qin" id="q-r3" data-a="4">. After one more 3×3 stride-1: RF = <input class="qin" id="q-r4" data-a="19">.</p>
+<div class="chkrow"><button class="chkbtn" type="button">Check</button><span class="chkmsg"></span>
+<details class="ans"><summary>Show answer</summary><div class="a"><p>1+2+2+2 = 7. First layer: RF = 11, J = 4. Then RF = 11 + 2×4 = 19, J stays 4. That is why an early large stride buys field of view quickly and spends spatial precision.</p></div></details></div>
+</div>
+<article class="theory-section">
+<span class="eyebrow">THEORY · BEFORE THE VISUALIZATION</span>
+<h3>Field of view is designed, not accidental</h3>
+<ol class="theory-reasoning">
+<li><strong>One 7×7 versus three 3×3</strong><p>Both have RF = 7 at stride 1. The stack uses 27 weights per channel pair instead of 49, and it inserts two extra nonlinearities.</p></li>
+<li><strong>Stride multiplies jump</strong><p>After a downsample, further 3×3s grow the field faster, in input pixels, because each step is a larger jump.</p></li>
+<li><strong>Effective field can be smaller</strong><p>The theoretical RF is the support. If weights in the corners are tiny, the practical field is concentrated in the centre. Dilated convolutions grow RF without a stride, by inserting holes in the kernel.</p></li>
+</ol>
+<div class="theory-example"><b>WORKED EXAMPLE</b><p>The lab paints a square of side RF on a 15×15 canvas. Raise the number of 3×3 layers: 1 → RF 3, 2 → 5, 3 → 7. Then set stride to 2: the field jumps, and the jump readout doubles each layer.</p></div>
+<details class="prediction"><summary>Predict before you play: Two 3×3 layers at stride 2 — is RF 5 or something larger?</summary><p>Layer 1: RF = 3, J = 2. Layer 2: RF = 3 + 2×2 = 7, J = 4. Larger than two stride-1 layers (RF 5), because the second kernel steps in input pixels of size 2.</p></details>
+<div class="observation-task"><b>WHAT TO LOOK FOR</b><p>Read the table under the grid. RF and jump should match the recurrence, not the picture’s crop.</p></div>
+</article>
+<div class="experiment lab-shell">
+<div class="visual-pane">
+<div class="pane-heading"><div><span class="eyebrow">2D GRID / FIELD OF VIEW</span><h3>Grow the square.</h3></div></div>
+<canvas id="cv-rf" class="scene grid-scene" tabindex="0" role="img" aria-label="Receptive field square on the input grid."></canvas>
+<p class="visual-note">The highlighted square is the theoretical support of the centre unit.</p>
+<div class="num-grid"><table class="wt small"><thead><tr><th>Layer</th><th>K / S</th><th>RF</th><th>Jump</th></tr></thead><tbody id="rf-table"></tbody></table></div>
+<div id="read-rf" class="walk-readout"></div>
+</div>
+<div class="controls">
+<span class="eyebrow">YOUR EXPERIMENT</span>
+<h3>Stack layers.</h3>
+<label for="k-rf-n">How many layers <output id="k-rf-n-value">3 layers</output></label>
+<input id="k-rf-n" type="range" min="1" max="6" value="3">
+<label for="k-rf-k">Kernel size</label>
+<select id="k-rf-k"><option>3</option><option>5</option><option>7</option><option>11</option></select>
+<label for="k-rf-s">Stride</label>
+<select id="k-rf-s"><option>1</option><option>2</option></select>
+<div class="try"><b>TRY THIS</b><p>Match three 3×3 stride-1 to one 7×7. Then give them stride 2 and watch jump take over.</p></div>
+</div>
+</div>
+</section>
+
+<section id="invariance" data-section="6" class="lab">
+<div class="section-heading"><span class="section-number">07</span><div><span class="eyebrow">TRANSLATION</span><h2>Move the cat.<br>Move the features?</h2></div><span class="completion">Complete ✓</span></div>
+<div class="minute">
+<span class="eyebrow">IN ONE MINUTE</span>
+<p>A convolution is <strong>translation equivariant</strong>: shift the input, and the feature map shifts by the same amount (when padding and cropping cooperate). It is not invariant. <strong>Invariance</strong> — “the cat is here, I do not care exactly where” — is assembled later, by pooling, by striding, and by the classifier.</p>
+<div class="equation">f(T<sub>Δ</sub> x) = T<sub>Δ</sub> f(x)<span>Equivariance of stride-1 convolution · T is a spatial shift</span></div>
+<p class="formula-explanation"><b>Read the commuting diagram.</b> T_Δ slides the array. If you convolve then shift, you should get the same array as shift then convolve. Weight sharing is exactly what makes that true: the detector does not know it has moved. Fully connected layers do not commute with T_Δ, because each position has its own weights. Classification wants invariance at the end, not at the first layer — you still need to know that the ear is next to the eye.</p>
+</div>
+<h3><span class="n">7.1</span>Name the property</h3>
+<div class="box hand">
+<span class="tag">Try it by hand</span>
+<p>Stride-1 same-padded convolution is translation <input class="qin wide" id="q-i1" data-a="equivariant|equivariance">. After a 1-pixel shift of the input, the feature map shifts by <input class="qin" id="q-i2" data-a="1"> pixel. A fully connected layer on flattened pixels is, in general, <input class="qin wide" id="q-i3" data-a="neither|not equivariant|not invariant">.</p>
+<div class="chkrow"><button class="chkbtn" type="button">Check</button><span class="chkmsg"></span>
+<details class="ans"><summary>Show answer</summary><div class="a"><p>Equivariant; 1; neither (not equivariant, and not invariant). Pooling is a step toward invariance, locally, as in 5.1.</p></div></details></div>
+</div>
+<article class="theory-section">
+<span class="eyebrow">THEORY · BEFORE THE VISUALIZATION</span>
+<h3>Shift the blob, read both maps</h3>
+<ol class="theory-reasoning">
+<li><strong>Equivariance first</strong><p>The identity convolution with P = 1 copies the image. Shifting the copy is the same as copying the shift. That is the cleanest picture of the property.</p></li>
+<li><strong>Boundaries still matter</strong><p>With P = 0, values fall off the edge and the equality can fail in the cropped frame. The lab uses same padding so the grids stay aligned.</p></li>
+<li><strong>Then pool</strong><p>Max-pool after the shift is not always a shift of the pooled map. That mismatch is the beginning of invariance.</p></li>
+</ol>
+<div class="theory-example"><b>WORKED EXAMPLE</b><p>The lab’s blob sits near the left. Drag the shift. The right-hand conv map should be the left-hand conv map, slid. Compare a centre cell of the two pooled maps: they stay closer than the raw pixels did.</p></div>
+<details class="prediction"><summary>Predict before you play: If we shift by 2 pixels, does 2×2 max-pool stay identical?</summary><p>Not necessarily. Two pixels is a whole pooling window, so the peaks move into a different output cell. A 1-pixel shift is the interesting case for local invariance.</p></details>
+<div class="observation-task"><b>WHAT TO LOOK FOR</b><p>Conv maps should travel together. If they do not, you are not looking at stride 1 with same padding.</p></div>
+</article>
+<div class="experiment lab-shell">
+<div class="visual-pane">
+<div class="pane-heading"><div><span class="eyebrow">2D GRID / SHIFT</span><h3>The object moves. The detector follows.</h3></div></div>
+<canvas id="cv-shift" class="scene grid-scene" tabindex="0" role="img" aria-label="Original and shifted images with their convolution maps."></canvas>
+<p class="visual-note">Top: input and shifted input. Bottom: same-padded identity convolution of each.</p>
+<div id="read-shift" class="walk-readout"></div>
+</div>
+<div class="controls">
+<span class="eyebrow">YOUR EXPERIMENT</span>
+<h3>Slide the blob.</h3>
+<label for="k-shift">Horizontal shift <output id="k-shift-value">0 px</output></label>
+<input id="k-shift" type="range" min="0" max="3" value="1">
+<div class="try"><b>TRY THIS</b><p>Set the shift to 1, then 2. Equivariance of conv should hold at both; pooling’s “sameness” should not.</p></div>
+</div>
+</div>
+</section>
+
+<section id="alexnet" data-section="7" class="lab">
+<div class="section-heading"><span class="section-number">08</span><div><span class="eyebrow">ALEXNET · 2012</span><h2>The network that<br>made the field look up.</h2></div><span class="completion">Complete ✓</span></div>
+<div class="minute">
+<span class="eyebrow">IN ONE MINUTE</span>
+<p>Krizhevsky, Sutskever and Hinton’s AlexNet won ILSVRC 2012 by a large margin. Five convolutional layers, three fully connected, ReLU, overlapping pooling, dropout, and data augmentation. <strong>The first layer looks at 11×11 patches every 4 pixels.</strong></p>
+<div class="equation">(227 − 11)/4 + 1 = 55<span>First map · 96 kernels · often quoted with 224 inputs and padding 2</span></div>
+<p class="formula-explanation"><b>Read the first layer.</b> An 11×11 kernel on RGB is 11×11×3 = 363 weights per map, times 96 maps — still tiny next to the later fully connected layers, which hold most of AlexNet’s 60 million parameters. The large stride is an aggressive downsample: jump 4 already, RF 11. Everything after that reasons on a 55×55 (then smaller) grid, not on the raw 227.</p>
+</div>
+<h3><span class="n">8.1</span>The stack, roughly</h3>
+<div class="arch-col" style="max-width:520px;margin:12px 0 22px">
+<i><b>INPUT</b> 227 × 227 × 3</i>
+<i><b>CONV 11×11, S=4, 96</b> 55 × 55 × 96 · ReLU · response norm · pool 3×3 S=2</i>
+<i><b>CONV 5×5, 256</b> then pool</i>
+<i><b>CONV 3×3, 384</b> twice more at 384 and 256 · pool</i>
+<i><b>FC 4096 · FC 4096 · FC 1000</b> dropout on the 4096s · softmax</i>
+</div>
+<div class="box hand">
+<span class="tag">Try it by hand</span>
+<p>First-layer H<sub>out</sub> with 227, K = 11, S = 4, P = 0: <input class="qin" id="q-a1" data-a="55">. Weights in one 11×11 RGB kernel: <input class="qin" id="q-a2" data-a="363">. After that pool 3×3 stride 2, spatial size ≈ <input class="qin" id="q-a3" data-a="27">.</p>
+<div class="chkrow"><button class="chkbtn" type="button">Check</button><span class="chkmsg"></span>
+<details class="ans"><summary>Show answer</summary><div class="a"><p>55. 11×11×3 = 363. Pool: ⌊(55 − 3)/2⌋ + 1 = 27. (Some implementations use 27×27 after rounding conventions on 224-input variants.)</p></div></details></div>
+</div>
+<div class="box key"><span class="tag">Key idea</span><p>AlexNet’s lessons that lasted: ReLU instead of saturating sigmoids, dropout on the large fully connected layers, heavy augmentation, and GPU training. Local response normalisation did not last. The fully connected tail is the parameter hog; VGG kept it, later nets replaced it with global average pooling.</p></div>
+<div class="box warn"><span class="tag">Common mistake</span><p>“AlexNet is 8 learned layers, so it is small.” Depth is 8, but the last three layers are dense. Parameter count is not the same as convolutional depth. VGG-16 is deeper in convolution and even heavier in FC.</p></div>
+<details><summary>At the board <span>What 2012 changed</span></summary>
+<div class="fold-body">
+<p>Before AlexNet, the ILSVRC winner was typically a carefully engineered vision pipeline. After it, the default became: learn the features, use more data, use ReLU, regularise the dense layers. The architecture details were a snapshot. The training recipe was the revolution.</p>
+<pre><code># First AlexNet-style conv in PyTorch (simplified)
+nn.Conv2d(3, 96, kernel_size=11, stride=4, padding=0)
+nn.ReLU(inplace=True)
+nn.MaxPool2d(kernel_size=3, stride=2)</code></pre>
+</div></details>
+</section>
+
+<section id="vgg" data-section="8" class="lab">
+<div class="section-heading"><span class="section-number">09</span><div><span class="eyebrow">VGG · 2014</span><h2>Only 3×3.<br>Just go deeper.</h2></div><span class="completion">Complete ✓</span></div>
+<div class="minute">
+<span class="eyebrow">IN ONE MINUTE</span>
+<p>Simonyan and Zisserman replaced large kernels by stacks of 3×3 with stride 1 and padding 1. VGG-16 has 13 conv layers and 3 FC. <strong>Three 3×3 layers have the receptive field of one 7×7, with 27 weights instead of 49, and three ReLUs instead of one.</strong></p>
+<div class="equation">3 · (3 × 3) = 27 &nbsp; vs &nbsp; 7 × 7 = 49<span>Per input/output channel pair · same RF = 7 at stride 1</span></div>
+<p class="formula-explanation"><b>Read the bargain.</b> A 5×5 is two 3×3 (RF 5, 18 vs 25 weights). A 7×7 is three 3×3. VGG uses that substitution everywhere, and doubles the channel count after each max-pool (64-128-256-512-512). The spatial size of 224 is kept by P = 1 until a pool halves it. The design is a template: later residual nets kept 3×3 as the default atomic convolution.</p>
+</div>
+<h3><span class="n">9.1</span>The cheap field of view</h3>
+<div class="box hand">
+<span class="tag">Try it by hand</span>
+<p>Weights in three 3×3 vs one 7×7, one in-channel and one out-channel: <input class="qin" id="q-v1" data-a="27"> vs <input class="qin" id="q-v2" data-a="49">. Two 3×3 vs one 5×5: <input class="qin" id="q-v3" data-a="18"> vs <input class="qin" id="q-v4" data-a="25">. VGG same-padding P for K = 3: <input class="qin" id="q-v5" data-a="1">.</p>
+<div class="chkrow"><button class="chkbtn" type="button">Check</button><span class="chkmsg"></span>
+<details class="ans"><summary>Show answer</summary><div class="a"><p>27 vs 49, 18 vs 25, P = 1. The extra ReLUs are not in the weight count and are a further reason the stack can represent a more refined function on the same field.</p></div></details></div>
+</div>
+<article class="theory-section">
+<span class="eyebrow">THEORY · BEFORE THE VISUALIZATION</span>
+<h3>Deeper, narrower kernels</h3>
+<ol class="theory-reasoning">
+<li><strong>Match the field</strong><p>n layers of 3×3 at stride 1 give RF = 1 + 2n, so n = 3 matches 7×7.</p></li>
+<li><strong>Count the weights</strong><p>n × 9 versus (1+2n)². For n &gt; 1 the stack is cheaper, and the gap widens.</p></li>
+<li><strong>Pay in depth</strong><p>More layers are harder to train (vanishing signal — see the initialization sheet). VGG still trained with the 2014 recipe. Residual connections later made this bargain even better.</p></li>
+</ol>
+<div class="theory-example"><b>WORKED EXAMPLE</b><p>The lab bar chart is the 9n vs (2n+1)² comparison. Drag n. At n = 1 they tie at 9. At n = 3 you should recover 27 vs 49. AlexNet’s 11×11 first layer is the opposite choice: one wide view, immediately strided.</p></div>
+<details class="prediction"><summary>Predict before you play: At n = 4, is the large kernel 9×9?</summary><p>Yes. RF = 1 + 8 = 9, weights 36 vs 81. The stack is less than half the price.</p></details>
+<div class="observation-task"><b>WHAT TO LOOK FOR</b><p>The teal bar should stay below the coral bar for n &gt; 1. That is VGG’s entire kernel argument, in one picture.</p></div>
+</article>
+<div class="experiment lab-shell">
+<div class="visual-pane">
+<div class="pane-heading"><div><span class="eyebrow">PARAMETER BARS / STACK VS LARGE</span><h3>Same field, fewer weights.</h3></div></div>
+<canvas id="cv-arch" class="scene grid-scene" tabindex="0" role="img" aria-label="Bar comparison of stacked three by three kernels versus one large kernel."></canvas>
+<p class="visual-note">Bars are weights per input/output channel pair, not the full VGG network.</p>
+<div id="read-arch" class="walk-readout"></div>
+</div>
+<div class="controls">
+<span class="eyebrow">YOUR EXPERIMENT</span>
+<h3>How many 3×3s.</h3>
+<label for="k-vgg-n">Stack depth <output id="k-vgg-n-value">3 × 3×3</output></label>
+<input id="k-vgg-n" type="range" min="1" max="5" value="3">
+<div class="try"><b>TRY THIS</b><p>Set n = 3 to match the equation in the minute. Then n = 1: the bars should meet.</p></div>
+</div>
+</div>
+<div class="reference-table">
+<table>
+<caption>A pocket map of this sheet</caption>
+<thead><tr><th>Idea</th><th>What it changes</th><th>Typical default</th><th>Watch for</th></tr></thead>
+<tbody>
+<tr><td>Kernel</td><td>What is detected</td><td>3×3</td><td>Unflipped cross-correlation in code</td></tr>
+<tr><td>Stride</td><td>Output grid and jump</td><td>1, or 2 to downsample</td><td>Floor leftovers</td></tr>
+<tr><td>Padding</td><td>Whether borders are centres</td><td>P = 1 with 3×3</td><td>Framework “same” with stride 2</td></tr>
+<tr><td>Feature maps</td><td>How many detectors</td><td>Double after a downsample</td><td>Params ignore H, W</td></tr>
+<tr><td>Pooling</td><td>Summary, cheap downsample</td><td>2×2 max, stride 2</td><td>No learned weights</td></tr>
+<tr><td>Receptive field</td><td>Support on the input</td><td>Grows with depth</td><td>Theoretical vs effective</td></tr>
+<tr><td>Translation</td><td>Conv equivariant, not invariant</td><td>—</td><td>Need pool / FC for invariance</td></tr>
+<tr><td>AlexNet</td><td>ReLU, dropout, GPUs</td><td>11×11 S=4 first</td><td>FC parameter hog</td></tr>
+<tr><td>VGG</td><td>Deep 3×3 stacks</td><td>P = 1, pool halves</td><td>Very heavy FC tail</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section id="check" data-section="9" class="lab">
+<div class="section-heading"><span class="section-number">10</span><div><span class="eyebrow">CHECK YOURSELF</span><h2>Eight questions,<br>then three sentences.</h2></div><span class="completion">Complete ✓</span></div>
+<div class="diagnostic-card">
+<span class="eyebrow">CASE FILE / FIRST LAYER</span>
+<h3>The map is 54, and you expected 55.</h3>
+<p>Someone coded Conv2d(3, 96, kernel_size=11, stride=4, padding=2) on a 224×224 image. Print the shape before you debug training.</p>
+<div class="case-metrics"><div><span>INPUT</span><b>224</b></div><div><span>KERNEL / STRIDE</span><b>11 / 4</b></div><div><span>PADDING</span><b>2</b></div></div>
+<p>⌊(224 + 4 − 11)/4⌋ + 1 = ⌊217/4⌋ + 1 = 54 + 1 = 55? 217/4 = 54.25, floor 54, plus 1 is 55. If you instead used padding 0 on 224 you would get 54. The off-by-one is almost always this formula, or 224 vs 227.</p>
+</div>
+<div class="box hand">
+<span class="tag">Multiple choice · type the letter</span>
+<ol class="mcq-list">
+<li>A 5×5 kernel, stride 1, no pad, on 32×32. H<sub>out</sub>? Type 28, 32, 27 or 16. <input class="qin" id="q-c1" data-a="28"></li>
+<li>Why share a kernel across space? (a) GPUs cannot store more weights (b) The same pattern is legal everywhere (c) It makes the network equivariant to scaling (d) It removes the need for padding. <input class="qin" id="q-c2" data-a="b"></li>
+<li>Max-pool 2×2 stride 2 is (a) a learned 2×2 kernel (b) a parameter-free downsample (c) the same as stride-2 convolution (d) translation equivariant with no qualification. <input class="qin" id="q-c3" data-a="b"></li>
+<li>Three 3×3 stride-1 layers, RF? <input class="qin" id="q-c4" data-a="7"></li>
+<li>Convolution is (a) invariant (b) equivariant (c) neither (d) only equivariant after pooling. Type the letter. <input class="qin" id="q-c5" data-a="b"></li>
+<li>VGG prefers 3×3 stacks because (a) they have a larger field than 7×7 (b) they match the field with fewer weights and more nonlinearities (c) they need no padding (d) AlexNet already used only 3×3. <input class="qin" id="q-c6" data-a="b"></li>
+<li>16 filters, 32 input channels, 3×3, with bias. Parameters? <input class="qin" id="q-c7" data-a="4624"></li>
+<li>AlexNet first-layer stride 4 mainly (a) increases parameters (b) downsamples and sets jump = 4 (c) is same-padding (d) replaces dropout. <input class="qin" id="q-c8" data-a="b"></li>
+</ol>
+<div class="chkrow"><button class="chkbtn" type="button">Check</button><span class="chkmsg"></span>
+<details class="ans"><summary>Show answers</summary><div class="a">
+<p>1: 28 = 32 − 5 + 1. 2: (b). 3: (b) — a stride-2 convolution still has learned weights. 4: 7. 5: (b) for the conv itself. 6: (b). 7: 16×32×9 + 16 = 4608 + 16 = 4624. 8: (b).</p>
+</div></details></div>
+</div>
+<div class="box hand">
+<span class="tag">Explain in two or three sentences</span>
+<p>After you have a sentence, open the model answers. Nothing here is auto-marked.</p>
+<ol>
+<li>Why does a valid 3×3 stack shrink the image, and how does VGG stop that?</li>
+<li>Why is max-pooling not a substitute for learning kernels?</li>
+<li>Why can three 3×3 layers represent a more refined function than one 7×7 on the same field?</li>
+</ol>
+<details class="ans"><summary>Show model answers</summary><div class="a">
+<p>1. Each valid 3×3 removes a one-pixel border (K − 1 = 2). VGG sets P = 1 so every pixel can be a centre, and uses pooling (or later, stride) when it actually wants to downsample. 2. Pooling only summarises responses that already exist. Without a kernel, there is no detector to summarise. 3. The stack composes three linear templates with ReLU between them, so the effective function on the 7×7 patch is piecewise linear and deeper, not a single inner product.</p>
+</div></details>
+</div>
+</section>
+
+<div id="finish" class="finish" hidden>
+<span class="eyebrow">ALL SECTIONS COMPLETE</span>
+<h2>You can see the patch, and the network.</h2>
+<p>You can now size a map, count the weights, grow a receptive field, and say what AlexNet and VGG each contributed.</p>
+</div>
+<footer id="references">
+<div class="eyebrow">READING</div>
+<p>Labs use integer grids and fixed kernels. They are forward-pass geometry, not trained networks. Cross-correlation (unflipped kernels) matches deep-learning libraries.</p>
+<div class="reference-links">
+<a href="https://papers.nips.cc/paper/4824-imagenet-classification-with-deep-convolutional-neural-networks" target="_blank" rel="noopener">Krizhevsky, Sutskever &amp; Hinton, AlexNet (2012) ↗</a>
+<a href="https://arxiv.org/abs/1409.1556" target="_blank" rel="noopener">Simonyan &amp; Zisserman, VGG (2014) ↗</a>
+<a href="https://www.deeplearningbook.org/contents/convnets.html" target="_blank" rel="noopener">Goodfellow et al., ch. 9 ↗</a>
+<a href="https://udlbook.github.io/udlbook/" target="_blank" rel="noopener">Prince, Understanding Deep Learning, conv chapters ↗</a>
+</div>
+<div class="footer-bottom">
+<span>CONVOLUTION · LECTURE SHEET</span>
+<span id="storage-note">Progress is saved in this browser.</span>
+<button id="print" type="button">Print worksheet ↗</button>
+</div>
+</footer>
+</main>
+</div>
+<dialog id="reset-dialog">
+<h2>Start the checks again?</h2>
+<p>This clears the typed answers saved for this worksheet in this browser.</p>
+<div><button id="cancel-reset" type="button">Keep my progress</button><button id="confirm-reset" class="primary" type="button">Reset answers</button></div>
+</dialog>
+</body></html>

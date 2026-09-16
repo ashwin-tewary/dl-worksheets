@@ -11,6 +11,7 @@ Instructor-led pages with theory, live plots, textbook figures, and discussion q
 - [Regularisation](https://ashwin-tewary.github.io/dl-worksheets/presentations/regularisation/) — L2, L1, dropout, batch normalisation, and early stopping.
 
 - [Weight initialization](https://ashwin-tewary.github.io/dl-worksheets/presentations/initialization/) — symmetry, random scaling, Xavier, and He; interactive 3D visuals, guided layer animations, eleven checks, and browser-local progress.
+- [Convolutional networks](https://ashwin-tewary.github.io/dl-worksheets/presentations/cnn/) — kernels, stride, padding, feature maps, pooling, receptive field, translation invariance, AlexNet, and VGG; typed checks with Check / Show answer, and live pixel-grid labs.
 
 ## Practice sheets
 
@@ -29,6 +30,7 @@ presentations/regularisation/      Generated presentation sheet
 practice/generalisation/           Generated practice sheet
 practice/regularisation/           Generated practice sheet
 presentations/initialization/           Editable standalone HTML, CSS, JS, and tests
+presentations/cnn/                      Editable standalone CNN lecture sheet
 src/presentations/regularisation/  Presentation markup, styles, and interactions
 src/practice/                      Shared theme and topic-specific source modules
 scripts/                          Build and local-link verification tools
@@ -46,12 +48,11 @@ python3 scripts/check_links.py
 
 The shared practice stylesheet is tracked explicitly as `src/practice/theme.css`; rebuilds do not extract CSS from generated HTML. Commit the rebuilt HTML alongside source changes because GitHub Pages serves the repository directly.
 
-Initialization is standalone: edit `presentations/initialization/index.html`, `styles.css`, `model.js`, or `app.js`. It needs no build step or external JavaScript runtime. Fonts have system fallbacks. To run its numerical and interaction tests:
+Initialization and the CNN sheet are standalone: edit `presentations/initialization/` or `presentations/cnn/` (`index.html`, `styles.css`, `model.js`, `app.js`). They need no build step or external JavaScript runtime. Fonts have system fallbacks. To run numerical and interaction tests:
 
 ```bash
-cd presentations/initialization
-npm ci
-npm test
+cd presentations/initialization && npm ci && npm test
+cd ../cnn && npm ci && npm test
 ```
 
 Preview the collection from the repository root with `python3 -m http.server 8000`, then visit `http://localhost:8000/`. GitHub Pages publishes `main` from the repository root; the `.nojekyll` file is retained.
