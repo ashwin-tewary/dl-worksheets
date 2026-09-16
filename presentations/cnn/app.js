@@ -29,23 +29,32 @@ function fillFor(v,m){
   return `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`;
 }
 
+function fitCell(avail, count, max=26, min=11){
+  return Math.max(min, Math.min(max, Math.floor(avail/Math.max(count,1))));
+}
+
 function drawGrid(ctx, img, x0, y0, cell, opts={}){
   const h = img.length, w = img[0].length, m = opts.max || maxAbs(img);
-  const win = opts.win, pad = opts.pad || 0;
-  ctx.font = Math.max(9, cell*0.32)+'px ui-monospace, monospace';
+  const win = opts.win;
+  ctx.font = Math.max(8, Math.min(12, cell*0.38))+'px ui-monospace, monospace';
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   for(let i=0;i<h;i++)for(let j=0;j<w;j++){
     const x = x0+j*cell, y = y0+i*cell;
     ctx.fillStyle = fillFor(img[i][j], m);
-    ctx.fillRect(x,y,cell-1,cell-1);
-    if(win && i>=win.y && i<win.y+win.k && j>=win.x && j<win.x+win.k){
-      ctx.strokeStyle = colors.orange; ctx.lineWidth = 2; ctx.strokeRect(x+0.5,y+0.5,cell-2,cell-2);
-    }
+    ctx.fillRect(x+0.5,y+0.5,Math.max(1,cell-1.5),Math.max(1,cell-1.5));
     ctx.fillStyle = Math.abs(img[i][j])>0.55*m ? '#fff' : colors.ink;
-    ctx.fillText(fmt(img[i][j]), x+cell/2, y+cell/2);
+    if(cell>=14) ctx.fillText(fmt(img[i][j]), x+cell/2, y+cell/2);
   }
   ctx.strokeStyle = '#c9d4c4'; ctx.lineWidth = 1;
-  ctx.strokeRect(x0, y0, w*cell, h*cell);
+  ctx.strokeRect(x0+0.5, y0+0.5, w*cell-1, h*cell-1);
+  if(win){
+    const wx = Math.max(0, win.x), wy = Math.max(0, win.y);
+    const ww = Math.min(win.k, w - wx), hh = Math.min(win.k, h - wy);
+    if(ww>0 && hh>0){
+      ctx.strokeStyle = colors.orange; ctx.lineWidth = 2;
+      ctx.strokeRect(x0+wx*cell+1, y0+wy*cell+1, ww*cell-2, hh*cell-2);
+    }
+  }
   return {w:w*cell, h:h*cell, m};
 }
 
@@ -100,16 +109,35 @@ function mountConv(id, getState){
       const idx = Math.min(pos.length-1, Math.floor(Math.min(0.999, lab.phase)*Math.max(pos.length,1)));
       const p = pos[idx] || {y:0,x:0,oy:0,ox:0};
       const out = M.conv2d(st.img, st.kernel, st.stride, st.pad);
-      const cellIn = Math.min(28, Math.floor((h-70)/img.length));
-      const cellOut = Math.min(34, Math.floor((h-70)/Math.max(out.length,1)));
-      title(ctx, 'INPUT'+(st.pad?' + PAD':''), 16, 22);
-      drawGrid(ctx, img, 16, 36, cellIn, {win:{y:p.y+st.pad,x:p.x+st.pad,k}, pad:st.pad});
-      const kx = 16 + img[0].length*cellIn + 28;
-      title(ctx, 'KERNEL', kx, 22);
-      drawGrid(ctx, st.kernel, kx, 36, 36);
-      const ox = kx + 3*36 + 28;
-      title(ctx, `OUTPUT  ${out.length}×${out[0].length}`, ox, 22);
-      drawGrid(ctx, out, ox, 36, cellOut, {win:{y:p.oy,x:p.ox,k:1}});
+      const gap = 16, margin = 14, header = 28;
+      const stack = w < 560;
+      if(stack){
+        const topCell = Math.min(fitCell(w - margin*2, img[0].length, 28, 10), fitCell((h - header*2 - gap)/2, img.length, 28, 10));
+        title(ctx, 'INPUT'+(st.pad?' + PAD':''), margin, 18);
+        drawGrid(ctx, img, margin, header, topCell, {win:{y:p.y+st.pad,x:p.x+st.pad,k}});
+        const y2 = header + img.length*topCell + 22;
+        const botCell = Math.min(fitCell((w - margin*2 - gap)/2, Math.max(k, out[0].length), 28, 10), fitCell(h - y2 - 8, Math.max(k, out.length), 28, 10));
+        title(ctx, 'KERNEL', margin, y2-10);
+        drawGrid(ctx, st.kernel, margin, y2, botCell);
+        const ox = margin + Math.max(k, out[0].length)*botCell + gap;
+        title(ctx, `OUTPUT  ${out.length}×${out[0].length}`, ox, y2-10);
+        drawGrid(ctx, out, ox, y2, botCell, {win:{y:p.oy,x:p.ox,k:1}});
+      } else {
+        const colCount = img[0].length + k + out[0].length;
+        const rowCount = Math.max(img.length, k, out.length);
+        let cell = fitCell(w - margin*2 - gap*2, colCount, 24, 10);
+        cell = Math.min(cell, fitCell(h - header - 16, rowCount, 24, 10));
+        const y = header;
+        let x = margin;
+        title(ctx, 'INPUT'+(st.pad?' + PAD':''), x, 18);
+        drawGrid(ctx, img, x, y, cell, {win:{y:p.y+st.pad,x:p.x+st.pad,k}});
+        x += img[0].length*cell + gap;
+        title(ctx, 'KERNEL', x, 18);
+        drawGrid(ctx, st.kernel, x, y, cell);
+        x += k*cell + gap;
+        title(ctx, `OUTPUT  ${out.length}×${out[0].length}`, x, 18);
+        drawGrid(ctx, out, x, y, cell, {win:{y:p.oy,x:p.ox,k:1}});
+      }
       lab.pos = pos; lab.index = idx; lab.out = out; lab.patch = M.patchAt(st.img, p.y, p.x, k, st.pad);
       if(st.readout){
         const prod = M.innerProduct(lab.patch, st.kernel);
@@ -126,7 +154,7 @@ function mountConv(id, getState){
 function bindRange(id, outId, fmtFn){
   const el = $(id); if(!el) return;
   const paint = ()=>{ if(outId && $(outId)) $(outId).textContent = fmtFn ? fmtFn(el.value) : el.value; };
-  el.addEventListener('input', ()=>{ paint(); Object.values(labs).forEach(L=>{L.phase=0; L.draw();}); });
+  el.addEventListener('input', paint);
   paint();
 }
 
@@ -167,15 +195,19 @@ function mapsLab(){
       const {w,h,ctx} = sizeCanvas(canvas);
       const kernels = [M.KERNELS.edgex, M.KERNELS.edgey, M.KERNELS.blur];
       const names = ['edge x','edge y','blur'];
-      const cell = Math.min(22, Math.floor((h-80)/7));
-      title(ctx, 'ONE IMAGE · THREE KERNELS · THREE FEATURE MAPS', 16, 22);
-      drawGrid(ctx, EDGE_IMG, 16, 40, cell);
+      const maps = kernels.map(k=>M.conv2d(EDGE_IMG, k, 1, 0));
+      const margin = 14, gap = 14;
+      const inCell = Math.min(fitCell(w*0.34 - margin, 7, 24, 10), fitCell(h - 50, 7, 24, 10));
+      title(ctx, 'INPUT', margin, 20);
+      drawGrid(ctx, EDGE_IMG, margin, 32, inCell);
+      const left = margin + 7*inCell + gap;
+      const colW = Math.max(80, (w - left - margin - gap*2)/3);
       kernels.forEach((k,i)=>{
-        const x = 16 + 7*cell + 24 + i*(5*36);
-        title(ctx, names[i].toUpperCase(), x, 22);
-        drawGrid(ctx, k, x, 40, 22);
-        const fmap = M.conv2d(EDGE_IMG, k, 1, 0);
-        drawGrid(ctx, fmap, x, 40+3*22+16, 26);
+        const x = left + i*(colW + gap);
+        const kCell = fitCell(colW, 5, 22, 10);
+        title(ctx, names[i].toUpperCase(), x, 20);
+        drawGrid(ctx, k, x, 32, kCell);
+        drawGrid(ctx, maps[i], x, 32 + 3*kCell + 18, kCell);
       });
       $('read-maps').innerHTML = `<b>A feature map is one kernel’s output</b><p>Each coral detector looks for a different pattern. Stacking the three maps gives a 5×5×3 volume. The network later learns the kernels; here they are fixed so you can see the geometry.</p><p>Parameters for 16 kernels on 3 input channels, 3×3, no bias: 16 × 3 × 9 = <strong>432</strong>.</p>`;
     }
@@ -197,10 +229,14 @@ function poolLab(){
       const idx = Math.min(pos.length-1, Math.floor(Math.min(0.999, lab.phase)*pos.length));
       const p = pos[idx];
       const {w,h,ctx} = sizeCanvas(canvas);
-      title(ctx, '4×4 INPUT', 16, 22);
-      drawGrid(ctx, img, 16, 40, 42, {win:{y:p.y,x:p.x,k:2}});
-      title(ctx, (kind==='max'?'MAX':'AVG')+' 2×2, STRIDE 2', 16+4*42+36, 22);
-      drawGrid(ctx, out, 16+4*42+36, 40, 64, {win:{y:p.oy,x:p.ox,k:1}});
+      const gap = 22, margin = 14, header = 30;
+      let cell = fitCell(w - margin*2 - gap, 6, 48, 12);
+      cell = Math.min(cell, fitCell(h - header - 16, 4, 48, 12));
+      title(ctx, '4×4 INPUT', margin, 20);
+      drawGrid(ctx, img, margin, header, cell, {win:{y:p.y,x:p.x,k:2}});
+      const ox = margin + 4*cell + gap;
+      title(ctx, (kind==='max'?'MAX':'AVG')+' 2×2, STRIDE 2', ox, 20);
+      drawGrid(ctx, out, ox, header, cell*2, {win:{y:p.oy,x:p.ox,k:1}});
       $('read-pool').innerHTML = `<b>Window (${p.oy}, ${p.ox})</b><p>${kind==='max'?'The output is the largest value in the 2×2.':'The output is the mean of the four values.'} Pooling has <strong>no learned weights</strong>.</p><p>Spatial size: 4 → 2. With overlapping 3×3 stride 2 (AlexNet), size falls more slowly than a 2×2 stride 2 grid.</p>`;
     }
   };
@@ -224,7 +260,7 @@ function rfLab(){
       const rows = M.receptiveField(layers());
       const {w,h,ctx} = sizeCanvas(canvas);
       const last = rows.at(-1);
-      const n = 15, cell = Math.min(22, Math.floor((Math.min(w,h)-80)/n));
+      const n = 15, cell = fitCell(Math.min(w,h)-56, n, 22, 9);
       const cx = 8, cy = 7, half = (last.rf-1)/2;
       const img = M.zeros(n,n);
       for(let i=0;i<n;i++)for(let j=0;j<n;j++){
@@ -249,7 +285,7 @@ function rfLab(){
 function shiftLab(){
   const canvas = $('cv-shift');
   const lab = {
-    canvas, phase:0, playing:!matchMedia('(prefers-reduced-motion: reduce)').matches, speed:1, visible:true,
+    canvas, phase:0, playing:false, speed:1, visible:true,
     draw(){
       const dx = Number($('k-shift').value);
       const src = M.blobImage(7,2,1,3,4);
@@ -259,11 +295,14 @@ function shiftLab(){
       const pooledA = M.pool2d(a,2,2,'max');
       const pooledB = M.pool2d(b,2,2,'max');
       const {w,h,ctx} = sizeCanvas(canvas);
-      const cell = 22;
-      title(ctx, 'INPUT', 16, 22); drawGrid(ctx, src, 16, 36, cell);
-      title(ctx, `SHIFTED +${dx}`, 16+8*cell, 22); drawGrid(ctx, moved, 16+8*cell, 36, cell);
-      title(ctx, 'CONV (EQUIVARIANT)', 16, 36+8*cell); drawGrid(ctx, a, 16, 50+8*cell, 18);
-      title(ctx, 'CONV AFTER SHIFT', 16+8*cell, 36+8*cell); drawGrid(ctx, b, 16+8*cell, 50+8*cell, 18);
+      const gap = 16, margin = 14;
+      const cell = Math.min(fitCell((w - margin*2 - gap)/2, 7, 24, 10), fitCell((h - 56)/2, 8, 24, 10));
+      const x2 = margin + 7*cell + gap;
+      const y2 = 32 + 7*cell + 28;
+      title(ctx, 'INPUT', margin, 20); drawGrid(ctx, src, margin, 32, cell);
+      title(ctx, `SHIFTED +${dx}`, x2, 20); drawGrid(ctx, moved, x2, 32, cell);
+      title(ctx, 'CONV (EQUIVARIANT)', margin, y2-10); drawGrid(ctx, a, margin, y2, cell);
+      title(ctx, 'CONV AFTER SHIFT', x2, y2-10); drawGrid(ctx, b, x2, y2, cell);
       $('read-shift').innerHTML = `<b>Shift of ${dx} pixel(s)</b><p>A stride-1 convolution <strong>moves with the object</strong>: that is translation equivariance, not invariance. After 2×2 max-pool the maps are ${fmt(pooledA[1][1])} and ${fmt(pooledB[1][1])} at a centre cell — pooling makes the code <em>more</em> invariant, not perfectly so.</p>`;
     }
   };
@@ -325,7 +364,8 @@ function animate(t){
   const dt = Math.min(0.05, (t-last)/1000); last = t;
   Object.values(labs).forEach(lab=>{
     if(lab.playing && lab.visible && !document.hidden){
-      lab.phase += dt*(lab.speed||1)/4;
+      const n = Math.max((lab.pos && lab.pos.length) || 12, 4);
+      lab.phase += dt * (lab.speed||1) / (n * 1.35);
       if(lab.phase>=1) lab.phase=0;
       lab.draw();
     }

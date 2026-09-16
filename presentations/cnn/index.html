@@ -27,14 +27,14 @@
 <a href="#vgg"><span>09</span>VGG<i></i></a>
 <a href="#check"><span>10</span>Check yourself<i></i></a>
 </nav>
-<div class="sidebar-note"><span class="tiny-cross">+</span><p>A small template,<br>reused everywhere.</p></div>
+<div class="sidebar-note"><span class="tiny-cross">+</span><p>One detector.<br>Every location.</p></div>
 <a class="source-link" href="#references">Reading ↗</a>
 </aside>
 <main id="main" class="prose">
 <div class="intro">
 <a class="source-link" href="../../index.html">← All presentation &amp; practice sheets</a>
 <div class="eyebrow">CONVOLUTIONAL NETWORKS</div>
-<h1>See locally,<br>share <em>globally.</em><span class="title-dot">●</span></h1>
+<h1>See locally,<br>share <em>globally.</em></h1>
 <p>An image is not a bag of pixels. Nearby pixels belong together, and the same pattern can appear anywhere.</p>
 <div class="intro-meta"><span>8 visual labs</span><span>Typed checks</span><span>Explore at your own pace</span></div>
 </div>
@@ -246,7 +246,7 @@
 <div class="experiment lab-shell">
 <div class="visual-pane">
 <div class="pane-heading"><div><span class="eyebrow">2D GRID / THREE MAPS</span><h3>Same image, three stories.</h3></div><span class="live-label">COMPARE</span></div>
-<canvas id="cv-maps" class="scene grid-scene" tabindex="0" role="img" aria-label="One input and three feature maps from three kernels."></canvas>
+<canvas id="cv-maps" class="scene grid-scene tall" tabindex="0" role="img" aria-label="One input and three feature maps from three kernels."></canvas>
 <p class="visual-note">Left: input. Then kernel and its map, three times.</p>
 <div id="read-maps" class="walk-readout"></div>
 </div>
@@ -385,7 +385,7 @@
 <div class="experiment lab-shell">
 <div class="visual-pane">
 <div class="pane-heading"><div><span class="eyebrow">2D GRID / SHIFT</span><h3>The object moves. The detector follows.</h3></div></div>
-<canvas id="cv-shift" class="scene grid-scene" tabindex="0" role="img" aria-label="Original and shifted images with their convolution maps."></canvas>
+<canvas id="cv-shift" class="scene grid-scene tall" tabindex="0" role="img" aria-label="Original and shifted images with their convolution maps."></canvas>
 <p class="visual-note">Top: input and shifted input. Bottom: same-padded identity convolution of each.</p>
 <div id="read-shift" class="walk-readout"></div>
 </div>
