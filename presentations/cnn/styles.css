@@ -215,3 +215,5 @@ html{scroll-padding-top:0}
  .animation-stages span{padding:5px 3px}
 }
 @media print{.experiment .controls,.experiment-guide,.scene-tools,.pipeline-stages{display:none}}
+
+.scan-location{font:12px/1.7 var(--mono);color:var(--deep);padding:9px 12px;margin:0 0 10px;border-left:3px solid var(--teal);background:#eef3e8}

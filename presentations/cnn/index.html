@@ -5,9 +5,9 @@
 <meta name="theme-color" content="#124b47">
 <meta name="description" content="Why CNNs? Explore kernels, stride, padding, feature maps, pooling and architecture with a global numbers/images toggle, readable pixel matrices and guided questions.">
 <title>See locally, share globally · Convolutional Networks Lecture Sheet</title>
-<link rel="stylesheet" href="styles.css?v=20260917-5">
+<link rel="stylesheet" href="styles.css?v=20260917-6">
 <script defer="" src="model.js"></script>
-<script defer="" src="app.js?v=20260917-5"></script>
+<script defer="" src="app.js?v=20260917-6"></script>
 </head>
 <body>
 <a class="skip" href="#main">Skip to worksheet</a>
@@ -118,7 +118,7 @@
 <div class="pane-heading"><div><span class="eyebrow">2D GRID / STRIDE</span><h3>Fewer hops, smaller map.</h3></div></div>
 <canvas id="cv-stride" class="scene grid-scene" tabindex="0" role="img" aria-label="Convolution with adjustable stride."></canvas>
 <div class="scene-tools"><span>Identity kernel, so the output copies each window centre</span><button type="button" data-replay="cv-stride">↻ Replay</button><button type="button" data-motion="cv-stride">Pause</button><button type="button" data-next="cv-stride">Next patch →</button></div>
-<p class="visual-note">Identity makes geometry visible: you are seeing which centres were sampled.</p>
+<p class="visual-note">Stride 2 and 3 hop directly between sampled origins; skipped origins are never evaluated. The identity kernel copies each selected centre pixel.</p>
 <div id="read-stride" class="walk-readout"></div>
 </div>
 <div class="controls">
@@ -303,18 +303,18 @@
 <h3>Shift the input, compare the whole maps</h3>
 <ol class="theory-reasoning">
 <li><strong>Equivariance first</strong><p>The identity convolution with P = 1 copies the image. Shifting the copy is the same as copying the shift. That is the cleanest picture of the property.</p></li>
-<li><strong>Boundaries still matter</strong><p>Finite-image boundaries can break exact equivariance even with same padding. The identity filter in this lab makes the equality exact for the displayed zero-filled shifts; general filters require care at the edges.</p></li>
+<li><strong>Boundaries still matter</strong><p>Finite-image boundaries can break exact equivariance even with same padding. This lab leaves enough zero margin for every displayed shift, so its vertical-edge responses shift exactly with the input. Cropping the object or its surrounding context can break that equality.</p></li>
 <li><strong>Then pool</strong><p>Max-pool after the shift is not always a shift of the pooled map. Pooling can leave some within-window shifts unchanged, but it does not guarantee invariance.</p></li>
 </ol>
-<div class="theory-example"><b>WORKED NUMERICAL EXAMPLE</b><p>In Numbers mode, slide the blob; in Images mode, slide the digit inside a zero border. With the identity filter, convolving the shifted input gives exactly the shifted feature map. Compare all cells in the pooled maps before claiming that they stayed the same.</p></div>
+<div class="theory-example"><b>WORKED NUMERICAL EXAMPLE</b><p>In Numbers mode, slide the blob; in Images mode, slide the digit inside a zero border. With the vertical-edge filter and room to shift inside the zero margin, convolving the shifted input gives the shifted edge map. Compare all cells in the pooled maps before claiming that they stayed the same.</p></div>
 <details class="prediction"><summary>Predict before you play: If we shift by 2 pixels, does 2×2 max-pool stay identical?</summary><p>Not necessarily. Two pixels is a whole pooling window, so the peaks move into a different output cell. A 1-pixel shift is the interesting case for local invariance.</p></details>
-<div class="observation-task"><b>WHAT TO LOOK FOR</b><p>Conv maps travel together in this identity-filter example. With other filters, check boundary effects as well as stride.</p></div>
+<div class="observation-task"><b>WHAT TO LOOK FOR</b><p>The vertical-edge responses travel with the input. The zero margin keeps the demonstrated shifts inside the frame; cropping or a larger stride can change this relationship.</p></div>
 </div></details>
  <div class="interactive-step" data-step="interactive"><span class="step-label">05 / TRY IT</span><div class="experiment lab-shell">
 <div class="visual-pane">
 <div class="pane-heading"><div><span class="eyebrow">2D GRID / SHIFT</span><h3>The object moves. The detector follows.</h3></div></div>
 <canvas id="cv-shift" class="scene grid-scene tall" tabindex="0" role="img" aria-label="Original and shifted images with their convolution maps."></canvas>
-<p class="visual-note">Compare original and shifted values at the same stage. Switch stages to follow the shift through convolution and pooling.</p>
+<p class="visual-note">Input shows pixel brightness. Convolution shows signed vertical-edge responses. Max pooling summarises those responses. Each pair uses the same colour scale.</p>
 <div id="read-shift" class="walk-readout"></div>
 </div>
 <div class="controls">

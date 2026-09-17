@@ -196,6 +196,7 @@ function mount(id,draw,{animated=false}={}){
   }
   const playback=canvas.closest('.visual-pane').querySelector('.scene-tools');
   if(playback)wrapper.before(playback);
+  if(id==='cv-stride')wrapper.insertAdjacentHTML('beforebegin','<p id="stride-location" class="scan-location"></p>');
   if(id==='cv-rf'){
     const comparison=document.createElement('div');comparison.className='field-comparison';
     wrapper.before(comparison);comparison.append(wrapper,$('field-growth'));
@@ -301,13 +302,19 @@ function rfLab(){
 function shiftLab(){
   const lab=mount('cv-shift',lab=>{
     const dx=Number($('k-shift').value);
-    const src=visualMode==='images'?M.pad2d(DIGIT,2):M.blobImage(7,2,1,3,4),moved=M.shift2d(src,0,dx);
-    const a=M.conv2d(src,M.KERNELS.identity,1,1),b=M.conv2d(moved,M.KERNELS.identity,1,1);
+    const src=M.pad2d(inputFor(M.blobImage(7,2,1,3,4)),1).map(row=>row.concat([0,0,0])),moved=M.shift2d(src,0,dx);
+    const a=M.conv2d(src,M.KERNELS.edgex,1,1),b=M.conv2d(moved,M.KERNELS.edgex,1,1);
     const pa=M.pool2d(a,2,2),pb=M.pool2d(b,2,2);
     const stage=Number($('k-shift-stage').value),pairs=[[src,moved],[a,b],[pa,pb]],names=['Input','Convolution','Max pooling'];
-    drawPanels(lab.canvas,[{label:names[stage]+' · original',img:pairs[stage][0],opts:imageOptions()},{label:names[stage]+` · shifted +${dx}`,img:pairs[stage][1],opts:imageOptions()}]);
+    const opts=stage===0?imageOptions():{max:Math.max(maxAbs(a),maxAbs(b))};
+    drawPanels(lab.canvas,[{label:names[stage]+' · original',img:pairs[stage][0],opts},{label:names[stage]+` · shifted +${dx}`,img:pairs[stage][1],opts}]);
     const same=JSON.stringify(pa)===JSON.stringify(pb);
-    readout('read-shift',`Shift +${dx} pixels · ${same?'pooled maps match':'pooled maps differ'}`,`The identity convolution moves with the input: equivariance. The <em>whole</em> pooled map is ${same?'unchanged in this example':'different in this example'}; one unchanged cell would not prove invariance. Zero-filled shifts discard anything beyond the frame.`);
+    const descriptions=[
+      'The same input moves inside a zero margin, leaving room for every allowed shift.',
+      'A vertical-edge filter turns pixels into signed responses. Those responses move by the same number of pixels as the input: equivariance. Teal is positive; coral is negative.',
+      `A 2×2 max pool with stride 2 summarises the edge responses. The whole pooled map ${same?'matches':'differs from'} the original in this example; pooling does not guarantee invariance.`
+    ];
+    readout('read-shift',`${names[stage]} · shift +${dx} pixels`,descriptions[stage],stage===0?'':`The fixed vertical-edge kernel is [−1, 0, 1] in each of its three rows. Convolution uses stride 1 and padding 1. ${stage===2?'Pooling then uses a 2×2 window and stride 2.':''}`);
   });bindRange('k-shift','k-shift-value',v=>v+' px');listen(['k-shift','k-shift-stage'],lab);
 }
 function alexLab(){
@@ -374,10 +381,11 @@ function playbackState(lab){
   const travel=Math.max(0,Math.min(1,(fraction-.8)/.2));
   const smooth=travel*travel*(3-2*travel);
   const win={x:p.x+(lab.inputPad||0),y:p.y+(lab.inputPad||0),k:lab.patchSize};
-  // Only interpolate within a scan row. A row change fades the cursor to the
-  // next origin instead of sweeping through patches that were never sampled.
-  if(next&&next.y===p.y)win.x+=(next.x-p.x)*smooth;
-  return {index,fraction,travel:smooth,window:win,next,rowChange:next&&next.y!==p.y,
+  // Interpolate adjacent windows only. Larger strides cross-fade between
+  // valid origins; intermediate, unsampled patches must never be highlighted.
+  const hop=Boolean(next&&(next.y!==p.y||Math.abs(next.x-p.x)>1));
+  if(next&&!hop)win.x+=(next.x-p.x)*smooth;
+  return {index,fraction,travel:smooth,window:win,next,hop,rowChange:next&&next.y!==p.y,
     visibleCount:lab.showFull?n:Math.min(n,index+(fraction>=.6?1:0)),
     stage:fraction<.16?'find':fraction<.6?'calculate':fraction<.8?'write':'move'};
 }
@@ -401,8 +409,8 @@ function paintAnimation(lab){
     ctx.fillText('·',x+cell/2,y+cell/2);
   }
   const win=state.window;
-  frameOutline(ctx,input.x+win.x*cell,input.y+win.y*cell,win.k*cell,win.k*cell,'#bf532e',state.rowChange?1-state.travel:1);
-  if(state.rowChange&&state.travel){
+  frameOutline(ctx,input.x+win.x*cell,input.y+win.y*cell,win.k*cell,win.k*cell,'#bf532e',state.hop?1-state.travel:1);
+  if(state.hop&&state.travel){
     frameOutline(ctx,input.x+(state.next.x+(lab.inputPad||0))*cell,input.y+(state.next.y+(lab.inputPad||0))*cell,win.k*cell,win.k*cell,'#bf532e',state.travel);
   }
   if(state.stage==='calculate'){
@@ -425,7 +433,11 @@ function paintAnimation(lab){
     $(lab.canvas.id+'-stages').querySelectorAll('span').forEach((el,i)=>el.classList.toggle('current',i===active));
     $(lab.canvas.id+'-position').textContent=`${state.index+1} / ${lab.pos.length}`;
     const scrub=$(lab.canvas.id+'-scrub');scrub.max=lab.pos.length-1;scrub.value=state.index;
-    const action={find:'Find the highlighted patch',calculate:lab.canvas.id==='cv-pool'?'Summarise the four highlighted values':'Multiply matching pixels and weights',write:'Write the result into the feature map',move:'Slide to the next patch',complete:'Scan complete — every output cell is filled'};
+    const action={find:'Find the highlighted patch',calculate:lab.canvas.id==='cv-pool'?'Summarise the four highlighted values':'Multiply matching pixels and weights',write:'Write the result into the feature map',move:state.rowChange?'Start the next sampled row':state.hop?`Hop ${state.next.x-p.x} pixels to the next sampled patch`:'Slide to the next patch',complete:'Scan complete — every output cell is filled'};
+    if(lab.canvas.id==='cv-stride'){
+      const next=stage==='move'&&state.next?` Next origin (${state.next.y}, ${state.next.x})${state.rowChange?' — next row; column resets to 0':''}.`:'';
+      $('stride-location').textContent=`Stride ${lab.state.stride} · input origin (${p.y}, ${p.x}) → output (${p.oy}, ${p.ox}).${next} Row, column; counted from 0.`;
+    }
     $(lab.canvas.id+'-status').textContent=`${action[stage]}. ${state.visibleCount} / ${lab.pos.length} outputs visible.`;
   }
 }

@@ -219,3 +219,37 @@ test('all lab controls recompute valid results at their limits in both visual mo
     dom.window.close();
   }
 });
+test('stride animation hops only between sampled origins and resets correctly at row ends',()=>{
+  for(const mode of ['numbers','images'])for(const stride of [2,3]){
+    const dom=load(mode),w=dom.window,d=w.document,lab=w.__labs['cv-stride'];
+    const el=d.getElementById('k-stride');el.value=String(stride);el.dispatchEvent(new w.Event('input'));
+    lab.playing=true;w.__advance(lab,1.8);
+    assert.equal(lab.motion.window.x,0,'A stride hop must not sweep over unsampled origins');
+    assert.equal(lab.motion.next.x,stride);
+    assert.equal(lab.motion.hop,true);
+    w.__advance(lab,.3);assert.equal(lab.motion.window.x,stride);
+    const columns=lab.out[0].length,scrub=d.getElementById('cv-stride-scrub');
+    scrub.value=String(columns-1);scrub.dispatchEvent(new w.Event('input'));
+    lab.playing=true;w.__advance(lab,.4);
+    assert.equal(lab.motion.window.x,(columns-1)*stride);
+    assert.equal(lab.motion.next.x,0);assert.equal(lab.motion.next.y,stride);
+    w.__advance(lab,.3);assert.equal(lab.motion.window.x,0);assert.equal(lab.motion.window.y,stride);
+    dom.window.close();
+  }
+});
+test('translation convolution changes the input into edge responses and preserves the spatial shift',()=>{
+  for(const mode of ['numbers','images']){
+    const dom=load(mode),w=dom.window,d=w.document,lab=w.__labs['cv-shift'];
+    const set=(id,value)=>{const el=d.getElementById(id);el.value=String(value);el.dispatchEvent(new w.Event('input'));};
+    set('k-shift-stage',0);const original=lab.panels[0].img;
+    set('k-shift-stage',1);
+    assert.notDeepEqual(lab.panels[0].img,original,'Convolution must visibly compute features, not copy input');
+    assert.ok(lab.panels[0].img.flat().some(v=>v<0),'Signed edges stay visible');
+    for(const dx of [0,1,2,3]){
+      set('k-shift',dx);
+      assert.deepEqual(lab.panels[1].img,w.CNNModel.shift2d(lab.panels[0].img,0,dx));
+    }
+    assert.match(d.getElementById('read-shift').textContent,/Convolution/);
+    dom.window.close();
+  }
+});
