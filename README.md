@@ -11,7 +11,7 @@ Instructor-led pages with theory, live plots, textbook figures, and discussion q
 - [Regularisation](https://ashwin-tewary.github.io/dl-worksheets/presentations/regularisation/) — L2, L1, dropout, batch normalisation, and early stopping.
 
 - [Weight initialization](https://ashwin-tewary.github.io/dl-worksheets/presentations/initialization/) — symmetry, random scaling, Xavier, and He; interactive 3D visuals, guided layer animations, eleven checks, and browser-local progress.
-- [Convolutional networks](https://ashwin-tewary.github.io/dl-worksheets/presentations/cnn/) — kernels, stride, padding, feature maps, pooling, receptive field, translation invariance, AlexNet, and VGG; typed checks with Check / Show answer, and live pixel-grid labs.
+- [Convolutional networks](https://ashwin-tewary.github.io/dl-worksheets/presentations/cnn/) — why CNNs, kernels, stride, padding, feature maps, pooling, receptive field, translation, AlexNet, and VGG; ten guided labs with a global Numbers / Images switch, a real handwritten-digit example, readable pixel matrices, foldable theory, and typed checks.
 
 ## Practice sheets
 
@@ -48,7 +48,7 @@ python3 scripts/check_links.py
 
 The shared practice stylesheet is tracked explicitly as `src/practice/theme.css`; rebuilds do not extract CSS from generated HTML. Commit the rebuilt HTML alongside source changes because GitHub Pages serves the repository directly.
 
-Initialization and the CNN sheet are standalone: edit `presentations/initialization/` or `presentations/cnn/` (`index.html`, `styles.css`, `model.js`, `app.js`). They need no build step or external JavaScript runtime. Fonts have system fallbacks. To run numerical and interaction tests:
+Initialization and the CNN sheet are standalone: edit `presentations/initialization/` or `presentations/cnn/` (`index.html`, `styles.css`, `model.js`, `app.js`). They need no build step or external JavaScript runtime. Fonts have system fallbacks. The CNN sheet keeps its image sample locally in `app.js` (UCI optical digits, CC BY 4.0, credited on the page), so its visuals work without external model or image downloads. Its Numbers / Images preference and typed answers are saved in the browser; questions retain their stated data in both modes. To run numerical and interaction tests:
 
 ```bash
 cd presentations/initialization && npm ci && npm test

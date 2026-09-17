@@ -1,374 +1,299 @@
 'use strict';
 const M = window.CNNModel;
 const $ = id => document.getElementById(id);
-const colors = { teal:'#167569', orange:'#c0613e', gold:'#bc8730', ink:'#294c42', paper:'#eef1e7' };
+const colors = {teal:'#12655b',orange:'#a64126',ink:'#182e2b',paper:'#f6f4ed'};
+const labs = {};
+const viewKey = 'cnn-visual-mode-v1';
+let visualMode = 'numbers';
+try { if(localStorage.getItem(viewKey)==='images') visualMode='images'; } catch {}
 
+// UCI Optical Recognition of Handwritten Digits, Alpaydin & Kaynak (1998).
+// CC BY 4.0, https://doi.org/10.24432/C50P49. Sample index 7 in
+// scikit-learn's digits.csv.gz. Native 8×8 intensities, unchanged (0–16).
+const DIGIT = [
+  [0,0,7,8,13,16,15,1], [0,0,7,7,4,11,12,0],
+  [0,0,0,0,8,13,1,0], [0,4,8,8,15,15,6,0],
+  [0,2,11,15,15,4,0,0], [0,0,0,16,5,0,0,0],
+  [0,0,9,15,1,0,0,0], [0,0,13,5,0,0,0,0]
+];
+const DEMO = M.blobImage(7,2,2,3,4);
+const EDGE_IMG = [[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[1,1,1,1,0,0,0],[1,1,1,1,0,0,0],[1,1,1,1,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
+const inputFor = (numeric=EDGE_IMG)=>visualMode==='images'?DIGIT:numeric;
+const imageOptions = ()=>visualMode==='images'?{image:true,max:16}:{};
+const maxAbs = img=>Math.max(1e-9,...img.flat().map(Math.abs));
 function fmt(n){
   if(!Number.isFinite(n)) return '—';
-  if(Object.is(n,-0)) n = 0;
-  if(Number.isInteger(n)) return String(n);
-  const a = Math.abs(n);
-  if(a>=100) return n.toFixed(1);
-  if(a>=1) return n.toFixed(2);
-  return n.toFixed(3);
+  if(Math.abs(n)<1e-10) return '0';
+  return Number.isInteger(n)?String(n):String(Number(n.toFixed(3)));
 }
-
-function maxAbs(img){
-  let m = 1e-9;
-  img.forEach(row => row.forEach(v => { m = Math.max(m, Math.abs(v)); }));
-  return m;
+function cellLabel(n){
+  if(Math.abs(n-1/9)<1e-10) return '1/9';
+  return Number.isInteger(n)?String(n):String(Number(n.toFixed(1)));
 }
-
-function mix(a,b,t){
-  return a.map((c,i)=>Math.round(c+(b[i]-c)*t));
-}
-const TEAL=[22,117,105], ORANGE=[192,97,62], PAPER=[247,248,241];
-function fillFor(v,m){
-  const t = Math.max(-1, Math.min(1, v/(m||1)));
-  const rgb = t>=0 ? mix(PAPER, TEAL, t) : mix(PAPER, ORANGE, -t);
-  return `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`;
-}
-
-function fitCell(avail, count, max=26, min=11){
-  return Math.max(min, Math.min(max, Math.floor(avail/Math.max(count,1))));
-}
-
-function drawGrid(ctx, img, x0, y0, cell, opts={}){
-  const h = img.length, w = img[0].length, m = opts.max || maxAbs(img);
-  const win = opts.win;
-  ctx.font = Math.max(8, Math.min(12, cell*0.38))+'px ui-monospace, monospace';
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  for(let i=0;i<h;i++)for(let j=0;j<w;j++){
-    const x = x0+j*cell, y = y0+i*cell;
-    ctx.fillStyle = fillFor(img[i][j], m);
-    ctx.fillRect(x+0.5,y+0.5,Math.max(1,cell-1.5),Math.max(1,cell-1.5));
-    ctx.fillStyle = Math.abs(img[i][j])>0.55*m ? '#fff' : colors.ink;
-    if(cell>=14) ctx.fillText(fmt(img[i][j]), x+cell/2, y+cell/2);
+function cellColors(v,m,image=false){
+  let c;
+  if(image){
+    const shade=Math.round(255*Math.max(0,Math.min(1,v/(m||16))));
+    c=[shade,shade,shade];
+  }else{
+    const t=Math.min(1,Math.abs(v)/(m||1));
+    const a=[247,248,241],b=v>=0?[18,101,91]:[166,65,38];
+    c=a.map((x,i)=>Math.round(x+(b[i]-x)*t));
   }
-  ctx.strokeStyle = '#c9d4c4'; ctx.lineWidth = 1;
-  ctx.strokeRect(x0+0.5, y0+0.5, w*cell-1, h*cell-1);
-  if(win){
-    const wx = Math.max(0, win.x), wy = Math.max(0, win.y);
-    const ww = Math.min(win.k, w - wx), hh = Math.min(win.k, h - wy);
-    if(ww>0 && hh>0){
-      ctx.strokeStyle = colors.orange; ctx.lineWidth = 2;
-      ctx.strokeRect(x0+wx*cell+1, y0+wy*cell+1, ww*cell-2, hh*cell-2);
+  // Choose the higher-contrast of white and black (at least 4.5:1).
+  const linear=c.map(x=>{x/=255;return x<=0.04045?x/12.92:((x+0.055)/1.055)**2.4;});
+  const lum=.2126*linear[0]+.7152*linear[1]+.0722*linear[2];
+  return {bg:`rgb(${c.join(',')})`,fg:lum<.179?'#fff':'#000'};
+}
+function drawGrid(ctx,img,x0,y0,cell,opts={}){
+  const h=img.length,w=img[0].length,m=opts.max||maxAbs(img);
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+    const paint=cellColors(img[y][x],m,opts.image);
+    ctx.fillStyle=paint.bg;ctx.fillRect(x0+x*cell,y0+y*cell,cell,cell);
+    ctx.strokeStyle=opts.image?'#ffffff28':'#a5b5a04d';ctx.lineWidth=.5;
+    ctx.strokeRect(x0+x*cell,y0+y*cell,cell,cell);
+    ctx.fillStyle=paint.fg;
+    const label=cellLabel(img[y][x]);
+    const size=Math.max(12,Math.min(14,(cell-5)/(label.length*.64)));
+    ctx.font=`600 ${size}px ui-monospace, monospace`;
+    ctx.fillText(label,x0+(x+.5)*cell,y0+(y+.5)*cell);
+  }
+  if(opts.win){
+    const p=opts.win,x=Math.max(0,p.x),y=Math.max(0,p.y);
+    const right=Math.min(w,p.x+p.k),bottom=Math.min(h,p.y+p.k);
+    if(right>x&&bottom>y){
+      ctx.strokeStyle='#fff';ctx.lineWidth=5;
+      ctx.strokeRect(x0+x*cell+2,y0+y*cell+2,(right-x)*cell-4,(bottom-y)*cell-4);
+      ctx.strokeStyle='#bc4a25';ctx.lineWidth=2.5;
+      ctx.strokeRect(x0+x*cell+2,y0+y*cell+2,(right-x)*cell-4,(bottom-y)*cell-4);
     }
   }
-  return {w:w*cell, h:h*cell, m};
 }
-
-function title(ctx, text, x, y){
-  ctx.fillStyle = '#607661'; ctx.font = '11px ui-monospace, monospace'; ctx.textAlign='left'; ctx.textBaseline='alphabetic';
-  ctx.fillText(text, x, y);
+function canvasWidth(canvas){
+  return Math.max(160,Math.round(canvas.parentElement.clientWidth||canvas.getBoundingClientRect().width||600));
 }
-
-function sizeCanvas(canvas){
-  const rect = canvas.getBoundingClientRect();
-  if(!rect.width) return {w:600,h:300};
-  const dpr = Math.min(devicePixelRatio||1, 2);
-  const w = Math.round(rect.width), h = Math.round(rect.height);
-  if(canvas.width !== Math.round(w*dpr) || canvas.height !== Math.round(h*dpr)){
-    canvas.width = Math.round(w*dpr); canvas.height = Math.round(h*dpr);
+function canvasBox(canvas,w,h){
+  h=Math.ceil(h);
+  const dpr=Math.min(window.devicePixelRatio||1,2);
+  canvas.style.width=w+'px';canvas.style.height=h+'px';
+  canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);
+  const ctx=canvas.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.fillStyle='#f3f4ed';ctx.fillRect(0,0,w,h);
+  return ctx;
+}
+function title(ctx,text,x,y){
+  ctx.fillStyle=colors.ink;ctx.font='600 12px system-ui, sans-serif';
+  ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.fillText(text,x,y);
+}
+function tableHTML(img,label,opts={}){
+  const m=opts.max||maxAbs(img);
+  return `<table class="pixel-table"><caption>${label} · ${img.length}×${img[0].length}</caption><tbody>${img.map((row,y)=>`<tr>${row.map((v,x)=>{
+    const c=cellColors(v,m,opts.image);
+    const p=opts.win,active=p&&y>=p.y&&y<p.y+p.k&&x>=p.x&&x<p.x+p.k;
+    return `<td class="${active?'in-window':''}" style="background:${c.bg};color:${c.fg}" title="Row ${y}, column ${x}: ${fmt(v)}">${fmt(v)}</td>`;
+  }).join('')}</tr>`).join('')}</tbody></table>`;
+}
+function imagePreview(img,opts={}){
+  const m=opts.max||maxAbs(img);
+  return `<svg class="image-preview" viewBox="0 0 ${img[0].length} ${img.length}" role="img" aria-label="Image view without numeric overlay" shape-rendering="crispEdges">${img.map((row,y)=>row.map((v,x)=>`<rect x="${x}" y="${y}" width="1" height="1" fill="${cellColors(v,m,opts.image).bg}"/>`).join('')).join('')}</svg>`;
+}
+function inspectValues(canvas,panels){
+  const detail=$(canvas.id+'-values');
+  // Do not replace an open inspector while a student is reading it.
+  const key=JSON.stringify(panels.map(p=>[p.label,p.img,p.opts?.image,visualMode]));
+  if(detail.dataset.key!==key){
+    detail.dataset.key=key;
+    detail.querySelector('.matrix-tables').innerHTML=panels.map(p=>tableHTML(p.img,p.label,p.opts)).join('');
   }
-  const ctx = canvas.getContext('2d');
-  ctx.setTransform(dpr,0,0,dpr,0,0);
-  ctx.clearRect(0,0,w,h);
-  const g = ctx.createLinearGradient(0,0,0,h);
-  g.addColorStop(0,'#f3f4eb'); g.addColorStop(1,'#e7edde');
-  ctx.fillStyle = g; ctx.fillRect(0,0,w,h);
-  return {w,h,ctx};
-}
-
-const DEMO = M.blobImage(7,2,2,3,4);
-const EDGE_IMG = [
-  [0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0],
-  [1,1,1,1,0,0,0],
-  [1,1,1,1,0,0,0],
-  [1,1,1,1,0,0,0],
-  [0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,0]
-];
-
-function kernelByName(name){ return M.KERNELS[name] || M.KERNELS.edgex; }
-
-const labs = {};
-
-function mountConv(id, getState){
-  const canvas = $(id);
-  const lab = {
-    canvas, phase:0, playing:!matchMedia('(prefers-reduced-motion: reduce)').matches, speed:1, visible:true, walk:-1,
-    draw(){
-      const st = getState();
-      lab.state = st;
-      const {w,h,ctx} = sizeCanvas(canvas);
-      const img = st.pad ? M.pad2d(st.img, st.pad) : st.img;
-      const k = st.kernel.length;
-      const pos = M.convPositions(st.img.length, st.img[0].length, k, st.stride, st.pad);
-      const idx = Math.min(pos.length-1, Math.floor(Math.min(0.999, lab.phase)*Math.max(pos.length,1)));
-      const p = pos[idx] || {y:0,x:0,oy:0,ox:0};
-      const out = M.conv2d(st.img, st.kernel, st.stride, st.pad);
-      const gap = 16, margin = 14, header = 28;
-      const stack = w < 560;
-      if(stack){
-        const topCell = Math.min(fitCell(w - margin*2, img[0].length, 28, 10), fitCell((h - header*2 - gap)/2, img.length, 28, 10));
-        title(ctx, 'INPUT'+(st.pad?' + PAD':''), margin, 18);
-        drawGrid(ctx, img, margin, header, topCell, {win:{y:p.y+st.pad,x:p.x+st.pad,k}});
-        const y2 = header + img.length*topCell + 22;
-        const botCell = Math.min(fitCell((w - margin*2 - gap)/2, Math.max(k, out[0].length), 28, 10), fitCell(h - y2 - 8, Math.max(k, out.length), 28, 10));
-        title(ctx, 'KERNEL', margin, y2-10);
-        drawGrid(ctx, st.kernel, margin, y2, botCell);
-        const ox = margin + Math.max(k, out[0].length)*botCell + gap;
-        title(ctx, `OUTPUT  ${out.length}×${out[0].length}`, ox, y2-10);
-        drawGrid(ctx, out, ox, y2, botCell, {win:{y:p.oy,x:p.ox,k:1}});
-      } else {
-        const colCount = img[0].length + k + out[0].length;
-        const rowCount = Math.max(img.length, k, out.length);
-        let cell = fitCell(w - margin*2 - gap*2, colCount, 24, 10);
-        cell = Math.min(cell, fitCell(h - header - 16, rowCount, 24, 10));
-        const y = header;
-        let x = margin;
-        title(ctx, 'INPUT'+(st.pad?' + PAD':''), x, 18);
-        drawGrid(ctx, img, x, y, cell, {win:{y:p.y+st.pad,x:p.x+st.pad,k}});
-        x += img[0].length*cell + gap;
-        title(ctx, 'KERNEL', x, 18);
-        drawGrid(ctx, st.kernel, x, y, cell);
-        x += k*cell + gap;
-        title(ctx, `OUTPUT  ${out.length}×${out[0].length}`, x, 18);
-        drawGrid(ctx, out, x, y, cell, {win:{y:p.oy,x:p.ox,k:1}});
-      }
-      lab.pos = pos; lab.index = idx; lab.out = out; lab.patch = M.patchAt(st.img, p.y, p.x, k, st.pad);
-      if(st.readout){
-        const prod = M.innerProduct(lab.patch, st.kernel);
-        st.readout.innerHTML = `<b>Window (${p.oy}, ${p.ox}) on the output</b><p>The coral frame is the ${k}×${k} patch. Its inner product with the kernel is <strong>${fmt(prod)}</strong>, written at that output cell.</p><p>H<sub>out</sub> = ⌊(H + 2P − K)/S⌋ + 1 = ⌊(${st.img.length} + ${2*st.pad} − ${k})/${st.stride}⌋ + 1 = <strong>${out.length}</strong>.</p>`;
-      }
-    }
-  };
-  new ResizeObserver(()=>lab.draw()).observe(canvas);
-  new IntersectionObserver(es=>{lab.visible=es[0].isIntersecting;}).observe(canvas);
-  labs[id] = lab;
-  return lab;
-}
-
-function bindRange(id, outId, fmtFn){
-  const el = $(id); if(!el) return;
-  const paint = ()=>{ if(outId && $(outId)) $(outId).textContent = fmtFn ? fmtFn(el.value) : el.value; };
-  el.addEventListener('input', paint);
-  paint();
-}
-
-function kernelLab(){
-  const read = $('read-kernel');
-  const lab = mountConv('cv-kernel', ()=>({
-    img: EDGE_IMG, kernel: kernelByName($('k-kernel').value), stride:1, pad:0, readout: read
-  }));
-  $('k-kernel').addEventListener('input', ()=>{ lab.phase=0; lab.draw(); });
-  lab.draw();
-}
-
-function strideLab(){
-  const read = $('read-stride');
-  const lab = mountConv('cv-stride', ()=>({
-    img: DEMO, kernel: M.KERNELS.identity, stride: Number($('k-stride').value), pad:0, readout: read
-  }));
-  bindRange('k-stride','k-stride-value', v=>v+' px');
-  $('k-stride').addEventListener('input', ()=>lab.draw());
-  lab.draw();
-}
-
-function padLab(){
-  const read = $('read-pad');
-  const lab = mountConv('cv-pad', ()=>({
-    img: DEMO, kernel: M.KERNELS.identity, stride:1, pad: Number($('k-pad').value), readout: read
-  }));
-  bindRange('k-pad','k-pad-value', v=>v+' px');
-  $('k-pad').addEventListener('input', ()=>lab.draw());
-  lab.draw();
-}
-
-function mapsLab(){
-  const canvas = $('cv-maps');
-  const lab = {
-    canvas, phase:0, playing:false, speed:1, visible:true,
-    draw(){
-      const {w,h,ctx} = sizeCanvas(canvas);
-      const kernels = [M.KERNELS.edgex, M.KERNELS.edgey, M.KERNELS.blur];
-      const names = ['edge x','edge y','blur'];
-      const maps = kernels.map(k=>M.conv2d(EDGE_IMG, k, 1, 0));
-      const margin = 14, gap = 14;
-      const inCell = Math.min(fitCell(w*0.34 - margin, 7, 24, 10), fitCell(h - 50, 7, 24, 10));
-      title(ctx, 'INPUT', margin, 20);
-      drawGrid(ctx, EDGE_IMG, margin, 32, inCell);
-      const left = margin + 7*inCell + gap;
-      const colW = Math.max(80, (w - left - margin - gap*2)/3);
-      kernels.forEach((k,i)=>{
-        const x = left + i*(colW + gap);
-        const kCell = fitCell(colW, 5, 22, 10);
-        title(ctx, names[i].toUpperCase(), x, 20);
-        drawGrid(ctx, k, x, 32, kCell);
-        drawGrid(ctx, maps[i], x, 32 + 3*kCell + 18, kCell);
-      });
-      $('read-maps').innerHTML = `<b>A feature map is one kernel’s output</b><p>Each coral detector looks for a different pattern. Stacking the three maps gives a 5×5×3 volume. The network later learns the kernels; here they are fixed so you can see the geometry.</p><p>Parameters for 16 kernels on 3 input channels, 3×3, no bias: 16 × 3 × 9 = <strong>432</strong>.</p>`;
-    }
-  };
-  new ResizeObserver(()=>lab.draw()).observe(canvas);
-  new IntersectionObserver(es=>{lab.visible=es[0].isIntersecting;}).observe(canvas);
-  labs['cv-maps'] = lab; lab.draw();
-}
-
-function poolLab(){
-  const canvas = $('cv-pool');
-  const lab = {
-    canvas, phase:0, playing:!matchMedia('(prefers-reduced-motion: reduce)').matches, speed:1, visible:true,
-    draw(){
-      const kind = $('k-pool').value;
-      const img = M.POOL_DEMO;
-      const out = M.pool2d(img, 2, 2, kind);
-      const pos = M.convPositions(4,4,2,2,0);
-      const idx = Math.min(pos.length-1, Math.floor(Math.min(0.999, lab.phase)*pos.length));
-      const p = pos[idx];
-      const {w,h,ctx} = sizeCanvas(canvas);
-      const gap = 22, margin = 14, header = 30;
-      let cell = fitCell(w - margin*2 - gap, 6, 48, 12);
-      cell = Math.min(cell, fitCell(h - header - 16, 4, 48, 12));
-      title(ctx, '4×4 INPUT', margin, 20);
-      drawGrid(ctx, img, margin, header, cell, {win:{y:p.y,x:p.x,k:2}});
-      const ox = margin + 4*cell + gap;
-      title(ctx, (kind==='max'?'MAX':'AVG')+' 2×2, STRIDE 2', ox, 20);
-      drawGrid(ctx, out, ox, header, cell*2, {win:{y:p.oy,x:p.ox,k:1}});
-      $('read-pool').innerHTML = `<b>Window (${p.oy}, ${p.ox})</b><p>${kind==='max'?'The output is the largest value in the 2×2.':'The output is the mean of the four values.'} Pooling has <strong>no learned weights</strong>.</p><p>Spatial size: 4 → 2. With overlapping 3×3 stride 2 (AlexNet), size falls more slowly than a 2×2 stride 2 grid.</p>`;
-    }
-  };
-  $('k-pool').addEventListener('input', ()=>{lab.phase=0; lab.draw();});
-  new ResizeObserver(()=>lab.draw()).observe(canvas);
-  new IntersectionObserver(es=>{lab.visible=es[0].isIntersecting;}).observe(canvas);
-  labs['cv-pool'] = lab; lab.draw();
-}
-
-function rfLab(){
-  const canvas = $('cv-rf');
-  function layers(){
-    const n = Number($('k-rf-n').value);
-    const k = Number($('k-rf-k').value);
-    const s = Number($('k-rf-s').value);
-    return Array.from({length:n}, ()=>({k,s,p:0}));
-  }
-  const lab = {
-    canvas, phase:0, playing:false, speed:1, visible:true,
-    draw(){
-      const rows = M.receptiveField(layers());
-      const {w,h,ctx} = sizeCanvas(canvas);
-      const last = rows.at(-1);
-      const n = 15, cell = fitCell(Math.min(w,h)-56, n, 22, 9);
-      const cx = 8, cy = 7, half = (last.rf-1)/2;
-      const img = M.zeros(n,n);
-      for(let i=0;i<n;i++)for(let j=0;j<n;j++){
-        const d = Math.max(Math.abs(i-cy), Math.abs(j-cx));
-        img[i][j] = d<=half ? 1 - d/(half+0.5) : 0;
-      }
-      title(ctx, `RECEPTIVE FIELD = ${last.rf} · JUMP = ${last.jump}`, 16, 22);
-      drawGrid(ctx, img, 16, 40, cell, {win:{y:cy-half, x:cx-half, k:last.rf}});
-      $('rf-table').innerHTML = rows.map(r=>`<tr><td>${r.layer}</td><td>${r.k} / ${r.s}</td><td>${r.rf}</td><td>${r.jump}</td></tr>`).join('');
-      $('read-rf').innerHTML = `<b>After ${rows.length-1} layer(s)</b><p>Each new layer adds (K − 1) × jump to the field, then multiplies the jump by the stride. Three 3×3 layers at stride 1 give RF = 7, the same field as one 7×7.</p>`;
-    }
-  };
-  ['k-rf-n','k-rf-k','k-rf-s'].forEach(id=>$(id).addEventListener('input', ()=>{
-    if(id==='k-rf-n') $('k-rf-n-value').textContent = $('k-rf-n').value+' layers';
-    lab.phase=0; lab.draw();
-  }));
-  $('k-rf-n-value').textContent = $('k-rf-n').value+' layers';
-  new ResizeObserver(()=>lab.draw()).observe(canvas);
-  labs['cv-rf'] = lab; lab.draw();
-}
-
-function shiftLab(){
-  const canvas = $('cv-shift');
-  const lab = {
-    canvas, phase:0, playing:false, speed:1, visible:true,
-    draw(){
-      const dx = Number($('k-shift').value);
-      const src = M.blobImage(7,2,1,3,4);
-      const moved = M.shift2d(src, 0, dx);
-      const a = M.conv2d(src, M.KERNELS.identity, 1, 1);
-      const b = M.conv2d(moved, M.KERNELS.identity, 1, 1);
-      const pooledA = M.pool2d(a,2,2,'max');
-      const pooledB = M.pool2d(b,2,2,'max');
-      const {w,h,ctx} = sizeCanvas(canvas);
-      const gap = 16, margin = 14;
-      const cell = Math.min(fitCell((w - margin*2 - gap)/2, 7, 24, 10), fitCell((h - 56)/2, 8, 24, 10));
-      const x2 = margin + 7*cell + gap;
-      const y2 = 32 + 7*cell + 28;
-      title(ctx, 'INPUT', margin, 20); drawGrid(ctx, src, margin, 32, cell);
-      title(ctx, `SHIFTED +${dx}`, x2, 20); drawGrid(ctx, moved, x2, 32, cell);
-      title(ctx, 'CONV (EQUIVARIANT)', margin, y2-10); drawGrid(ctx, a, margin, y2, cell);
-      title(ctx, 'CONV AFTER SHIFT', x2, y2-10); drawGrid(ctx, b, x2, y2, cell);
-      $('read-shift').innerHTML = `<b>Shift of ${dx} pixel(s)</b><p>A stride-1 convolution <strong>moves with the object</strong>: that is translation equivariance, not invariance. After 2×2 max-pool the maps are ${fmt(pooledA[1][1])} and ${fmt(pooledB[1][1])} at a centre cell — pooling makes the code <em>more</em> invariant, not perfectly so.</p>`;
-    }
-  };
-  bindRange('k-shift','k-shift-value', v=>v+' px');
-  $('k-shift').addEventListener('input', ()=>lab.draw());
-  new ResizeObserver(()=>lab.draw()).observe(canvas);
-  labs['cv-shift'] = lab; lab.draw();
-}
-
-function archLab(){
-  const canvas = $('cv-arch');
-  const lab = {
-    canvas, phase:0, playing:false, speed:1, visible:true,
-    draw(){
-      const n = Number($('k-vgg-n').value);
-      const s = M.stackVsLarge(3, n);
-      const {w,h,ctx} = sizeCanvas(canvas);
-      ctx.fillStyle = colors.ink; ctx.font = '16px Georgia, serif';
-      ctx.fillText(`${n} × (3×3)  ≡  one ${s.kLarge}×${s.kLarge} field`, 20, 36);
-      const maxP = Math.max(s.paramsSmall, s.paramsLarge, 1);
-      const bar = (label, val, y, color)=>{
-        ctx.fillStyle = '#dce5d4'; ctx.fillRect(20,y, w-40, 26);
-        ctx.fillStyle = color; ctx.fillRect(20,y, (w-40)*val/maxP, 26);
-        ctx.fillStyle = colors.ink; ctx.font = '13px ui-monospace, monospace';
-        ctx.fillText(`${label}: ${val} weights per in/out channel pair`, 28, y+18);
-      };
-      bar('stacked 3×3', s.paramsSmall, 70, colors.teal);
-      bar('one large kernel', s.paramsLarge, 110, colors.orange);
-      ctx.font = '13px sans-serif'; ctx.fillStyle = '#5f7069';
-      ctx.fillText('Three nonlinearities vs one. Same receptive field, fewer parameters, more depth.', 20, 170);
-      $('read-arch').innerHTML = `<b>${n} layers of 3×3</b><p>Receptive field ${s.rf}. Weights ${s.paramsSmall} vs ${s.paramsLarge} for a single ${s.kLarge}×${s.kLarge}. VGG chose the cheaper, deeper option throughout.</p>`;
-    }
-  };
-  bindRange('k-vgg-n','k-vgg-n-value', v=>v+' × 3×3');
-  $('k-vgg-n').addEventListener('input', ()=>lab.draw());
-  new ResizeObserver(()=>lab.draw()).observe(canvas);
-  labs['cv-arch'] = lab; lab.draw();
-}
-
-function wirePlayback(){
-  document.querySelectorAll('[data-replay]').forEach(b=>b.addEventListener('click',()=>{
-    const lab = labs[b.dataset.replay]; if(!lab) return; lab.phase=0; lab.playing=true; lab.draw();
-    const pause = document.querySelector(`[data-motion="${b.dataset.replay}"]`);
-    if(pause){ pause.textContent='Pause'; pause.setAttribute('aria-pressed','true'); }
-  }));
-  document.querySelectorAll('[data-motion]').forEach(b=>{
-    const lab = labs[b.dataset.motion]; if(!lab) return;
-    b.textContent = lab.playing ? 'Pause' : 'Play';
-    b.addEventListener('click',()=>{
-      lab.playing = !lab.playing;
-      b.textContent = lab.playing ? 'Pause' : 'Play';
-      b.setAttribute('aria-pressed', String(lab.playing));
+  // A moving window changes the highlight, not the matrix values or DOM nodes.
+  detail.querySelectorAll('table').forEach((table,i)=>{
+    const win=panels[i].opts?.win;
+    table.querySelectorAll('tbody tr').forEach((row,y)=>{
+      [...row.cells].forEach((cell,x)=>cell.classList.toggle('in-window',Boolean(win&&y>=win.y&&y<win.y+win.k&&x>=win.x&&x<win.x+win.k)));
     });
   });
 }
-
+function drawPanels(canvas,panels){
+  canvas.dataset.visualMode=visualMode;
+  const margin=12,gap=22,minCell=32;
+  const w=Math.max(canvasWidth(canvas),Math.max(...panels.map(p=>p.img[0].length))*minCell+margin*2);
+  $(canvas.id+'-scroll-hint').hidden=w<=canvasWidth(canvas);
+  const available=w-margin*2;
+  const oneRow=panels.reduce((n,p)=>n+Math.max(p.img[0].length*minCell,115),0)+gap*(panels.length-1)<=available;
+  const cell=oneRow?Math.min(38,Math.floor((available-gap*(panels.length-1))/panels.reduce((n,p)=>n+p.img[0].length,0))):minCell;
+  let x=margin,y=32,rowHeight=0;
+  const layout=panels.map(p=>{
+    const pw=Math.max(p.img[0].length*cell,115);
+    if(x>margin&&x+pw>w-margin){x=margin;y+=rowHeight+48;rowHeight=0;}
+    const box={...p,x,y};x+=pw+gap;rowHeight=Math.max(rowHeight,p.img.length*cell);return box;
+  });
+  const ctx=canvasBox(canvas,w,y+rowHeight+14);
+  layout.forEach(p=>{title(ctx,p.label,p.x,p.y-12);drawGrid(ctx,p.img,p.x,p.y,cell,p.opts);});
+  inspectValues(canvas,panels);
+}
+function mount(id,draw,{animated=false}={}){
+  const canvas=$(id);
+  const wrapper=document.createElement('div');wrapper.className='canvas-scroll';
+  wrapper.setAttribute('role','region');wrapper.setAttribute('aria-label','Visual matrices; scroll horizontally for wide grids');wrapper.tabIndex=0;
+  canvas.before(wrapper);wrapper.append(canvas);
+  wrapper.insertAdjacentHTML('afterend',`<p class="matrix-scroll-hint" id="${id}-scroll-hint" hidden>↔ Scroll the visual sideways to see the whole matrix.</p><details class="matrix-values" id="${id}-values"><summary>Inspect matrices · values to 3 decimals</summary><div class="matrix-tables"></div></details>`);
+  const lab={canvas,phase:0,index:0,playing:animated&&!matchMedia('(prefers-reduced-motion: reduce)').matches,visible:true,draw(){draw(lab);}};
+  labs[id]=lab;
+  let lastWidth=0;
+  new ResizeObserver(()=>{const w=canvasWidth(canvas);if(w!==lastWidth){lastWidth=w;lab.draw();}}).observe(wrapper);
+  new IntersectionObserver(es=>{lab.visible=es[0].isIntersecting;}).observe(canvas);
+  return lab;
+}
+function bindRange(id,outId,format=v=>v){
+  const el=$(id);const paint=()=>$(outId).textContent=format(el.value);
+  el.addEventListener('input',paint);paint();
+}
+function listen(ids,lab){ids.forEach(id=>$(id).addEventListener('input',()=>{lab.phase=0;lab.draw();}));}
+function readout(id,heading,text){$(id).innerHTML=`<b>${heading}</b><p>${text}</p>`;}
+function mountConv(id,getState){
+  return mount(id,lab=>{
+    const st=getState(),img=st.img,k=st.kernel.length;
+    const padded=M.pad2d(img,st.pad),out=M.conv2d(img,st.kernel,st.stride,st.pad);
+    const positions=M.convPositions(img.length,img[0].length,k,st.stride,st.pad);
+    const idx=Math.min(positions.length-1,Math.floor(lab.phase*positions.length)),p=positions[idx];
+    lab.pos=positions;lab.index=idx;lab.out=out;lab.state=st;
+    const patch=M.patchAt(img,p.y,p.x,k,st.pad);
+    lab.patch=patch;
+    drawPanels(lab.canvas,[
+      {label:`Input${st.pad?' + padding':''}`,img:padded,opts:{...imageOptions(),win:{y:p.y+st.pad,x:p.x+st.pad,k}}},
+      {label:'Kernel',img:st.kernel},
+      {label:'Output',img:out,opts:{win:{y:p.oy,x:p.ox,k:1},...([M.KERNELS.identity,M.KERNELS.blur].includes(st.kernel)?imageOptions():{})}}
+    ]);
+    const terms=patch.flat().map((v,i)=>`${fmt(v)} × (${cellLabel(st.kernel.flat()[i])})`).join(' + ');
+    const equals=Number.isInteger(out[p.oy][p.ox])?'=':'≈';
+    readout(st.readout,`Output (${p.oy}, ${p.ox}) ${equals} ${fmt(out[p.oy][p.ox])}`,`H<sub>out</sub> = ⌊(${img.length} + ${2*st.pad} − ${k}) / ${st.stride}⌋ + 1 = <strong>${out.length}</strong>. ${positions.length} placements.<br><span class="calculation">${terms} ${equals} <b>${fmt(out[p.oy][p.ox])}</b></span>`);
+    lab.canvas.setAttribute('aria-label',`${visualMode==='images'?'Handwritten 7':'Numerical input'}, ${img.length} by ${img[0].length}. ${out.length} by ${out[0].length} output. Selected cell ${p.oy}, ${p.ox} is ${fmt(out[p.oy][p.ox])}. Expanded matrix tables follow.`);
+  },{animated:true});
+}
+function convolutionLabs(){
+  const kernel=mountConv('cv-kernel',()=>({img:inputFor(),kernel:M.KERNELS[$('k-kernel').value],stride:1,pad:0,readout:'read-kernel'}));
+  const stride=mountConv('cv-stride',()=>({img:inputFor(DEMO),kernel:M.KERNELS.identity,stride:Number($('k-stride').value),pad:0,readout:'read-stride'}));
+  const pad=mountConv('cv-pad',()=>({img:inputFor(DEMO),kernel:M.KERNELS.identity,stride:1,pad:Number($('k-pad').value),readout:'read-pad'}));
+  listen(['k-kernel'],kernel);listen(['k-stride'],stride);listen(['k-pad'],pad);
+  bindRange('k-stride','k-stride-value',v=>v+' px');bindRange('k-pad','k-pad-value',v=>v+' px');
+}
+function whyLab(){
+  const lab=mount('cv-why',lab=>{
+    const h=Number($('k-why-size').value),count=(h-2)**2;
+    const img=inputFor(),patch=img.slice(1,4).map(r=>r.slice(1,4));
+    drawPanels(lab.canvas,[{label:'Sample input',img,opts:{...imageOptions(),win:{y:1,x:1,k:3}}},{label:'Local patch',img:patch,opts:imageOptions()}]);
+    readout('read-why',`${h}×${h} → ${h-2}×${h-2} · one output channel`,`<span class="parameter-counts"><span>Dense <strong>${(h*h*count).toLocaleString('en-US')}</strong> weights</span><span>Local, unshared <strong>${(9*count).toLocaleString('en-US')}</strong> weights</span><span>Convolution <strong>9 weights</strong></span></span>All three produce ${count.toLocaleString('en-US')} outputs. Only convolution reuses the same nine weights at every location.`);
+  });
+  bindRange('k-why-size','k-why-size-value',v=>v+' px');listen(['k-why-size'],lab);
+}
+function mapsLab(){
+  const lab=mount('cv-maps',lab=>{
+    const img=inputFor(),ks=[M.KERNELS.edgex,M.KERNELS.edgey,M.KERNELS.blur],names=['Vertical edges','Horizontal edges','Local average'];
+    const focus=Number($('k-map-focus').value),maps=ks.map(k=>M.conv2d(img,k));
+    drawPanels(lab.canvas,[{label:'Input',img,opts:imageOptions()},{label:'Selected kernel',img:ks[focus]},...maps.map((img,i)=>({label:(i===focus?'● ':'')+names[i],img,opts:i===2?imageOptions():{}}))]);
+    readout('read-maps',`Three detectors → ${maps[0].length}×${maps[0][0].length}×3`,`Selected: <strong>${names[focus]}</strong>. The other maps stay visible for comparison. Each map has its own filter; the same filter is reused at every location. Teal = positive response, coral = negative response; each signed map uses its own colour range.`);
+  });listen(['k-map-focus'],lab);
+}
+function poolLab(){
+  const lab=mount('cv-pool',lab=>{
+    const img=inputFor(M.POOL_DEMO),kind=$('k-pool').value,out=M.pool2d(img,2,2,kind);
+    const positions=M.convPositions(img.length,img[0].length,2,2),idx=Math.min(positions.length-1,Math.floor(lab.phase*positions.length)),p=positions[idx];
+    lab.pos=positions;lab.index=idx;lab.out=out;
+    drawPanels(lab.canvas,[{label:'Input',img,opts:{...imageOptions(),win:{y:p.y,x:p.x,k:2}}},{label:kind==='max'?'Max pooling':'Average pooling',img:out,opts:{...imageOptions(),win:{y:p.oy,x:p.ox,k:1}}}]);
+    const values=M.patchAt(img,p.y,p.x,2).flat();
+    readout('read-pool',`Output (${p.oy}, ${p.ox}) = ${fmt(out[p.oy][p.ox])}`,`${kind==='max'?`max(${values.join(', ')})`:`(${values.join(' + ')}) / 4`} = <strong>${fmt(out[p.oy][p.ox])}</strong>. Size: ${img.length}×${img[0].length} → ${out.length}×${out[0].length}. No learned weights.`);
+  },{animated:true});listen(['k-pool'],lab);
+}
+function rfLab(){
+  const lab=mount('cv-rf',lab=>{
+    const n=Number($('k-rf-n').value),k=Number($('k-rf-k').value),s=Number($('k-rf-s').value);
+    const rows=M.receptiveField(Array.from({length:n},()=>({k,s}))),last=rows.at(-1);
+    const img=visualMode==='images'?M.pad2d(DIGIT,3):M.pad2d(DEMO,4),half=(last.rf-1)/2;
+    drawPanels(lab.canvas,[{label:`RF ${last.rf} · jump ${last.jump}`,img,opts:{...imageOptions(),win:{y:7-half,x:7-half,k:last.rf}}}]);
+    $('rf-table').innerHTML=rows.map(r=>`<tr><td>${r.layer}</td><td>${r.k} / ${r.s}</td><td>${r.rf}</td><td>${r.jump}</td></tr>`).join('');
+    readout('read-rf',`${n} layers · receptive field ${last.rf}×${last.rf}`,`Each layer adds (K − 1) × previous jump, then multiplies jump by stride. ${last.rf>img.length?'The theoretical field exceeds the displayed image; the coral outline is clipped to the view.':'The coral region marks which input pixels can affect the selected unit.'} ${visualMode==='images'?'The 8×8 digit is shown with a 3-pixel zero margin.':''}`);
+  });bindRange('k-rf-n','k-rf-n-value',v=>v+' layers');listen(['k-rf-n','k-rf-k','k-rf-s'],lab);
+}
+function shiftLab(){
+  const lab=mount('cv-shift',lab=>{
+    const dx=Number($('k-shift').value);
+    const src=visualMode==='images'?M.pad2d(DIGIT,2):M.blobImage(7,2,1,3,4),moved=M.shift2d(src,0,dx);
+    const a=M.conv2d(src,M.KERNELS.identity,1,1),b=M.conv2d(moved,M.KERNELS.identity,1,1);
+    const pa=M.pool2d(a,2,2),pb=M.pool2d(b,2,2);
+    drawPanels(lab.canvas,[{label:'Input',img:src,opts:imageOptions()},{label:`Input shifted +${dx}`,img:moved,opts:imageOptions()},{label:'Convolution',img:a,opts:imageOptions()},{label:'Conv. after shift',img:b,opts:imageOptions()},{label:'Pooled original',img:pa,opts:imageOptions()},{label:'Pooled shifted',img:pb,opts:imageOptions()}]);
+    const same=JSON.stringify(pa)===JSON.stringify(pb);
+    readout('read-shift',`Shift +${dx} pixels · ${same?'pooled maps match':'pooled maps differ'}`,`The identity convolution moves with the input: equivariance. The <em>whole</em> pooled map is ${same?'unchanged in this example':'different in this example'}; one unchanged cell would not prove invariance. Zero-filled shifts discard anything beyond the frame.`);
+  });bindRange('k-shift','k-shift-value',v=>v+' px');listen(['k-shift'],lab);
+}
+function alexLab(){
+  const lab=mount('cv-alex',lab=>{
+    const img=inputFor(),conv=M.conv2d(img,M.KERNELS.edgex,1,1),relu=conv.map(row=>row.map(v=>Math.max(0,v))),pool=M.pool2d(relu);
+    const stage=Number($('k-alex-stage').value),names=['Input','Convolution','ReLU','Max pooling'];
+    const arrays=[img,conv,relu,pool];
+    drawPanels(lab.canvas,arrays.slice(0,stage+1).map((img,i)=>({label:names[i],img,opts:i===0?imageOptions():{}})));
+    const notes=['Start with pixel intensities.','A fixed vertical-edge kernel produces positive and negative responses.','ReLU keeps positive evidence: max(0, z). Negative responses become zero.','A 2×2 maximum with stride 2 makes the feature map half as tall and half as wide.'];
+    readout('read-alex',`Stage ${stage+1} / 4 · ${names[stage]}`,`${notes[stage]}<br>AlexNet’s actual first layer uses 96 learned 11×11×3 kernels at stride 4: a 227×227 input gives 55×55 maps, then 3×3 pooling at stride 2 gives 27×27. This small example demonstrates the operations, not its trained predictions.`);
+  });listen(['k-alex-stage'],lab);
+}
+function archLab(){
+  const lab=mount('cv-arch',lab=>{
+    const n=Number($('k-vgg-n').value),s=M.stackVsLarge(3,n),img=inputFor(DEMO),centre=Math.floor(img.length/2);
+    drawPanels(lab.canvas,[{label:`${n} small layers`,img,opts:{...imageOptions(),win:{y:centre-n,x:centre-n,k:s.rf}}},{label:`One ${s.kLarge}×${s.kLarge} layer`,img,opts:{...imageOptions(),win:{y:centre-n,x:centre-n,k:s.rf}}}]);
+    readout('read-arch',`Same ${s.rf}×${s.rf} receptive field`,`${n} × 9 = <strong>${s.paramsSmall}</strong> weights in the stack; ${s.kLarge}² = <strong>${s.paramsLarge}</strong> in one large filter. ${n===1?'The two designs coincide.':`With ReLU after each layer, the stack has ${n} nonlinearities instead of one.`} The matching regions show equal support, not equal outputs. With a constant width of C channels, multiply both weight counts by C²; changing widths changes the comparison.`);
+  });bindRange('k-vgg-n','k-vgg-n-value',v=>v+' × 3×3');listen(['k-vgg-n'],lab);
+}
+function problemVisuals(){
+  const img=inputFor(),opt=imageOptions(),centre=Math.floor(img.length/2);
+  const panel=(label,img,opts=opt)=>({label,img,opts});
+  const edge=M.conv2d(img,M.KERNELS.edgex);
+  const problems={
+    why:[panel('Same pattern',M.pad2d(img,1)),panel('Different pixel addresses',M.shift2d(M.pad2d(img,1),0,1))],
+    kernels:[panel('One pixel: enough evidence?',img,{...opt,win:{y:centre,x:centre,k:1}}),panel('A neighbourhood adds context',img,{...opt,win:{y:centre-1,x:centre-1,k:3}})],
+    stride:[panel('Every centre · stride 1',M.conv2d(img,M.KERNELS.identity)),panel('Skipped centres · stride 2',M.conv2d(img,M.KERNELS.identity,2))],
+    padding:[panel('Original',img),panel('One unpadded 3×3 layer',M.conv2d(img,M.KERNELS.identity))],
+    maps:[panel('Vertical changes',edge,{}),panel('Horizontal changes',M.conv2d(img,M.KERNELS.edgey),{})],
+    pooling:[panel('Many local responses',img),panel('One maximum per 2×2',M.pool2d(img))],
+    field:[panel('A small view of a larger pattern',img,{...opt,win:{y:centre-1,x:centre-1,k:3}})],
+    invariance:[panel('Original position',img),panel('Same object, shifted',M.shift2d(img,0,1))],
+    alexnet:[panel('Raw pixels',img),panel('Edges are evidence, not a class',edge,{})],
+    vgg:[panel('3×3: too little context',img,{...opt,win:{y:centre-1,x:centre-1,k:3}}),panel('7×7: a wider view',img,{...opt,win:{y:centre-3,x:centre-3,k:7}})]
+  };
+  Object.entries(problems).forEach(([id,panels])=>{
+    const container=$('problem-'+id);container.dataset.visualMode=visualMode;
+    container.innerHTML=panels.map(p=>`<div class="problem-panel">${visualMode==='images'?imagePreview(p.img,p.opts):''}${tableHTML(p.img,p.label,p.opts)}</div>`).join('');
+  });
+  $('worked-patch').innerHTML=tableHTML(M.WORKED.patch,'Exercise patch',{image:visualMode==='images',max:3});
+  $('worked-kernel').innerHTML=tableHTML(M.WORKED.kernel,'Exercise kernel');
+  // The written exercises retain their own data in both modes.
+  document.querySelectorAll('.questions-step .wt.small td').forEach(td=>{
+    const raw=Number(td.textContent);
+    if(visualMode==='images'&&Number.isFinite(raw)){const c=cellColors(raw,8,true);td.style.background=c.bg;td.style.color=c.fg;}
+    else {td.style.background='';td.style.color='';}
+  });
+}
+function applyMode(){
+  document.body.dataset.visualMode=visualMode;
+  $('visual-mode').setAttribute('aria-pressed',String(visualMode==='images'));
+  $('mode-status').textContent=visualMode==='images'?'Images mode · real handwritten 7 · 8×8 pixels · intensity 0 (black) to 16 (white).':'Numbers mode · small matrices you can calculate by hand.';
+  problemVisuals();
+  Object.values(labs).forEach(lab=>{lab.phase=0;lab.draw();});
+}
+function wirePlayback(){
+  const sync=id=>{const b=document.querySelector(`[data-motion="${id}"]`);if(b){b.textContent=labs[id].playing?'Pause':'Play';b.setAttribute('aria-pressed',String(labs[id].playing));}};
+  document.querySelectorAll('[data-motion]').forEach(b=>{sync(b.dataset.motion);b.addEventListener('click',()=>{labs[b.dataset.motion].playing=!labs[b.dataset.motion].playing;sync(b.dataset.motion);});});
+  document.querySelectorAll('[data-replay]').forEach(b=>b.addEventListener('click',()=>{const lab=labs[b.dataset.replay];lab.phase=0;lab.playing=true;lab.draw();sync(b.dataset.replay);}));
+  document.querySelectorAll('[data-next]').forEach(b=>b.addEventListener('click',()=>{const lab=labs[b.dataset.next];lab.playing=false;lab.phase=((lab.index+1)%lab.pos.length+.001)/lab.pos.length;lab.draw();sync(b.dataset.next);}));
+}
 let last=0;
 function animate(t){
-  const dt = Math.min(0.05, (t-last)/1000); last = t;
+  const dt=Math.min(.05,(t-last)/1000);last=t;
   Object.values(labs).forEach(lab=>{
-    if(lab.playing && lab.visible && !document.hidden){
-      const n = Math.max((lab.pos && lab.pos.length) || 12, 4);
-      lab.phase += dt * (lab.speed||1) / (n * 1.35);
-      if(lab.phase>=1) lab.phase=0;
-      lab.draw();
-    }
+    if(!lab.playing||!lab.visible||document.hidden)return;
+    const n=lab.pos.length;
+    lab.phase=(lab.phase+dt/(n*1.35))%1;
+    // Redraw only when the selected patch changes, not on every frame.
+    if(Math.floor(lab.phase*n)!==lab.index)lab.draw();
   });
   requestAnimationFrame(animate);
 }
@@ -461,7 +386,13 @@ function nav(){
 
 document.querySelectorAll('.qin').forEach((inp,i)=>{ if(!inp.id) inp.id='qin-'+i; inp.addEventListener('change', save); });
 loadSaved();
-kernelLab(); strideLab(); padLab(); mapsLab(); poolLab(); rfLab(); shiftLab(); archLab();
+whyLab(); convolutionLabs(); mapsLab(); poolLab(); rfLab(); shiftLab(); alexLab(); archLab();
+applyMode();
+$('visual-mode').addEventListener('click',()=>{
+  visualMode=visualMode==='images'?'numbers':'images';
+  try{localStorage.setItem(viewKey,visualMode);}catch{}
+  applyMode();
+});
 wirePlayback(); checkers(); nav(); updateProgress();
 requestAnimationFrame(animate);
 
