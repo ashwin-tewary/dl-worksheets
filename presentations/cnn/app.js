@@ -8,13 +8,13 @@ let visualMode = 'numbers';
 try { if(localStorage.getItem(viewKey)==='images') visualMode='images'; } catch {}
 
 // UCI Optical Recognition of Handwritten Digits, Alpaydin & Kaynak (1998).
-// CC BY 4.0, https://doi.org/10.24432/C50P49. Sample index 7 in
+// CC BY 4.0, https://doi.org/10.24432/C50P49. Sample index 403 in
 // scikit-learn's digits.csv.gz. Native 8×8 intensities, unchanged (0–16).
 const DIGIT = [
-  [0,0,7,8,13,16,15,1], [0,0,7,7,4,11,12,0],
-  [0,0,0,0,8,13,1,0], [0,4,8,8,15,15,6,0],
-  [0,2,11,15,15,4,0,0], [0,0,0,16,5,0,0,0],
-  [0,0,9,15,1,0,0,0], [0,0,13,5,0,0,0,0]
+  [0,0,1,8,8,9,12,7], [0,0,8,16,12,13,16,5],
+  [0,0,11,6,0,8,11,0], [0,0,15,3,1,15,3,0],
+  [0,0,1,0,10,9,0,0], [0,0,0,3,13,1,0,0],
+  [0,0,0,13,7,0,0,0], [0,0,1,11,1,0,0,0]
 ];
 const DEMO = M.blobImage(7,2,2,3,4);
 const EDGE_IMG = [[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[1,1,1,1,0,0,0],[1,1,1,1,0,0,0],[1,1,1,1,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
@@ -76,8 +76,10 @@ function canvasWidth(canvas){
 function canvasBox(canvas,w,h){
   h=Math.ceil(h);
   const dpr=Math.min(window.devicePixelRatio||1,2);
-  canvas.style.width=w+'px';canvas.style.height=h+'px';
-  canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);
+  if(canvas.style.width!==w+'px')canvas.style.width=w+'px';
+  if(canvas.style.height!==h+'px')canvas.style.height=h+'px';
+  if(canvas.width!==Math.round(w*dpr))canvas.width=Math.round(w*dpr);
+  if(canvas.height!==Math.round(h*dpr))canvas.height=Math.round(h*dpr);
   const ctx=canvas.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);
   ctx.fillStyle='#f3f4ed';ctx.fillRect(0,0,w,h);
   return ctx;
@@ -116,20 +118,35 @@ function inspectValues(canvas,panels){
 }
 function drawPanels(canvas,panels){
   canvas.dataset.visualMode=visualMode;
-  const margin=12,gap=22,minCell=32;
-  const w=Math.max(canvasWidth(canvas),Math.max(...panels.map(p=>p.img[0].length))*minCell+margin*2);
+  const margin=12,gap=28,minCell=32;
+  const animated=labs[canvas.id]?.animated;
+  const rowWidth=panels.reduce((n,p)=>n+Math.max(p.img[0].length*minCell,115),0)+gap*(panels.length-1)+margin*2;
+  const w=Math.max(canvasWidth(canvas),animated?rowWidth:Math.max(...panels.map(p=>p.img[0].length))*minCell+margin*2);
   $(canvas.id+'-scroll-hint').hidden=w<=canvasWidth(canvas);
   const available=w-margin*2;
   const oneRow=panels.reduce((n,p)=>n+Math.max(p.img[0].length*minCell,115),0)+gap*(panels.length-1)<=available;
-  const cell=oneRow?Math.min(38,Math.floor((available-gap*(panels.length-1))/panels.reduce((n,p)=>n+p.img[0].length,0))):minCell;
+  let cell=oneRow?Math.min(38,Math.floor((available-gap*(panels.length-1))/panels.reduce((n,p)=>n+p.img[0].length,0))):minCell;
+  while(cell>minCell&&panels.reduce((n,p)=>n+Math.max(p.img[0].length*cell,115),0)+gap*(panels.length-1)>available)cell--;
   let x=margin,y=32,rowHeight=0;
   const layout=panels.map(p=>{
     const pw=Math.max(p.img[0].length*cell,115);
     if(x>margin&&x+pw>w-margin){x=margin;y+=rowHeight+48;rowHeight=0;}
     const box={...p,x,y};x+=pw+gap;rowHeight=Math.max(rowHeight,p.img.length*cell);return box;
   });
-  const ctx=canvasBox(canvas,w,y+rowHeight+14);
-  layout.forEach(p=>{title(ctx,p.label,p.x,p.y-12);drawGrid(ctx,p.img,p.x,p.y,cell,p.opts);});
+  const height=y+rowHeight+14,lab=labs[canvas.id];
+  if(lab?.animated){
+    const key=JSON.stringify([w,height,visualMode,panels.map(p=>[p.label,p.img,p.opts?.image,p.opts?.max])]);
+    if(lab.scene?.key!==key){
+      const backdrop=document.createElement('canvas');
+      const ctx=canvasBox(backdrop,w,height);
+      layout.forEach(p=>{title(ctx,p.label,p.x,p.y-12);drawGrid(ctx,p.img,p.x,p.y,cell,{...p.opts,win:null});});
+      lab.scene={key,backdrop,layout,cell,w,height};
+    }
+    paintAnimation(lab);
+  }else{
+    const ctx=canvasBox(canvas,w,height);
+    layout.forEach(p=>{title(ctx,p.label,p.x,p.y-12);drawGrid(ctx,p.img,p.x,p.y,cell,p.opts);});
+  }
   inspectValues(canvas,panels);
 }
 function mount(id,draw,{animated=false}={}){
@@ -138,8 +155,12 @@ function mount(id,draw,{animated=false}={}){
   wrapper.setAttribute('role','region');wrapper.setAttribute('aria-label','Visual matrices; scroll horizontally for wide grids');wrapper.tabIndex=0;
   canvas.before(wrapper);wrapper.append(canvas);
   wrapper.insertAdjacentHTML('afterend',`<p class="matrix-scroll-hint" id="${id}-scroll-hint" hidden>↔ Scroll the visual sideways to see the whole matrix.</p><details class="matrix-values" id="${id}-values"><summary>Inspect matrices · values to 3 decimals</summary><div class="matrix-tables"></div></details>`);
-  const lab={canvas,phase:0,index:0,playing:animated&&!matchMedia('(prefers-reduced-motion: reduce)').matches,visible:true,draw(){draw(lab);}};
+  const lab={canvas,animated,phase:0,index:0,speed:1,showFull:false,playing:animated&&!matchMedia('(prefers-reduced-motion: reduce)').matches,visible:true,draw(){draw(lab);}};
   labs[id]=lab;
+  if(animated){
+    wrapper.insertAdjacentHTML('beforebegin',`<div class="animation-stages" id="${id}-stages"><span>01 · Find patch</span><i>→</i><span>02 · ${id==='cv-pool'?'Summarise':'Multiply & sum'}</span><i>→</i><span>03 · Write result</span></div>`);
+    wrapper.insertAdjacentHTML('afterend',`<div class="animation-timeline"><label for="${id}-scrub">Patch <output id="${id}-position">1</output></label><input id="${id}-scrub" data-scrub="${id}" type="range" min="0" max="1" value="0" aria-label="Selected patch"><label for="${id}-speed">Speed</label><select id="${id}-speed" data-speed="${id}"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option></select><button type="button" data-full-map="${id}" aria-pressed="false">Show full map</button></div><p class="animation-status" id="${id}-status">Find the first patch.</p>`);
+  }
   let lastWidth=0;
   new ResizeObserver(()=>{const w=canvasWidth(canvas);if(w!==lastWidth){lastWidth=w;lab.draw();}}).observe(wrapper);
   new IntersectionObserver(es=>{lab.visible=es[0].isIntersecting;}).observe(canvas);
@@ -149,15 +170,18 @@ function bindRange(id,outId,format=v=>v){
   const el=$(id);const paint=()=>$(outId).textContent=format(el.value);
   el.addEventListener('input',paint);paint();
 }
-function listen(ids,lab){ids.forEach(id=>$(id).addEventListener('input',()=>{lab.phase=0;lab.draw();}));}
-function readout(id,heading,text){$(id).innerHTML=`<b>${heading}</b><p>${text}</p>`;}
+function listen(ids,lab){ids.forEach(id=>$(id).addEventListener('input',()=>{lab.phase=0;lab.stageKey='';lab.draw();syncPlayback(lab);}));}
+function readout(id,heading,text,calculation=''){
+  const el=$(id),open=el.querySelector('.calculation-fold')?.open;
+  el.innerHTML=`<b>${heading}</b><p>${text}</p>${calculation?`<details class="calculation-fold"${open?' open':''}><summary>Formula &amp; this calculation</summary><div>${calculation}</div></details>`:''}`;
+}
 function mountConv(id,getState){
   return mount(id,lab=>{
     const st=getState(),img=st.img,k=st.kernel.length;
     const padded=M.pad2d(img,st.pad),out=M.conv2d(img,st.kernel,st.stride,st.pad);
     const positions=M.convPositions(img.length,img[0].length,k,st.stride,st.pad);
     const idx=Math.min(positions.length-1,Math.floor(lab.phase*positions.length)),p=positions[idx];
-    lab.pos=positions;lab.index=idx;lab.out=out;lab.state=st;
+    lab.pos=positions;lab.index=idx;lab.out=out;lab.state=st;lab.patchSize=k;lab.inputPad=st.pad;
     const patch=M.patchAt(img,p.y,p.x,k,st.pad);
     lab.patch=patch;
     drawPanels(lab.canvas,[
@@ -167,7 +191,7 @@ function mountConv(id,getState){
     ]);
     const terms=patch.flat().map((v,i)=>`${fmt(v)} × (${cellLabel(st.kernel.flat()[i])})`).join(' + ');
     const equals=Number.isInteger(out[p.oy][p.ox])?'=':'≈';
-    readout(st.readout,`Output (${p.oy}, ${p.ox}) ${equals} ${fmt(out[p.oy][p.ox])}`,`H<sub>out</sub> = ⌊(${img.length} + ${2*st.pad} − ${k}) / ${st.stride}⌋ + 1 = <strong>${out.length}</strong>. ${positions.length} placements.<br><span class="calculation">${terms} ${equals} <b>${fmt(out[p.oy][p.ox])}</b></span>`);
+    readout(st.readout,`This patch produces ${fmt(out[p.oy][p.ox])}`,`${k}×${k} input patch → one cell at (${p.oy}, ${p.ox}). ${positions.length} patches build a ${out.length}×${out[0].length} feature map.`, `H<sub>out</sub> = ⌊(${img.length} + ${2*st.pad} − ${k}) / ${st.stride}⌋ + 1 = <strong>${out.length}</strong>.<span class="calculation">${terms} ${equals} <b>${fmt(out[p.oy][p.ox])}</b></span>`);
     lab.canvas.setAttribute('aria-label',`${visualMode==='images'?'Handwritten 7':'Numerical input'}, ${img.length} by ${img[0].length}. ${out.length} by ${out[0].length} output. Selected cell ${p.oy}, ${p.ox} is ${fmt(out[p.oy][p.ox])}. Expanded matrix tables follow.`);
   },{animated:true});
 }
@@ -199,10 +223,10 @@ function poolLab(){
   const lab=mount('cv-pool',lab=>{
     const img=inputFor(M.POOL_DEMO),kind=$('k-pool').value,out=M.pool2d(img,2,2,kind);
     const positions=M.convPositions(img.length,img[0].length,2,2),idx=Math.min(positions.length-1,Math.floor(lab.phase*positions.length)),p=positions[idx];
-    lab.pos=positions;lab.index=idx;lab.out=out;
+    lab.pos=positions;lab.index=idx;lab.out=out;lab.patchSize=2;lab.inputPad=0;
     drawPanels(lab.canvas,[{label:'Input',img,opts:{...imageOptions(),win:{y:p.y,x:p.x,k:2}}},{label:kind==='max'?'Max pooling':'Average pooling',img:out,opts:{...imageOptions(),win:{y:p.oy,x:p.ox,k:1}}}]);
     const values=M.patchAt(img,p.y,p.x,2).flat();
-    readout('read-pool',`Output (${p.oy}, ${p.ox}) = ${fmt(out[p.oy][p.ox])}`,`${kind==='max'?`max(${values.join(', ')})`:`(${values.join(' + ')}) / 4`} = <strong>${fmt(out[p.oy][p.ox])}</strong>. Size: ${img.length}×${img[0].length} → ${out.length}×${out[0].length}. No learned weights.`);
+    readout('read-pool',`This window produces ${fmt(out[p.oy][p.ox])}`,`Four values become one ${kind==='max'?'maximum':'average'}. Size: ${img.length}×${img[0].length} → ${out.length}×${out[0].length}. No learned weights.`,`${kind==='max'?`max(${values.join(', ')})`:`(${values.join(' + ')}) / 4`} = <strong>${fmt(out[p.oy][p.ox])}</strong>.`);
   },{animated:true});listen(['k-pool'],lab);
 }
 function rfLab(){
@@ -212,7 +236,7 @@ function rfLab(){
     const img=visualMode==='images'?M.pad2d(DIGIT,3):M.pad2d(DEMO,4),half=(last.rf-1)/2;
     drawPanels(lab.canvas,[{label:`RF ${last.rf} · jump ${last.jump}`,img,opts:{...imageOptions(),win:{y:7-half,x:7-half,k:last.rf}}}]);
     $('rf-table').innerHTML=rows.map(r=>`<tr><td>${r.layer}</td><td>${r.k} / ${r.s}</td><td>${r.rf}</td><td>${r.jump}</td></tr>`).join('');
-    readout('read-rf',`${n} layers · receptive field ${last.rf}×${last.rf}`,`Each layer adds (K − 1) × previous jump, then multiplies jump by stride. ${last.rf>img.length?'The theoretical field exceeds the displayed image; the coral outline is clipped to the view.':'The coral region marks which input pixels can affect the selected unit.'} ${visualMode==='images'?'The 8×8 digit is shown with a 3-pixel zero margin.':''}`);
+    readout('read-rf',`${n} layers · receptive field ${last.rf}×${last.rf}`,`${last.rf>img.length?'The theoretical field exceeds the displayed image; the coral outline is clipped to the view.':'The coral region marks which input pixels can affect the selected unit.'} ${visualMode==='images'?'The 8×8 digit is shown with a 3-pixel zero margin.':''}`,`Each layer adds (K − 1) × previous jump to the receptive field, then multiplies jump by stride. Final field: <strong>${last.rf}</strong>; jump: <strong>${last.jump}</strong>.`);
   });bindRange('k-rf-n','k-rf-n-value',v=>v+' layers');listen(['k-rf-n','k-rf-k','k-rf-s'],lab);
 }
 function shiftLab(){
@@ -232,7 +256,7 @@ function alexLab(){
     const stage=Number($('k-alex-stage').value),names=['Input','Convolution','ReLU','Max pooling'];
     const arrays=[img,conv,relu,pool];
     drawPanels(lab.canvas,arrays.slice(0,stage+1).map((img,i)=>({label:names[i],img,opts:i===0?imageOptions():{}})));
-    const notes=['Start with pixel intensities.','A fixed vertical-edge kernel produces positive and negative responses.','ReLU keeps positive evidence: max(0, z). Negative responses become zero.','A 2×2 maximum with stride 2 makes the feature map half as tall and half as wide.'];
+    const notes=['Start with pixel intensities.','A fixed vertical-edge kernel produces positive and negative responses.','ReLU keeps positive evidence. Negative responses become zero.','A 2×2 maximum with stride 2 makes the feature map half as tall and half as wide.'];
     readout('read-alex',`Stage ${stage+1} / 4 · ${names[stage]}`,`${notes[stage]}<br>AlexNet’s actual first layer uses 96 learned 11×11×3 kernels at stride 4: a 227×227 input gives 55×55 maps, then 3×3 pooling at stride 2 gives 27×27. This small example demonstrates the operations, not its trained predictions.`);
   });listen(['k-alex-stage'],lab);
 }
@@ -240,7 +264,7 @@ function archLab(){
   const lab=mount('cv-arch',lab=>{
     const n=Number($('k-vgg-n').value),s=M.stackVsLarge(3,n),img=inputFor(DEMO),centre=Math.floor(img.length/2);
     drawPanels(lab.canvas,[{label:`${n} small layers`,img,opts:{...imageOptions(),win:{y:centre-n,x:centre-n,k:s.rf}}},{label:`One ${s.kLarge}×${s.kLarge} layer`,img,opts:{...imageOptions(),win:{y:centre-n,x:centre-n,k:s.rf}}}]);
-    readout('read-arch',`Same ${s.rf}×${s.rf} receptive field`,`${n} × 9 = <strong>${s.paramsSmall}</strong> weights in the stack; ${s.kLarge}² = <strong>${s.paramsLarge}</strong> in one large filter. ${n===1?'The two designs coincide.':`With ReLU after each layer, the stack has ${n} nonlinearities instead of one.`} The matching regions show equal support, not equal outputs. With a constant width of C channels, multiply both weight counts by C²; changing widths changes the comparison.`);
+    readout('read-arch',`Same ${s.rf}×${s.rf} receptive field`,`<strong>${s.paramsSmall}</strong> weights in the stack; <strong>${s.paramsLarge}</strong> in one large filter. ${n===1?'The two designs coincide.':`With ReLU after each layer, the stack has ${n} nonlinearities instead of one.`} The matching regions show equal support, not equal outputs.`,`${n} × 3² = ${s.paramsSmall} weights in the stack; ${s.kLarge}² = ${s.paramsLarge} in the large filter. With a constant width of C channels, multiply both weight counts by C²; changing widths changes the comparison.`);
   });bindRange('k-vgg-n','k-vgg-n-value',v=>v+' × 3×3');listen(['k-vgg-n'],lab);
 }
 function problemVisuals(){
@@ -261,7 +285,7 @@ function problemVisuals(){
   };
   Object.entries(problems).forEach(([id,panels])=>{
     const container=$('problem-'+id);container.dataset.visualMode=visualMode;
-    container.innerHTML=panels.map(p=>`<div class="problem-panel">${visualMode==='images'?imagePreview(p.img,p.opts):''}${tableHTML(p.img,p.label,p.opts)}</div>`).join('');
+    container.innerHTML=panels.map(p=>`<div class="problem-panel${visualMode==='images'?' with-image':''}">${visualMode==='images'?imagePreview(p.img,p.opts):''}${tableHTML(p.img,p.label,p.opts)}</div>`).join('');
   });
   $('worked-patch').innerHTML=tableHTML(M.WORKED.patch,'Exercise patch',{image:visualMode==='images',max:3});
   $('worked-kernel').innerHTML=tableHTML(M.WORKED.kernel,'Exercise kernel');
@@ -277,23 +301,96 @@ function applyMode(){
   $('visual-mode').setAttribute('aria-pressed',String(visualMode==='images'));
   $('mode-status').textContent=visualMode==='images'?'Images mode · real handwritten 7 · 8×8 pixels · intensity 0 (black) to 16 (white).':'Numbers mode · small matrices you can calculate by hand.';
   problemVisuals();
-  Object.values(labs).forEach(lab=>{lab.phase=0;lab.draw();});
+  Object.values(labs).forEach(lab=>{lab.phase=0;lab.stageKey='';lab.draw();syncPlayback(lab);});
+}
+function playbackState(lab){
+  const n=lab.pos.length,position=Math.min(n,lab.phase*n);
+  const index=Math.min(n-1,Math.floor(position)),p=lab.pos[index],next=lab.pos[index+1];
+  const fraction=lab.phase>=1?1:position-index;
+  const travel=Math.max(0,Math.min(1,(fraction-.8)/.2));
+  const smooth=travel*travel*(3-2*travel);
+  const win={x:p.x+(lab.inputPad||0),y:p.y+(lab.inputPad||0),k:lab.patchSize};
+  // Only interpolate within a scan row. A row change fades the cursor to the
+  // next origin instead of sweeping through patches that were never sampled.
+  if(next&&next.y===p.y)win.x+=(next.x-p.x)*smooth;
+  return {index,fraction,travel:smooth,window:win,next,rowChange:next&&next.y!==p.y,
+    visibleCount:lab.showFull?n:Math.min(n,index+(fraction>=.6?1:0)),
+    stage:fraction<.16?'find':fraction<.6?'calculate':fraction<.8?'write':'move'};
+}
+function frameOutline(ctx,x,y,w,h,color,alpha=1){
+  ctx.save();ctx.globalAlpha=alpha;ctx.shadowColor=color;ctx.shadowBlur=10;
+  ctx.strokeStyle='#fff';ctx.lineWidth=5;ctx.strokeRect(x+2,y+2,w-4,h-4);
+  ctx.shadowBlur=0;ctx.strokeStyle=color;ctx.lineWidth=2.5;ctx.strokeRect(x+2,y+2,w-4,h-4);ctx.restore();
+}
+function paintAnimation(lab){
+  if(!lab.scene||!lab.pos)return;
+  const {backdrop,layout,cell,w,height}=lab.scene,ctx=canvasBox(lab.canvas,w,height);
+  ctx.drawImage(backdrop,0,0,w,height);
+  const state=playbackState(lab);lab.motion=state;
+  const input=layout[0],output=layout.at(-1),p=lab.pos[state.index];
+  const cols=output.img[0].length;
+  // Unwritten output cells stay empty so the map visibly grows with the scan.
+  for(let i=state.visibleCount;i<output.img.length*cols;i++){
+    const x=output.x+(i%cols)*cell,y=output.y+Math.floor(i/cols)*cell;
+    ctx.fillStyle='#e6ebe0';ctx.fillRect(x+.5,y+.5,cell-1,cell-1);
+    ctx.fillStyle='#8d9a89';ctx.font='12px ui-monospace, monospace';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('·',x+cell/2,y+cell/2);
+  }
+  const win=state.window;
+  frameOutline(ctx,input.x+win.x*cell,input.y+win.y*cell,win.k*cell,win.k*cell,'#bf532e',state.rowChange?1-state.travel:1);
+  if(state.rowChange&&state.travel){
+    frameOutline(ctx,input.x+(state.next.x+(lab.inputPad||0))*cell,input.y+(state.next.y+(lab.inputPad||0))*cell,win.k*cell,win.k*cell,'#bf532e',state.travel);
+  }
+  if(state.stage==='calculate'){
+    const term=Math.min(win.k*win.k-1,Math.floor((state.fraction-.16)/.44*win.k*win.k));
+    const row=Math.floor(term/win.k),col=term%win.k;
+    frameOutline(ctx,input.x+(p.x+(lab.inputPad||0)+col)*cell,input.y+(p.y+(lab.inputPad||0)+row)*cell,cell,cell,'#956c00');
+    if(layout.length===3){const kernel=layout[1];frameOutline(ctx,kernel.x+col*cell,kernel.y+row*cell,cell,cell,'#956c00');}
+  }
+  const ox=output.x+p.ox*cell,oy=output.y+p.oy*cell;
+  frameOutline(ctx,ox,oy,cell,cell,state.fraction>=.6?'#12655b':'#bf532e');
+  if(state.stage==='write'){
+    ctx.save();ctx.globalAlpha=.24*(1-(state.fraction-.6)/.2);ctx.fillStyle='#e6bd65';ctx.fillRect(ox,oy,cell,cell);ctx.restore();
+  }
+  // Stage and progress DOM updates happen only when their values change.
+  const stage=lab.phase>=1?'complete':state.stage;
+  const stageKey=stage+':'+state.index+':'+state.visibleCount;
+  if(lab.stageKey!==stageKey){
+    lab.stageKey=stageKey;lab.canvas.dataset.stage=stage;
+    const active=stage==='find'||stage==='move'?0:stage==='calculate'?1:2;
+    $(lab.canvas.id+'-stages').querySelectorAll('span').forEach((el,i)=>el.classList.toggle('current',i===active));
+    $(lab.canvas.id+'-position').textContent=`${state.index+1} / ${lab.pos.length}`;
+    const scrub=$(lab.canvas.id+'-scrub');scrub.max=lab.pos.length-1;scrub.value=state.index;
+    const action={find:'Find the highlighted patch',calculate:lab.canvas.id==='cv-pool'?'Summarise the four highlighted values':'Multiply matching pixels and weights',write:'Write the result into the feature map',move:'Slide to the next patch',complete:'Scan complete — every output cell is filled'};
+    $(lab.canvas.id+'-status').textContent=`${action[stage]}. ${state.visibleCount} / ${lab.pos.length} outputs visible.`;
+  }
+}
+function syncPlayback(lab){
+  const b=document.querySelector(`[data-motion="${lab.canvas.id}"]`);
+  if(b){b.textContent=lab.playing?'Pause':lab.phase>=1?'Play again':'Play';b.setAttribute('aria-pressed',String(lab.playing));}
 }
 function wirePlayback(){
-  const sync=id=>{const b=document.querySelector(`[data-motion="${id}"]`);if(b){b.textContent=labs[id].playing?'Pause':'Play';b.setAttribute('aria-pressed',String(labs[id].playing));}};
-  document.querySelectorAll('[data-motion]').forEach(b=>{sync(b.dataset.motion);b.addEventListener('click',()=>{labs[b.dataset.motion].playing=!labs[b.dataset.motion].playing;sync(b.dataset.motion);});});
-  document.querySelectorAll('[data-replay]').forEach(b=>b.addEventListener('click',()=>{const lab=labs[b.dataset.replay];lab.phase=0;lab.playing=true;lab.draw();sync(b.dataset.replay);}));
-  document.querySelectorAll('[data-next]').forEach(b=>b.addEventListener('click',()=>{const lab=labs[b.dataset.next];lab.playing=false;lab.phase=((lab.index+1)%lab.pos.length+.001)/lab.pos.length;lab.draw();sync(b.dataset.next);}));
+  document.querySelectorAll('[data-motion]').forEach(b=>{const lab=labs[b.dataset.motion];syncPlayback(lab);b.addEventListener('click',()=>{if(lab.phase>=1){lab.phase=0;lab.draw();}lab.playing=!lab.playing;syncPlayback(lab);});});
+  document.querySelectorAll('[data-replay]').forEach(b=>b.addEventListener('click',()=>{const lab=labs[b.dataset.replay];lab.phase=0;lab.playing=true;lab.draw();syncPlayback(lab);}));
+  const seek=(lab,index)=>{lab.playing=false;lab.phase=(index+.7)/lab.pos.length;lab.draw();syncPlayback(lab);};
+  document.querySelectorAll('[data-next]').forEach(b=>b.addEventListener('click',()=>{const lab=labs[b.dataset.next];seek(lab,(lab.index+1)%lab.pos.length);}));
+  document.querySelectorAll('[data-scrub]').forEach(el=>el.addEventListener('input',()=>seek(labs[el.dataset.scrub],Number(el.value))));
+  document.querySelectorAll('[data-speed]').forEach(el=>el.addEventListener('input',()=>{labs[el.dataset.speed].speed=Number(el.value);}));
+  document.querySelectorAll('[data-full-map]').forEach(b=>b.addEventListener('click',()=>{const lab=labs[b.dataset.fullMap];lab.showFull=!lab.showFull;b.textContent=lab.showFull?'Show scan progress':'Show full map';b.setAttribute('aria-pressed',String(lab.showFull));paintAnimation(lab);}));
+}
+function advanceLab(lab,dt){
+  if(!lab.playing||!lab.pos)return;
+  lab.phase=Math.min(1,lab.phase+dt*lab.speed/(lab.pos.length*2));
+  const index=Math.min(lab.pos.length-1,Math.floor(lab.phase*lab.pos.length));
+  if(index!==lab.index)lab.draw();else paintAnimation(lab);
+  if(lab.phase>=1){lab.playing=false;syncPlayback(lab);}
 }
 let last=0;
 function animate(t){
   const dt=Math.min(.05,(t-last)/1000);last=t;
   Object.values(labs).forEach(lab=>{
     if(!lab.playing||!lab.visible||document.hidden)return;
-    const n=lab.pos.length;
-    lab.phase=(lab.phase+dt/(n*1.35))%1;
-    // Redraw only when the selected patch changes, not on every frame.
-    if(Math.floor(lab.phase*n)!==lab.index)lab.draw();
+    advanceLab(lab,dt);
   });
   requestAnimationFrame(animate);
 }

@@ -122,3 +122,46 @@ html{scroll-padding-top:0}
 .matrix-scroll-hint{font-size:12px;color:var(--teal);margin:8px 0}
 @media print{.matrix-scroll-hint{display:none}}
 .canvas-scroll canvas.scene{touch-action:auto}
+
+/* Keep the input → operation → output visible as one continuous experiment. */
+.experiment.lab-shell{grid-template-columns:minmax(0,1fr)}
+.experiment .visual-pane{border-right:0;border-bottom:1px solid var(--line)}
+.experiment .controls{padding:20px 24px}
+.experiment .controls select,.experiment .controls input[type=range]{max-width:420px}
+.animation-stages{display:flex;align-items:center;gap:10px;margin:0 0 16px;font-size:12px;color:var(--muted)}
+.animation-stages span{padding:7px 10px;border:1px solid transparent;border-radius:7px;transition:background .18s,color .18s}
+.animation-stages span.current{background:#e1ead9;border-color:#b9cdb4;color:var(--deep)}
+.animation-stages i{font-style:normal;color:#8a9b88}
+.animation-timeline{display:grid;grid-template-columns:auto minmax(80px,1fr) auto 72px auto;align-items:center;gap:12px;margin-top:16px}
+.animation-timeline label{font-size:12px;white-space:nowrap;margin:0}
+.animation-timeline output{float:none;display:inline;font-size:11px;margin-left:6px}
+.animation-timeline input[type=range]{margin:0}
+.animation-timeline select,.animation-timeline button{font-size:12px;padding:6px 8px}
+.animation-status{font-size:12px;color:var(--teal);margin:10px 0;min-height:2em}
+.canvas-scroll canvas.scene{cursor:default}
+.formula-card.formula-fold{padding:0;overflow:hidden}
+.formula-fold>summary{display:flex;justify-content:space-between;align-items:center;gap:16px;list-style:none;padding:17px 22px}
+.formula-fold>summary::-webkit-details-marker{display:none}
+.formula-fold>summary span{margin:0;color:var(--deep);font-size:13px}
+.formula-fold>summary .step-label{font-size:11px;color:#536d56}
+.formula-fold>summary>span:last-child{display:flex;align-items:center;gap:14px}
+.formula-fold>summary>span:last-child>span{display:inline-block;font-size:19px;transition:transform .2s}
+.formula-fold[open]>summary>span:last-child>span{transform:rotate(45deg)}
+.formula-fold[open]>summary{border-bottom:1px solid #ccdcca}
+.formula-content{padding:20px 24px;overflow-x:auto}
+.calculation-fold{margin-top:14px;background:transparent;border-color:#d4dece}
+.calculation-fold>summary{font-size:12px;color:var(--teal);padding:10px 13px}
+.calculation-fold>div{font-size:13px;padding:0 14px 14px;line-height:1.8}
+.image-preview{width:144px;height:144px;flex:none;border:8px solid #111;border-radius:8px;margin:0;box-shadow:0 3px 12px #182e2b12}
+.problem-panel.with-image{display:flex;align-items:flex-start;gap:18px;flex-wrap:wrap;flex-basis:390px}
+@media(max-width:640px){
+ .animation-stages{gap:4px;font-size:10px}.animation-stages span{padding:6px 4px}.animation-stages i{display:none}
+ .animation-timeline{grid-template-columns:auto minmax(60px,1fr) auto;gap:9px}
+ .animation-timeline label:first-child{grid-column:1}.animation-timeline input{grid-column:2 / 4}
+ .animation-timeline select{width:72px}.animation-timeline button{justify-self:end}
+ .formula-fold>summary{padding:15px;gap:10px}.formula-fold>summary span{font-size:12px}
+ .formula-content{padding:18px}.image-preview{width:144px;height:144px}
+ .problem-panel.with-image{flex-basis:100%}
+}
+@media(prefers-reduced-motion:reduce){.animation-stages span,.formula-fold>summary>span:last-child>span{transition:none}}
+@media print{.animation-stages,.animation-timeline,.animation-status{display:none}.image-preview{width:90px;height:90px}}

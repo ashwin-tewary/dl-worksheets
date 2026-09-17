@@ -9,7 +9,7 @@ function load(savedMode){
   w.HTMLDialogElement.prototype.close=function(){this.open=false;};
   if(savedMode) w.localStorage.setItem('cnn-visual-mode-v1',savedMode);
   w.eval(fs.readFileSync('model.js','utf8'));
-  w.eval(fs.readFileSync('app.js','utf8')+';window.__labs=labs;');
+  w.eval(fs.readFileSync('app.js','utf8')+';window.__labs=labs;window.__advance=typeof advanceLab==="function"?advanceLab:null;');
   return dom;
 }
 test('sections, typed blanks, check and show-answer exist',()=>{
@@ -60,7 +60,8 @@ test('image mode recomputes the digit convolution and restores number examples w
   assert.equal(toggle.getAttribute('aria-pressed'),'true');
   assert.equal(w.localStorage.getItem('cnn-visual-mode-v1'),'images');
   assert.equal(w.__labs['cv-kernel'].out.length,6);
-  assert.equal(w.__labs['cv-kernel'].out[0][0],14);
+  assert.equal(w.__labs['cv-kernel'].out[0][0],20);
+  assert.equal(new Set(w.__labs['cv-kernel'].scene.layout.map(panel=>panel.y)).size,1,'Related animated matrices stay on the same row, with horizontal scrolling when needed');
   for(const lab of Object.values(w.__labs)) assert.equal(lab.canvas.dataset.visualMode,'images');
   assert.equal(d.getElementById('q-k1').value,'1');
   assert.ok(d.getElementById('q-k1').classList.contains('ok'));
@@ -82,7 +83,7 @@ test('a saved image preference applies to every lab on load and pixel values rem
     const values=d.getElementById(lab.canvas.id+'-values');
     assert.ok(values && values.querySelector('table td'),'Every lab exposes readable matrix values');
   }
-  assert.match(d.getElementById('cv-kernel-values').textContent,/14/);
+  assert.equal(d.querySelectorAll('#cv-kernel-values table')[2].querySelector('td').textContent,'20');
   dom.window.close();
 });
 test('architecture controls compare dense, local and shared weights at the same output size',()=>{
@@ -131,5 +132,41 @@ test('numeric labels maintain at least 4.5:1 contrast over grayscale digit pixel
     const contrast=(Math.max(bg,fg)+.05)/(Math.min(bg,fg)+.05);
     assert.ok(contrast>=4.5,`Pixel ${cell.textContent} has contrast ${contrast.toFixed(2)}`);
   }
+  dom.window.close();
+});
+test('scan animation interpolates between patches and progressively reveals output',()=>{
+  const dom=load(),w=dom.window,lab=w.__labs['cv-kernel'];
+  assert.ok(w.__advance,'Animation has a frame update independent of calculation');
+  lab.playing=true;
+  w.__advance(lab,1.8);
+  assert.equal(lab.index,0);
+  assert.ok(lab.motion.window.x>0 && lab.motion.window.x<1,'Window slides between adjacent patch origins');
+  assert.equal(lab.motion.visibleCount,1);
+  w.__advance(lab,.3);
+  assert.equal(lab.index,1);
+  assert.equal(lab.motion.visibleCount,1,'The next result waits until its calculation stage');
+  lab.playing=false;
+  const phase=lab.phase;
+  w.__advance(lab,1);
+  assert.equal(lab.phase,phase);
+  dom.window.close();
+});
+test('timeline seeking pauses at the requested patch; playback finishes and replay restarts',()=>{
+  const dom=load(),w=dom.window,d=w.document,lab=w.__labs['cv-kernel'];
+  const scrub=d.querySelector('[data-scrub="cv-kernel"]');
+  assert.ok(scrub,'A timeline allows direct access to any patch');
+  scrub.value='4';scrub.dispatchEvent(new w.Event('input'));
+  assert.equal(lab.index,4);
+  assert.equal(lab.motion.visibleCount,5);
+  assert.equal(lab.playing,false);
+  lab.playing=true;w.__advance(lab,100);
+  assert.equal(lab.index,24);
+  assert.equal(lab.motion.visibleCount,25);
+  assert.equal(lab.playing,false);
+  d.querySelector('[data-replay="cv-kernel"]').click();
+  assert.equal(lab.index,0);
+  assert.equal(lab.phase,0);
+  assert.equal(lab.playing,true);
+  assert.equal(lab.motion.visibleCount,0);
   dom.window.close();
 });
