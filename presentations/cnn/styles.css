@@ -165,3 +165,53 @@ html{scroll-padding-top:0}
 }
 @media(prefers-reduced-motion:reduce){.animation-stages span,.formula-fold>summary>span:last-child>span{transition:none}}
 @media print{.animation-stages,.animation-timeline,.animation-status{display:none}.image-preview{width:90px;height:90px}}
+
+/* Parameters and the result form one compact experiment. */
+.experiment .visual-pane{border:0;padding:22px}
+.experiment .controls{display:flex;flex-wrap:wrap;align-items:end;gap:12px 20px;padding:14px 16px;margin:0 0 16px;border:1px solid #d4dfcd;border-radius:10px;background:#eef3e8}
+.control-field{flex:1 1 170px;min-width:0;max-width:420px}
+.experiment .controls label{margin:0 0 6px;font-size:12px}
+.experiment .controls input[type=range]{width:100%;margin:0;height:36px}
+.experiment .controls select{width:100%;max-width:none;font-size:13px;padding-block:8px}
+.experiment .controls output{font-size:12px}
+.experiment-guide,.layer-details{margin:12px 0 0;background:#fafbf6;border-color:#dce2d5}
+.experiment-guide>summary,.layer-details>summary{padding:10px 13px;font-size:12px;color:var(--teal)}
+.experiment-guide>div{padding:0 15px 13px;font-size:13px;line-height:1.7}
+.experiment-guide .try{margin:0;padding:0;border:0}.experiment-guide .try>b{display:none}
+.layer-details .num-grid{margin:0;padding:0 14px 14px}
+.visual-pane>.scene-tools{justify-content:flex-start;margin:0 0 12px;gap:8px}
+.visual-pane>.scene-tools span{display:none}
+.visual-pane>.scene-tools button{padding:6px 10px;background:#fffefa}
+.walk-readout{margin-top:12px;padding:12px 15px}.walk-readout p{font-size:13px;line-height:1.7;margin:7px 0 0}
+.animation-stages{margin-bottom:10px}
+.map-comparison{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0}
+.map-comparison button{display:flex;align-items:center;text-align:left;gap:10px;padding:10px;border:2px solid #dce3d5;background:#fafbf5}
+.map-comparison button[aria-pressed=true]{border-color:var(--teal);background:#e7f0df;box-shadow:0 0 0 1px #12655b12}
+.map-comparison b{display:block;font-size:12px;line-height:1.5}
+.map-comparison small{display:block;font-size:10px;line-height:1.5;color:var(--muted);margin-top:4px}
+.map-thumbnail{flex:none}.map-thumbnail .image-preview{width:62px;height:62px;border:0;border-radius:3px;box-shadow:none}
+.pipeline-stages{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
+.pipeline-stages button{font-size:12px;padding:7px 10px}
+.pipeline-stages button[aria-pressed=true]{color:#fff;background:var(--deep);border-color:var(--deep)}
+.panel-jumps{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}
+.panel-jumps[hidden]{display:none}
+.panel-jumps button{padding:5px 9px;font-size:11px;color:var(--teal);background:#f2f6eb}
+.panel-jumps button:hover{border-color:var(--teal)}
+.field-growth{margin:15px 0;font-size:12px;max-width:640px}
+.field-growth>b{display:block;font-size:12px;margin-bottom:10px}
+.field-growth>div{display:grid;grid-template-columns:66px minmax(20px,1fr) 92px;align-items:center;gap:12px;margin:7px 0}
+.field-growth i{display:block;min-width:2px;height:10px;background:var(--teal);border-radius:0 4px 4px 0}
+.field-growth strong{font:12px var(--mono);text-align:right;white-space:nowrap}
+.field-comparison{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(240px,1fr);gap:20px;align-items:start}
+.field-comparison .field-growth{padding:14px;border:1px solid #d4dfcd;border-radius:8px;background:#f4f7ef;margin:0}
+.field-comparison .field-growth>div{grid-template-columns:54px minmax(10px,1fr) 84px;gap:8px;margin:14px 0}
+@media(max-width:1100px){.field-comparison{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:640px){
+ .experiment .visual-pane{padding:14px}.experiment .controls{padding:12px;gap:12px;margin-bottom:14px}
+ .control-field{flex-basis:125px}.experiment .controls label{font-size:11px}
+ .map-comparison{gap:6px}.map-comparison button{flex-direction:column;align-items:flex-start;padding:7px;gap:7px}
+ .map-thumbnail .image-preview{width:54px;height:54px}.map-comparison b{font-size:10px}.map-comparison small{display:none}
+ .pipeline-stages{gap:5px}.pipeline-stages button{font-size:10px;padding:6px 7px}
+ .animation-stages span{padding:5px 3px}
+}
+@media print{.experiment .controls,.experiment-guide,.scene-tools,.pipeline-stages{display:none}}

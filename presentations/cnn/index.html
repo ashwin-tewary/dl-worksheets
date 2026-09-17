@@ -5,9 +5,9 @@
 <meta name="theme-color" content="#124b47">
 <meta name="description" content="Why CNNs? Explore kernels, stride, padding, feature maps, pooling and architecture with a global numbers/images toggle, readable pixel matrices and guided questions.">
 <title>See locally, share globally · Convolutional Networks Lecture Sheet</title>
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="styles.css?v=20260917-5">
 <script defer="" src="model.js"></script>
-<script defer="" src="app.js"></script>
+<script defer="" src="app.js?v=20260917-5"></script>
 </head>
 <body>
 <a class="skip" href="#main">Skip to worksheet</a>
@@ -197,7 +197,7 @@
 <div class="visual-pane">
 <div class="pane-heading"><div><span class="eyebrow">2D GRID / THREE MAPS</span><h3>Same image, three stories.</h3></div><span class="live-label">COMPARE</span></div>
 <canvas id="cv-maps" class="scene grid-scene tall" tabindex="0" role="img" aria-label="One input and three feature maps from three kernels."></canvas>
-<p class="visual-note">Left: input. Then kernel and its map, three times.</p>
+<p class="visual-note">Input → selected kernel → its output. Choose a map below to bring that detector into focus.</p>
 <div id="read-maps" class="walk-readout"></div>
 </div>
 <div class="controls"><span class="eyebrow">YOUR EXPERIMENT</span><h3>Inspect a detector.</h3><label for="k-map-focus">Feature map</label><select id="k-map-focus"><option value="0">Vertical edges</option><option value="1">Horizontal edges</option><option value="2">Local average</option></select><div class="try"><b>TRY THIS</b><p>Compare the same location in all three maps. Why do their responses differ?</p></div></div>
@@ -270,7 +270,7 @@
 <div class="visual-pane">
 <div class="pane-heading"><div><span class="eyebrow">2D GRID / FIELD OF VIEW</span><h3>Grow the square.</h3></div></div>
 <canvas id="cv-rf" class="scene grid-scene" tabindex="0" role="img" aria-label="Receptive field square on the input grid."></canvas>
-<p class="visual-note">Coral outlines the theoretical receptive field. Values are input pixels; a field larger than the image is clipped to this view.</p>
+<p class="visual-note">Coral outlines the theoretical receptive field. Values are input pixels. When the field exceeds this image, the growth bars below show its full size.</p>
 <div class="num-grid"><table class="wt small"><thead><tr><th>Layer</th><th>K / S</th><th>RF</th><th>Jump</th></tr></thead><tbody id="rf-table"></tbody></table></div>
 <div id="read-rf" class="walk-readout"></div>
 </div>
@@ -314,7 +314,7 @@
 <div class="visual-pane">
 <div class="pane-heading"><div><span class="eyebrow">2D GRID / SHIFT</span><h3>The object moves. The detector follows.</h3></div></div>
 <canvas id="cv-shift" class="scene grid-scene tall" tabindex="0" role="img" aria-label="Original and shifted images with their convolution maps."></canvas>
-<p class="visual-note">Input and shifted input, their identity-convolution maps, then the pooled maps. Wide grids scroll sideways.</p>
+<p class="visual-note">Compare original and shifted values at the same stage. Switch stages to follow the shift through convolution and pooling.</p>
 <div id="read-shift" class="walk-readout"></div>
 </div>
 <div class="controls">
@@ -322,6 +322,7 @@
 <h3>Slide the input.</h3>
 <label for="k-shift">Horizontal shift <output id="k-shift-value">0 px</output></label>
 <input id="k-shift" type="range" min="0" max="3" value="1">
+<label for="k-shift-stage">Compare at stage</label><select id="k-shift-stage"><option value="0">Input</option><option value="1">Convolution</option><option value="2">Max pooling</option></select>
 <div class="try"><b>TRY THIS</b><p>Set the shift to 1, then 2. Equivariance of conv should hold at both; pooling’s “sameness” should not.</p></div>
 </div>
 </div></div>

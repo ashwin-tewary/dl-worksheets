@@ -170,3 +170,52 @@ test('timeline seeking pauses at the requested patch; playback finishes and repl
   assert.equal(lab.motion.visibleCount,0);
   dom.window.close();
 });
+test('feature-map selection replaces the main output with the matching convolution',()=>{
+  for(const mode of ['numbers','images']){
+    const dom=load(mode),w=dom.window,d=w.document,lab=w.__labs['cv-maps'];
+    for(const value of ['0','1','2']){
+      const select=d.getElementById('k-map-focus');select.value=value;select.dispatchEvent(new w.Event('input'));
+      assert.equal(lab.panels?.length,3,'The main scene is input, selected kernel, selected output');
+      const expected=w.CNNModel.conv2d(lab.panels[0].img,lab.panels[1].img);
+      assert.deepEqual(lab.panels[2].img,expected);
+      assert.equal(d.querySelector('[data-map-choice][aria-pressed="true"]').dataset.mapChoice,value);
+    }
+    dom.window.close();
+  }
+});
+test('every lab keeps its parameter controls inside the visual pane before the canvas',()=>{
+  const dom=load(),d=dom.window.document;
+  for(const shell of d.querySelectorAll('.lab-shell')){
+    const pane=shell.querySelector('.visual-pane'),controls=shell.querySelector('.controls'),canvas=shell.querySelector('canvas');
+    assert.ok(pane.contains(controls),shell.closest('section').id+' controls belong to the visual');
+    assert.ok(controls.compareDocumentPosition(canvas)&4,'Controls precede their canvas');
+  }
+  dom.window.close();
+});
+test('all lab controls recompute valid results at their limits in both visual modes',()=>{
+  for(const mode of ['numbers','images']){
+    const dom=load(mode),w=dom.window,d=w.document,M=w.CNNModel,labs=w.__labs;
+    const set=(id,value)=>{const el=d.getElementById(id);el.value=String(value);el.dispatchEvent(new w.Event('input'));};
+    for(const kernel of ['identity','blur','sharpen']){
+      set('k-kernel',kernel);const lab=labs['cv-kernel'];
+      assert.deepEqual(lab.out,M.conv2d(lab.state.img,M.KERNELS[kernel]));
+    }
+    for(const stride of [1,2,3]){set('k-stride',stride);const lab=labs['cv-stride'];assert.equal(lab.out.length,M.outputSize(lab.state.img.length,3,stride,0));}
+    for(const pad of [0,2]){set('k-pad',pad);const lab=labs['cv-pad'];assert.equal(lab.out.length,lab.state.img.length+2*pad-2);}
+    for(const kind of ['max','avg']){set('k-pool',kind);const lab=labs['cv-pool'];assert.deepEqual(lab.out,M.pool2d(lab.panels[0].img,2,2,kind));}
+    set('k-rf-n',6);set('k-rf-k',11);set('k-rf-s',2);
+    assert.match(d.getElementById('field-growth').textContent,/631 × 631/);
+    assert.equal(d.querySelectorAll('#field-growth>div').length,6);
+    set('k-shift',3);
+    for(const stage of [0,1,2]){set('k-shift-stage',stage);assert.equal(labs['cv-shift'].panels.length,2);assert.notDeepEqual(labs['cv-shift'].panels[0].img,labs['cv-shift'].panels[1].img);}
+    for(const stage of [0,1,2,3]){set('k-alex-stage',stage);assert.equal(labs['cv-alex'].panels.length,stage===0?1:2);assert.equal(d.querySelector('[data-alex-stage][aria-pressed="true"]').dataset.alexStage,String(stage));}
+    for(const depth of [1,5]){
+      set('k-vgg-n',depth);
+      for(const p of labs['cv-arch'].panels){assert.equal(p.opts.win.k,2*depth+1);assert.ok(p.opts.win.x>=0&&p.opts.win.x+p.opts.win.k<=p.img[0].length,'Entire field stays visible at each depth');}
+    }
+    set('k-why-size',64);assert.match(d.getElementById('read-why').textContent,/15,745,024/);
+    d.querySelector('[data-map-choice="2"]').click();assert.equal(d.getElementById('k-map-focus').value,'2');
+    d.querySelector('[data-alex-stage="2"]').click();assert.equal(d.getElementById('k-alex-stage').value,'2');
+    dom.window.close();
+  }
+});
