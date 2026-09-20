@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="430" viewBox="0 0 1000 430" role="img" aria-labelledby="title desc">
+<title id="title">A ResNet is a stack of residual blocks.</title><desc id="desc">ResNet-18: basic blocks, with a projection when spatial size or channels change.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10" fill="#12655b"/></marker></defs>
+<rect width="1000" height="430" fill="#fffefa"/>
+<text x="36" y="43" font-family="Georgia,serif" font-size="28" fill="#183c35">A ResNet is a stack of residual blocks.</text>
+<text x="36" y="76" font-family="system-ui,sans-serif" font-size="17" fill="#52655d">ResNet-18: basic blocks, with a projection when spatial size or channels change.</text>
+<path d="M200 208H235" fill="none" stroke="#12655b" stroke-width="3" marker-end="url(#arrow)"/>
+<path d="M400 208H435" fill="none" stroke="#12655b" stroke-width="3" marker-end="url(#arrow)"/>
+<path d="M600 208H635" fill="none" stroke="#12655b" stroke-width="3" marker-end="url(#arrow)"/>
+<path d="M800 208H835" fill="none" stroke="#12655b" stroke-width="3" marker-end="url(#arrow)"/>
+<rect x="30" y="160" width="170" height="95" rx="9" fill="#e9f1e8" stroke="#aec6b9"/>
+<text x="115.0" y="201.0" text-anchor="middle" font-family="system-ui,sans-serif" font-size="19" fill="#183c35">Stem</text>
+<text x="115.0" y="226.0" text-anchor="middle" font-family="system-ui,sans-serif" font-size="19" fill="#183c35">56 × 56 × 64</text>
+<rect x="235" y="160" width="165" height="95" rx="9" fill="#e9f1e8" stroke="#aec6b9"/>
+<text x="317.5" y="201.0" text-anchor="middle" font-family="system-ui,sans-serif" font-size="19" fill="#183c35">Stage 1 · ×2</text>
+<text x="317.5" y="226.0" text-anchor="middle" font-family="system-ui,sans-serif" font-size="19" fill="#183c35">56 × 56 × 64</text>
+<rect x="435" y="160" width="165" height="95" rx="9" fill="#e9f1e8" stroke="#aec6b9"/>
+<text x="517.5" y="201.0" text-anchor="middle" font-family="system-ui,sans-serif" font-size="19" fill="#183c35">Stage 2 · ×2</text>
+<text x="517.5" y="226.0" text-anchor="middle" font-family="system-ui,sans-serif" font-size="19" fill="#183c35">28 × 28 × 128</text>
+<rect x="635" y="160" width="165" height="95" rx="9" fill="#e9f1e8" stroke="#aec6b9"/>
+<text x="717.5" y="201.0" text-anchor="middle" font-family="system-ui,sans-serif" font-size="19" fill="#183c35">Stage 3 · ×2</text>
+<text x="717.5" y="226.0" text-anchor="middle" font-family="system-ui,sans-serif" font-size="19" fill="#183c35">14 × 14 × 256</text>
+<rect x="835" y="160" width="140" height="95" rx="9" fill="#e9f1e8" stroke="#aec6b9"/>
+<text x="905.0" y="201.0" text-anchor="middle" font-family="system-ui,sans-serif" font-size="19" fill="#183c35">Stage 4 · ×2</text>
+<text x="905.0" y="226.0" text-anchor="middle" font-family="system-ui,sans-serif" font-size="19" fill="#183c35">7 × 7 × 512</text>
+<text x="35" y="318" font-family="system-ui,sans-serif" font-size="18" fill="#183c35">224 × 224 RGB input → stem → 8 basic blocks → global average pool → classifier</text>
+<text x="35" y="355" font-family="system-ui,sans-serif" font-size="18" fill="#183c35">Main-path weighted layers: 1 stem + 8 × 2 convolutions + 1 classifier = 18</text>
+</svg>

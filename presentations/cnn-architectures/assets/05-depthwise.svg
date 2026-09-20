@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="430" viewBox="0 0 1000 430" role="img" aria-labelledby="title desc">
+<title id="title">First look within channels. Then mix channels.</title><desc id="desc">Depth multiplier = 1. No bias, normalization, or activation costs counted.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10" fill="#12655b"/></marker></defs>
+<rect width="1000" height="430" fill="#fffefa"/>
+<text x="36" y="43" font-family="Georgia,serif" font-size="28" fill="#183c35">First look within channels. Then mix channels.</text>
+<text x="36" y="76" font-family="system-ui,sans-serif" font-size="17" fill="#52655d">Depth multiplier = 1. No bias, normalization, or activation costs counted.</text>
+<path d="M210 222H280" fill="none" stroke="#12655b" stroke-width="3" marker-end="url(#arrow)"/>
+<path d="M500 222H570" fill="none" stroke="#12655b" stroke-width="3" marker-end="url(#arrow)"/>
+<path d="M790 222H860" fill="none" stroke="#12655b" stroke-width="3" marker-end="url(#arrow)"/>
+<rect x="30" y="175" width="180" height="95" rx="9" fill="#e9f1e8" stroke="#aec6b9"/>
+<text x="120.0" y="216.0" text-anchor="middle" font-family="system-ui,sans-serif" font-size="19" fill="#183c35">Input</text>
+<text x="120.0" y="241.0" text-anchor="middle" font-family="system-ui,sans-serif" font-size="19" fill="#183c35">H × W × M</text>
+<rect x="280" y="175" width="220" height="95" rx="9" fill="#e9f1e8" stroke="#aec6b9"/>
+<text x="390.0" y="216.0" text-anchor="middle" font-family="system-ui,sans-serif" font-size="19" fill="#183c35">Depthwise k × k</text>
+<text x="390.0" y="241.0" text-anchor="middle" font-family="system-ui,sans-serif" font-size="19" fill="#183c35">M separate filters</text>
+<rect x="570" y="175" width="220" height="95" rx="9" fill="#e9f1e8" stroke="#aec6b9"/>
+<text x="680.0" y="216.0" text-anchor="middle" font-family="system-ui,sans-serif" font-size="19" fill="#183c35">Pointwise 1 × 1</text>
+<text x="680.0" y="241.0" text-anchor="middle" font-family="system-ui,sans-serif" font-size="19" fill="#183c35">M → N channels</text>
+<rect x="860" y="175" width="120" height="95" rx="9" fill="#e9f1e8" stroke="#aec6b9"/>
+<text x="920.0" y="216.0" text-anchor="middle" font-family="system-ui,sans-serif" font-size="19" fill="#183c35">Output</text>
+<text x="920.0" y="241.0" text-anchor="middle" font-family="system-ui,sans-serif" font-size="19" fill="#183c35">H′ × W′ × N</text>
+<text x="60" y="330" font-family="system-ui,sans-serif" font-size="18" fill="#183c35">Standard: k²MN parameters          Separable: k²M + MN parameters</text>
+<text x="60" y="370" font-family="system-ui,sans-serif" font-size="18" fill="#183c35">The saving imposes a factorization; it is not an arbitrary standard convolution.</text>
+</svg>

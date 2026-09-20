@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="430" viewBox="0 0 1000 430" role="img" aria-labelledby="title desc">
+<title id="title">Learn the correction. Keep the original.</title><desc id="desc">The shortcut and residual branch meet by elementwise addition.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10" fill="#12655b"/></marker></defs>
+<rect width="1000" height="430" fill="#fffefa"/>
+<text x="36" y="43" font-family="Georgia,serif" font-size="28" fill="#183c35">Learn the correction. Keep the original.</text>
+<text x="36" y="76" font-family="system-ui,sans-serif" font-size="17" fill="#52655d">The shortcut and residual branch meet by elementwise addition.</text>
+<path d="M190 247H320" fill="none" stroke="#12655b" stroke-width="3" marker-end="url(#arrow)"/>
+<path d="M570 247H700" fill="none" stroke="#12655b" stroke-width="3" marker-end="url(#arrow)"/>
+<path d="M780 247H840" fill="none" stroke="#12655b" stroke-width="3" marker-end="url(#arrow)"/>
+<path d="M190 247V130H740V210" fill="none" stroke="#12655b" stroke-width="3" marker-end="url(#arrow)"/>
+<rect x="40" y="210" width="150" height="75" rx="9" fill="#e9f1e8" stroke="#aec6b9"/>
+<text x="115.0" y="253.5" text-anchor="middle" font-family="system-ui,sans-serif" font-size="19" fill="#183c35">Input x</text>
+<rect x="320" y="210" width="250" height="75" rx="9" fill="#e9f1e8" stroke="#aec6b9"/>
+<text x="445.0" y="241.0" text-anchor="middle" font-family="system-ui,sans-serif" font-size="19" fill="#183c35">Residual branch</text>
+<text x="445.0" y="266.0" text-anchor="middle" font-family="system-ui,sans-serif" font-size="19" fill="#183c35">F(x)</text>
+<rect x="700" y="210" width="80" height="75" rx="9" fill="#e9f1e8" stroke="#aec6b9"/>
+<text x="740.0" y="253.5" text-anchor="middle" font-family="system-ui,sans-serif" font-size="19" fill="#183c35">+</text>
+<rect x="840" y="210" width="125" height="75" rx="9" fill="#e9f1e8" stroke="#aec6b9"/>
+<text x="902.5" y="253.5" text-anchor="middle" font-family="system-ui,sans-serif" font-size="19" fill="#183c35">y</text>
+<text x="340" y="117" font-family="system-ui,sans-serif" font-size="18" fill="#183c35">Identity shortcut: x</text>
+<text x="220" y="355" font-family="system-ui,sans-serif" font-size="18" fill="#183c35">y = x + F(x)       If F(x) = 0, the block preserves x.</text>
+</svg>

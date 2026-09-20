@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="430" viewBox="0 0 1000 430" role="img" aria-labelledby="title desc">
+<title id="title">A gradient can be loud … and still lose its pattern.</title><desc id="desc">Two independent diagnostics: size of the signal and agreement between nearby inputs.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10" fill="#12655b"/></marker></defs>
+<rect width="1000" height="430" fill="#fffefa"/>
+<text x="36" y="43" font-family="Georgia,serif" font-size="28" fill="#183c35">A gradient can be loud … and still lose its pattern.</text>
+<text x="36" y="76" font-family="system-ui,sans-serif" font-size="17" fill="#52655d">Two independent diagnostics: size of the signal and agreement between nearby inputs.</text>
+<rect x="40" y="140" width="260" height="105" rx="9" fill="#e9f1e8" stroke="#aec6b9"/>
+<text x="170.0" y="186.0" text-anchor="middle" font-family="system-ui,sans-serif" font-size="19" fill="#183c35">Vanishing</text>
+<text x="170.0" y="211.0" text-anchor="middle" font-family="system-ui,sans-serif" font-size="19" fill="#183c35">Small gradient magnitude</text>
+<rect x="370" y="140" width="260" height="105" rx="9" fill="#e9f1e8" stroke="#aec6b9"/>
+<text x="500.0" y="186.0" text-anchor="middle" font-family="system-ui,sans-serif" font-size="19" fill="#183c35">Shattering</text>
+<text x="500.0" y="211.0" text-anchor="middle" font-family="system-ui,sans-serif" font-size="19" fill="#183c35">Low gradient correlation</text>
+<rect x="700" y="140" width="260" height="105" rx="9" fill="#e9f1e8" stroke="#aec6b9"/>
+<text x="830.0" y="186.0" text-anchor="middle" font-family="system-ui,sans-serif" font-size="19" fill="#183c35">A useful direction</text>
+<text x="830.0" y="211.0" text-anchor="middle" font-family="system-ui,sans-serif" font-size="19" fill="#183c35">Size + coherent structure</text>
+<text x="48" y="305" font-family="system-ui,sans-serif" font-size="18" fill="#183c35">Analogy: a whisper is hard to hear; static is loud but hard to follow.</text>
+<text x="48" y="345" font-family="system-ui,sans-serif" font-size="18" fill="#183c35">Healthy gradient norms alone cannot rule out shattering.</text>
+</svg>

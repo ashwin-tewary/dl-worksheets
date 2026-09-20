@@ -6,6 +6,8 @@ Interactive material for in-lecture teaching and practice—not laboratory assig
 
 ## Lecture presentation sheets
 
+- [CNN architectures](presentations/cnn-architectures/) — shattered gradients, residual connections, ResNet, Inception, and depthwise separable convolutions. Five guided animated walkthroughs, interactive calculators, numbered feature maps, ten discussion checks, a design challenge, and [instructor assets](presentations/cnn-architectures/instructor-guide.md).
+
 Instructor-led pages with theory, live plots, textbook figures, and discussion questions.
 
 - [Regularisation](https://ashwin-tewary.github.io/dl-worksheets/presentations/regularisation/) — L2, L1, dropout, batch normalisation, and early stopping.
@@ -71,3 +73,5 @@ These old addresses redirect to their canonical location and preserve query stri
 The legacy `lab_` URL remains solely for backward compatibility. Figures remain at `figs/` so existing figure links continue to work. Original internal section IDs and JavaScript selectors remain unchanged to preserve behavior and deep links.
 
 The original click-to-fill sheets include glossary bubbles and print support. The initialization sheet includes explanations, playback controls, reduced-motion support, and locally saved progress. Progress from the separate private Sites preview does not transfer across origins to GitHub Pages.
+
+CNN architectures is also standalone: edit `presentations/cnn-architectures/` directly. Run its numerical checks with `node --test presentations/cnn-architectures/*.test.cjs`. No build step or external dependencies are required.
