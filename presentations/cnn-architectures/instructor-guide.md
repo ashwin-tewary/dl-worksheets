@@ -1,6 +1,6 @@
-# Go deeper. Keep the signal.
+# CNN Architectures: Depth, Scale & Efficiency
 
-A 75–90 minute lecture worksheet after basic CNNs, backpropagation, and initialization. Open `index.html` directly in a browser, or serve the repository. It has no external scripts, fonts, or network dependencies.
+A 75–90 minute lecture worksheet after basic CNNs, backpropagation, and initialization. Open `index.html` directly in a browser, or serve the repository. It has no external scripts. It shares the CNN worksheet stylesheet, with optional Google Fonts and system fallbacks. Keep the shared stylesheet when distributing offline.
 
 ## Learning outcomes
 
@@ -84,3 +84,7 @@ Each section now includes a planned visual walkthrough before free exploration. 
 - **Depthwise (7 steps):** separate inputs → top-left patch → top-right → bottom-left → bottom-right → pointwise mix at one position → completed mixed map.
 
 The guided scenes use fixed teaching values independently of the free-exploration controls, so students can reproduce the same lecture sequence after experimenting.
+
+## Worksheet structure
+
+Matches the CNN foundation sheet: question → problem visual → idea → folded formula → guided walkthrough and free exploration → questions. Each learning section uses the same six numbered step labels. Architecture reference diagrams are in the expanded theory, after the problem has been introduced.

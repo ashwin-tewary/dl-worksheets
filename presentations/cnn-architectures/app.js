@@ -14,3 +14,16 @@ const key='cnn-architectures-responses-v1';let saved={};try{saved=JSON.parse(loc
 for(const el of document.querySelectorAll('textarea')){el.value=typeof saved[el.id]==='string'?saved[el.id]:'';el.addEventListener('input',()=>{saved[el.id]=el.value;try{localStorage.setItem(key,JSON.stringify(saved));}catch{$('save-note').textContent='Could not save here. Download your responses before closing.';}});}
 $('print').addEventListener('click',()=>window.print());
 $('download-notes').addEventListener('click',()=>{const content=['# CNN architectures — my responses',...Array.from(document.querySelectorAll('textarea')).map(el=>`\n## ${document.querySelector('label[for="'+el.id+'"]').textContent}\n\n${el.value||'(No response)'}`)].join('\n');const url=URL.createObjectURL(new Blob([content],{type:'text/markdown'})),a=document.createElement('a');a.href=url;a.download='cnn-architectures-responses.md';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);});
+
+// Mirror the foundation worksheet's current-section navigation.
+const sectionLinks=Array.from(document.querySelectorAll('.sidebar nav a'));
+const lectureSections=sectionLinks.map(link=>document.querySelector(link.getAttribute('href')));
+let sectionFrame=0;
+function markCurrentSection(){
+  sectionFrame=0;
+  let current=lectureSections[0];
+  for(const section of lectureSections)if(section.getBoundingClientRect().top<=180)current=section;
+  for(const link of sectionLinks){const active=link.getAttribute('href')==='#'+current.id;link.classList.toggle('active',active);if(active)link.setAttribute('aria-current','location');else link.removeAttribute('aria-current');}
+}
+addEventListener('scroll',()=>{if(!sectionFrame)sectionFrame=requestAnimationFrame(markCurrentSection);},{passive:true});
+markCurrentSection();
