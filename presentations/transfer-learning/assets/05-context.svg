@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="560" viewBox="0 0 1100 560" role="img" aria-labelledby="title desc">
+<title id="title">Two routes to wider context</title><desc id="desc">Left: nested 3 by 3, 5 by 5 and 7 by 7 receptive fields for one output after one, two and three 3 by 3 convolutions, stride one and dilation one. Right: a 3 by 3 patch grid sends information to a query via global self-attention. CNNs can learn global context. Theoretical reach differs from effective influence; ViTs are not always superior.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#12655b"/></marker><marker id="ochre" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#bc783d"/></marker></defs>
+<rect width="1100" height="560" fill="#f7f5ef"/>
+<g font-family="Arial, Helvetica, sans-serif">
+<text x="40" y="34" font-size="18" fill="#12655b" font-weight="700" text-anchor="start">TRANSFER LEARNING  /  05</text>
+<text x="40" y="78" font-size="32" fill="#183c35" font-weight="700" text-anchor="start">Two routes to wider context</text>
+<text x="40" y="112" font-size="20" fill="#183c35" font-weight="400" text-anchor="start">Convolution expands spatial reach with depth; global attention directly mixes distant patches.</text>
+<text x="40" y="155" font-size="20" fill="#12655b" font-weight="700" text-anchor="start">CNN · LOCAL OPERATIONS</text>
+<text x="600" y="155" font-size="20" fill="#12655b" font-weight="700" text-anchor="start">ViT · GLOBAL SELF-ATTENTION</text>
+<rect x="48" y="182" width="26" height="26" rx="2" fill="#f1e2d1" stroke="none" stroke-width="2"/>
+<rect x="76" y="182" width="26" height="26" rx="2" fill="#f1e2d1" stroke="none" stroke-width="2"/>
+<rect x="104" y="182" width="26" height="26" rx="2" fill="#f1e2d1" stroke="none" stroke-width="2"/>
+<rect x="132" y="182" width="26" height="26" rx="2" fill="#f1e2d1" stroke="none" stroke-width="2"/>
+<rect x="160" y="182" width="26" height="26" rx="2" fill="#f1e2d1" stroke="none" stroke-width="2"/>
+<rect x="188" y="182" width="26" height="26" rx="2" fill="#f1e2d1" stroke="none" stroke-width="2"/>
+<rect x="216" y="182" width="26" height="26" rx="2" fill="#f1e2d1" stroke="none" stroke-width="2"/>
+<rect x="48" y="210" width="26" height="26" rx="2" fill="#f1e2d1" stroke="none" stroke-width="2"/>
+<rect x="76" y="210" width="26" height="26" rx="2" fill="#e1eae3" stroke="none" stroke-width="2"/>
+<rect x="104" y="210" width="26" height="26" rx="2" fill="#e1eae3" stroke="none" stroke-width="2"/>
+<rect x="132" y="210" width="26" height="26" rx="2" fill="#e1eae3" stroke="none" stroke-width="2"/>
+<rect x="160" y="210" width="26" height="26" rx="2" fill="#e1eae3" stroke="none" stroke-width="2"/>
+<rect x="188" y="210" width="26" height="26" rx="2" fill="#e1eae3" stroke="none" stroke-width="2"/>
+<rect x="216" y="210" width="26" height="26" rx="2" fill="#f1e2d1" stroke="none" stroke-width="2"/>
+<rect x="48" y="238" width="26" height="26" rx="2" fill="#f1e2d1" stroke="none" stroke-width="2"/>
+<rect x="76" y="238" width="26" height="26" rx="2" fill="#e1eae3" stroke="none" stroke-width="2"/>
+<rect x="104" y="238" width="26" height="26" rx="2" fill="#12655b" stroke="none" stroke-width="2"/>
+<rect x="132" y="238" width="26" height="26" rx="2" fill="#12655b" stroke="none" stroke-width="2"/>
+<rect x="160" y="238" width="26" height="26" rx="2" fill="#12655b" stroke="none" stroke-width="2"/>
+<rect x="188" y="238" width="26" height="26" rx="2" fill="#e1eae3" stroke="none" stroke-width="2"/>
+<rect x="216" y="238" width="26" height="26" rx="2" fill="#f1e2d1" stroke="none" stroke-width="2"/>
+<rect x="48" y="266" width="26" height="26" rx="2" fill="#f1e2d1" stroke="none" stroke-width="2"/>
+<rect x="76" y="266" width="26" height="26" rx="2" fill="#e1eae3" stroke="none" stroke-width="2"/>
+<rect x="104" y="266" width="26" height="26" rx="2" fill="#12655b" stroke="none" stroke-width="2"/>
+<rect x="132" y="266" width="26" height="26" rx="2" fill="#12655b" stroke="none" stroke-width="2"/>
+<rect x="160" y="266" width="26" height="26" rx="2" fill="#12655b" stroke="none" stroke-width="2"/>
+<rect x="188" y="266" width="26" height="26" rx="2" fill="#e1eae3" stroke="none" stroke-width="2"/>
+<rect x="216" y="266" width="26" height="26" rx="2" fill="#f1e2d1" stroke="none" stroke-width="2"/>
+<rect x="48" y="294" width="26" height="26" rx="2" fill="#f1e2d1" stroke="none" stroke-width="2"/>
+<rect x="76" y="294" width="26" height="26" rx="2" fill="#e1eae3" stroke="none" stroke-width="2"/>
+<rect x="104" y="294" width="26" height="26" rx="2" fill="#12655b" stroke="none" stroke-width="2"/>
+<rect x="132" y="294" width="26" height="26" rx="2" fill="#12655b" stroke="none" stroke-width="2"/>
+<rect x="160" y="294" width="26" height="26" rx="2" fill="#12655b" stroke="none" stroke-width="2"/>
+<rect x="188" y="294" width="26" height="26" rx="2" fill="#e1eae3" stroke="none" stroke-width="2"/>
+<rect x="216" y="294" width="26" height="26" rx="2" fill="#f1e2d1" stroke="none" stroke-width="2"/>
+<rect x="48" y="322" width="26" height="26" rx="2" fill="#f1e2d1" stroke="none" stroke-width="2"/>
+<rect x="76" y="322" width="26" height="26" rx="2" fill="#e1eae3" stroke="none" stroke-width="2"/>
+<rect x="104" y="322" width="26" height="26" rx="2" fill="#e1eae3" stroke="none" stroke-width="2"/>
+<rect x="132" y="322" width="26" height="26" rx="2" fill="#e1eae3" stroke="none" stroke-width="2"/>
+<rect x="160" y="322" width="26" height="26" rx="2" fill="#e1eae3" stroke="none" stroke-width="2"/>
+<rect x="188" y="322" width="26" height="26" rx="2" fill="#e1eae3" stroke="none" stroke-width="2"/>
+<rect x="216" y="322" width="26" height="26" rx="2" fill="#f1e2d1" stroke="none" stroke-width="2"/>
+<rect x="48" y="350" width="26" height="26" rx="2" fill="#f1e2d1" stroke="none" stroke-width="2"/>
+<rect x="76" y="350" width="26" height="26" rx="2" fill="#f1e2d1" stroke="none" stroke-width="2"/>
+<rect x="104" y="350" width="26" height="26" rx="2" fill="#f1e2d1" stroke="none" stroke-width="2"/>
+<rect x="132" y="350" width="26" height="26" rx="2" fill="#f1e2d1" stroke="none" stroke-width="2"/>
+<rect x="160" y="350" width="26" height="26" rx="2" fill="#f1e2d1" stroke="none" stroke-width="2"/>
+<rect x="188" y="350" width="26" height="26" rx="2" fill="#f1e2d1" stroke="none" stroke-width="2"/>
+<rect x="216" y="350" width="26" height="26" rx="2" fill="#f1e2d1" stroke="none" stroke-width="2"/>
+<rect x="46" y="180" width="198" height="198" rx="2" fill="none" stroke="#bc783d" stroke-width="2"/>
+<rect x="74" y="208" width="142" height="142" rx="2" fill="none" stroke="#183c35" stroke-width="2"/>
+<rect x="102" y="236" width="86" height="86" rx="2" fill="none" stroke="#12655b" stroke-width="2"/>
+<text x="281" y="215" font-size="23" fill="#183c35" font-weight="400" text-anchor="start">1 layer  →  3×3</text>
+<text x="281" y="265" font-size="23" fill="#183c35" font-weight="400" text-anchor="start">2 layers → 5×5</text>
+<text x="281" y="315" font-size="23" fill="#183c35" font-weight="400" text-anchor="start">3 layers → 7×7</text>
+<text x="48" y="416" font-size="23" fill="#183c35" font-weight="700" text-anchor="start">r₀ = 1;  rₗ = rₗ₋₁ + 2</text>
+<text x="48" y="451" font-size="20" fill="#183c35" font-weight="400" text-anchor="start">3×3 kernels · stride 1 · dilation 1</text>
+<path d="M624,211 L944,267" fill="none" stroke="#12655b" stroke-width="3"/>
+<path d="M681,211 L944,267" fill="none" stroke="#12655b" stroke-width="3"/>
+<path d="M738,211 L944,267" fill="none" stroke="#12655b" stroke-width="3"/>
+<path d="M624,268 L944,267" fill="none" stroke="#12655b" stroke-width="3"/>
+<path d="M681,268 L944,267" fill="none" stroke="#12655b" stroke-width="3"/>
+<path d="M738,268 L944,267" fill="none" stroke="#12655b" stroke-width="3"/>
+<path d="M624,325 L944,267" fill="none" stroke="#12655b" stroke-width="3"/>
+<path d="M681,325 L944,267" fill="none" stroke="#12655b" stroke-width="3"/>
+<path d="M738,325 L944,267" fill="none" stroke="#12655b" stroke-width="3"/>
+<rect x="600" y="186" width="49" height="49" rx="5" fill="#e1eae3" stroke="#12655b" stroke-width="2"/>
+<text x="624.5" y="219" font-size="22" fill="#183c35" font-weight="700" text-anchor="middle">1</text>
+<rect x="657" y="186" width="49" height="49" rx="5" fill="#e1eae3" stroke="#12655b" stroke-width="2"/>
+<text x="681.5" y="219" font-size="22" fill="#183c35" font-weight="700" text-anchor="middle">2</text>
+<rect x="714" y="186" width="49" height="49" rx="5" fill="#e1eae3" stroke="#12655b" stroke-width="2"/>
+<text x="738.5" y="219" font-size="22" fill="#183c35" font-weight="700" text-anchor="middle">3</text>
+<rect x="600" y="243" width="49" height="49" rx="5" fill="#e1eae3" stroke="#12655b" stroke-width="2"/>
+<text x="624.5" y="276" font-size="22" fill="#183c35" font-weight="700" text-anchor="middle">4</text>
+<rect x="657" y="243" width="49" height="49" rx="5" fill="#f1e2d1" stroke="#12655b" stroke-width="2"/>
+<text x="681.5" y="276" font-size="22" fill="#183c35" font-weight="700" text-anchor="middle">5</text>
+<rect x="714" y="243" width="49" height="49" rx="5" fill="#e1eae3" stroke="#12655b" stroke-width="2"/>
+<text x="738.5" y="276" font-size="22" fill="#183c35" font-weight="700" text-anchor="middle">6</text>
+<rect x="600" y="300" width="49" height="49" rx="5" fill="#e1eae3" stroke="#12655b" stroke-width="2"/>
+<text x="624.5" y="333" font-size="22" fill="#183c35" font-weight="700" text-anchor="middle">7</text>
+<rect x="657" y="300" width="49" height="49" rx="5" fill="#e1eae3" stroke="#12655b" stroke-width="2"/>
+<text x="681.5" y="333" font-size="22" fill="#183c35" font-weight="700" text-anchor="middle">8</text>
+<rect x="714" y="300" width="49" height="49" rx="5" fill="#e1eae3" stroke="#12655b" stroke-width="2"/>
+<text x="738.5" y="333" font-size="22" fill="#183c35" font-weight="700" text-anchor="middle">9</text>
+<rect x="923" y="231" width="136" height="74" rx="14" fill="#12655b" stroke="none" stroke-width="2"/>
+<text x="991" y="262" font-size="22" fill="#f7f5ef" font-weight="700" text-anchor="middle">Query 5</text>
+<text x="991" y="290" font-size="18" fill="#f7f5ef" font-weight="400" text-anchor="middle">mixes 1–9</text>
+<text x="600" y="401" font-size="21" fill="#183c35" font-weight="700" text-anchor="start">Patch embeddings + position</text>
+<text x="600" y="434" font-size="20" fill="#183c35" font-weight="400" text-anchor="start">One query can attend to every patch.</text>
+<text x="600" y="465" font-size="19" fill="#183c35" font-weight="400" text-anchor="start">Connections ≠ equal attention weights.</text>
+<path d="M40,492 L1060,492" fill="none" stroke="#e1eae3" stroke-width="3"/>
+<text x="40" y="527" font-size="18" fill="#183c35" font-weight="400" text-anchor="start">CNNs can learn global context. Theoretical reach ≠ effective influence. ViTs are not always superior.</text>
+</g></svg>

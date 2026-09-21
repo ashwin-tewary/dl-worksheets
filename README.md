@@ -6,6 +6,8 @@ Interactive material for in-lecture teaching and practice—not laboratory assig
 
 ## Lecture presentation sheets
 
+- [Transfer learning: borrow, adapt, see further](presentations/transfer-learning/) — five planned animated explainers plus interactive calculators covering pretrained models, feature extraction, freezing, augmentation, and CNN limitations motivating ViTs; foldable theory, eleven questions with reasoning, five original SVG figures, and an [instructor guide](presentations/transfer-learning/instructor-guide.md).
+
 - [CNN architectures: depth, scale & efficiency](presentations/cnn-architectures/) — shattered gradients, residual connections, ResNet, Inception, and depthwise separable convolutions. Five guided animated walkthroughs, interactive calculators, numbered feature maps, ten discussion checks, a design challenge, and [instructor assets](presentations/cnn-architectures/instructor-guide.md).
 
 Instructor-led pages with theory, live plots, textbook figures, and discussion questions.
@@ -75,3 +77,7 @@ The legacy `lab_` URL remains solely for backward compatibility. Figures remain 
 The original click-to-fill sheets include glossary bubbles and print support. The initialization sheet includes explanations, playback controls, reduced-motion support, and locally saved progress. Progress from the separate private Sites preview does not transfer across origins to GitHub Pages.
 
 CNN architectures is also standalone: edit `presentations/cnn-architectures/` directly. Run its numerical checks with `node --test presentations/cnn-architectures/*.test.cjs`. No build step is required. The architecture sheet shares `presentations/cnn/styles.css` with the CNN foundation sheet; Google Fonts have system fallbacks.
+
+Transfer learning is standalone HTML/CSS/JavaScript. It shares the CNN theme through `presentations/cnn-architectures/styles.css` and `presentations/cnn/styles.css`. Run exact numerical checks with `node --test presentations/transfer-learning/*.test.cjs`. Serve the repository root for local preview; no build or model download is needed.
+
+The [transfer-learning lecture presentation sheet](presentations/transfer-learning/) embeds its animated demonstrations directly within each learning section, with an accompanying [storyboard guide](presentations/transfer-learning/storyboard-guide.md). Its five sequences move numbered pixels, accumulate features, trace forward and update signals, grow receptive fields, and connect patch tokens. Players provide prediction pauses, speed, scrubbing, stepping, reduced-motion support, and SVG frame downloads.

@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="560" viewBox="0 0 1100 560" role="img" aria-labelledby="title desc">
+<title id="title">Frozen weights still compute features</title><desc id="desc">Solid teal arrows show the active forward route through a frozen backbone and a trainable head to the loss. An ochre update loop connects loss and optimizer only to the trainable head. Frozen backbone weights are unchanged; BatchNorm running statistics need separate control.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#12655b"/></marker><marker id="ochre" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#bc783d"/></marker></defs>
+<rect width="1100" height="560" fill="#f7f5ef"/>
+<g font-family="Arial, Helvetica, sans-serif">
+<text x="40" y="34" font-size="18" fill="#12655b" font-weight="700" text-anchor="start">TRANSFER LEARNING  /  03</text>
+<text x="40" y="78" font-size="32" fill="#183c35" font-weight="700" text-anchor="start">Frozen weights still compute features</text>
+<text x="40" y="112" font-size="20" fill="#183c35" font-weight="400" text-anchor="start">Freezing controls parameter updates. It does not remove the backbone from the forward pass.</text>
+<text x="40" y="156" font-size="18" fill="#12655b" font-weight="700" text-anchor="start">FORWARD PASS · ACTIVE THROUGH EVERY BLOCK</text>
+<rect x="40" y="183" width="150" height="105" rx="14" fill="#e1eae3" stroke="none" stroke-width="2"/>
+<text x="115.0" y="221" font-size="23" fill="#183c35" font-weight="700" text-anchor="middle">Image x</text>
+<text x="115.0" y="253" font-size="19" fill="#183c35" font-weight="400" text-anchor="middle">input</text>
+<rect x="255" y="183" width="300" height="105" rx="14" fill="#e1eae3" stroke="none" stroke-width="2"/>
+<text x="405.0" y="221" font-size="23" fill="#183c35" font-weight="700" text-anchor="middle">Frozen backbone</text>
+<text x="405.0" y="253" font-size="19" fill="#183c35" font-weight="400" text-anchor="middle">θ unchanged</text>
+<rect x="620" y="183" width="240" height="105" rx="14" fill="#f1e2d1" stroke="none" stroke-width="2"/>
+<text x="740.0" y="221" font-size="23" fill="#183c35" font-weight="700" text-anchor="middle">Trainable head</text>
+<text x="740.0" y="253" font-size="19" fill="#183c35" font-weight="400" text-anchor="middle">φ can update</text>
+<rect x="925" y="183" width="135" height="105" rx="14" fill="#e1eae3" stroke="none" stroke-width="2"/>
+<text x="992.5" y="221" font-size="23" fill="#183c35" font-weight="700" text-anchor="middle">Loss L</text>
+<text x="992.5" y="253" font-size="19" fill="#183c35" font-weight="400" text-anchor="middle">uses label</text>
+<path d="M201,235 L244,235" fill="none" stroke="#12655b" stroke-width="3" marker-end="url(#arrow)"/>
+<path d="M566,235 L609,235" fill="none" stroke="#12655b" stroke-width="3" marker-end="url(#arrow)"/>
+<path d="M871,235 L914,235" fill="none" stroke="#12655b" stroke-width="3" marker-end="url(#arrow)"/>
+<rect x="255" y="343" width="300" height="99" rx="14" fill="#ffffff" stroke="#12655b" stroke-width="2" stroke-dasharray="7 5"/>
+<text x="405" y="382" font-size="21" fill="#183c35" font-weight="700" text-anchor="middle">No optimizer update</text>
+<text x="405" y="416" font-size="25" fill="#12655b" font-weight="700" text-anchor="middle">Δθ = 0</text>
+<rect x="620" y="343" width="440" height="99" rx="14" fill="#f1e2d1" stroke="none" stroke-width="2"/>
+<text x="840" y="380" font-size="22" fill="#183c35" font-weight="700" text-anchor="middle">Optimizer step for the head</text>
+<text x="840" y="416" font-size="27" fill="#183c35" font-weight="700" text-anchor="middle">φ ← φ − η ∇φL</text>
+<path d="M994,299 L994,333" fill="none" stroke="#bc783d" stroke-width="3" marker-end="url(#ochre)"/>
+<path d="M741,333 L741,299" fill="none" stroke="#bc783d" stroke-width="3" marker-end="url(#ochre)"/>
+<text x="40" y="384" font-size="18" fill="#12655b" font-weight="700" text-anchor="start">Solid teal:</text>
+<text x="40" y="411" font-size="18" fill="#183c35" font-weight="400" text-anchor="start">computation</text>
+<text x="40" y="452" font-size="18" fill="#183c35" font-weight="700" text-anchor="start">Ochre: update route</text>
+<path d="M40,492 L1060,492" fill="none" stroke="#e1eae3" stroke-width="3"/>
+<text x="40" y="527" font-size="18" fill="#183c35" font-weight="400" text-anchor="start">BatchNorm: requires_grad=False freezes parameters; eval() separately controls running statistics.</text>
+</g></svg>

@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="560" viewBox="0 0 1100 560" role="img" aria-labelledby="title desc">
+<title id="title">Reuse the backbone. Replace the head.</title><desc id="desc">A source-task pipeline and a target-task pipeline reuse the same learned backbone weights. The source head is replaced by a new three-class head. The target has 120 labelled images; this is an illustrative setup, not a measured result.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#12655b"/></marker><marker id="ochre" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#bc783d"/></marker></defs>
+<rect width="1100" height="560" fill="#f7f5ef"/>
+<g font-family="Arial, Helvetica, sans-serif">
+<text x="40" y="34" font-size="18" fill="#12655b" font-weight="700" text-anchor="start">TRANSFER LEARNING  /  01</text>
+<text x="40" y="78" font-size="32" fill="#183c35" font-weight="700" text-anchor="start">Reuse the backbone. Replace the head.</text>
+<text x="40" y="112" font-size="20" fill="#183c35" font-weight="400" text-anchor="start">Pretraining supplies learned features; the new task supplies a new decision rule.</text>
+<text x="40" y="156" font-size="18" fill="#12655b" font-weight="700" text-anchor="start">SOURCE TASK</text>
+<rect x="40" y="174" width="175" height="100" rx="14" fill="#e1eae3" stroke="none" stroke-width="2"/>
+<text x="127.5" y="212" font-size="23" fill="#183c35" font-weight="700" text-anchor="middle">Many images</text>
+<text x="127.5" y="244" font-size="19" fill="#183c35" font-weight="400" text-anchor="middle">source dataset</text>
+<rect x="275" y="174" width="435" height="100" rx="14" fill="#e1eae3" stroke="none" stroke-width="2"/>
+<text x="492.5" y="212" font-size="23" fill="#183c35" font-weight="700" text-anchor="middle">Learned backbone fθ</text>
+<text x="492.5" y="244" font-size="19" fill="#183c35" font-weight="400" text-anchor="middle">edges → textures → combinations</text>
+<rect x="785" y="174" width="275" height="100" rx="14" fill="#f1e2d1" stroke="none" stroke-width="2"/>
+<text x="922.5" y="212" font-size="23" fill="#183c35" font-weight="700" text-anchor="middle">Source head</text>
+<text x="922.5" y="244" font-size="19" fill="#183c35" font-weight="400" text-anchor="middle">source classes</text>
+<path d="M225,224 L264,224" fill="none" stroke="#12655b" stroke-width="3" marker-end="url(#arrow)"/>
+<path d="M720,224 L774,224" fill="none" stroke="#12655b" stroke-width="3" marker-end="url(#arrow)"/>
+<path d="M490,283 L490,330" fill="none" stroke="#12655b" stroke-width="3" marker-end="url(#arrow)"/>
+<text x="518" y="311" font-size="20" fill="#12655b" font-weight="400" text-anchor="start">reuse learned weights</text>
+<text x="40" y="324" font-size="18" fill="#12655b" font-weight="700" text-anchor="start">TARGET TASK</text>
+<rect x="40" y="342" width="175" height="100" rx="14" fill="#e1eae3" stroke="none" stroke-width="2"/>
+<text x="127.5" y="380" font-size="23" fill="#183c35" font-weight="700" text-anchor="middle">120 images</text>
+<text x="127.5" y="412" font-size="19" fill="#183c35" font-weight="400" text-anchor="middle">labelled target</text>
+<rect x="275" y="342" width="435" height="100" rx="14" fill="#e1eae3" stroke="none" stroke-width="2"/>
+<text x="492.5" y="380" font-size="23" fill="#183c35" font-weight="700" text-anchor="middle">Reused backbone fθ</text>
+<text x="492.5" y="412" font-size="19" fill="#183c35" font-weight="400" text-anchor="middle">freeze first; optionally fine-tune</text>
+<rect x="785" y="342" width="275" height="100" rx="14" fill="#f1e2d1" stroke="none" stroke-width="2"/>
+<text x="922.5" y="380" font-size="23" fill="#183c35" font-weight="700" text-anchor="middle">New head gφ</text>
+<text x="922.5" y="412" font-size="19" fill="#183c35" font-weight="400" text-anchor="middle">3 target classes</text>
+<path d="M225,392 L264,392" fill="none" stroke="#12655b" stroke-width="3" marker-end="url(#arrow)"/>
+<path d="M720,392 L774,392" fill="none" stroke="#12655b" stroke-width="3" marker-end="url(#arrow)"/>
+<text x="793" y="472" font-size="20" fill="#183c35" font-weight="700" text-anchor="start">Replace + train this head</text>
+<path d="M40,492 L1060,492" fill="none" stroke="#e1eae3" stroke-width="3"/>
+<text x="40" y="527" font-size="18" fill="#183c35" font-weight="400" text-anchor="start">Prediction: gφ(fθ(x)). Transfer can help; a new domain can still require adaptation.</text>
+</g></svg>

@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="560" viewBox="0 0 1100 560" role="img" aria-labelledby="title desc">
+<title id="title">Flip the pixels. Check the meaning.</title><desc id="desc">The original 4 by 4 image has rows 1 2 3 4; 5 6 7 8; 9 10 11 12; 13 14 15 16. Its exact horizontal flip has rows 4 3 2 1; 8 7 6 5; 12 11 10 9; 16 15 14 13. Numbered pixel values are schematic. Flipping must preserve the target label; left versus right and text may change meaning.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#12655b"/></marker><marker id="ochre" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#bc783d"/></marker></defs>
+<rect width="1100" height="560" fill="#f7f5ef"/>
+<g font-family="Arial, Helvetica, sans-serif">
+<text x="40" y="34" font-size="18" fill="#12655b" font-weight="700" text-anchor="start">TRANSFER LEARNING  /  04</text>
+<text x="40" y="78" font-size="32" fill="#183c35" font-weight="700" text-anchor="start">Flip the pixels. Check the meaning.</text>
+<text x="40" y="112" font-size="20" fill="#183c35" font-weight="400" text-anchor="start">A horizontal flip reverses columns within each row; it does not reverse the row order.</text>
+<text x="100" y="157" font-size="23" fill="#183c35" font-weight="700" text-anchor="start">Original image X</text>
+<rect x="100" y="177" width="53" height="53" rx="5" fill="#12655b" stroke="none" stroke-width="2"/>
+<text x="126.5" y="213" font-size="24" fill="#f7f5ef" font-weight="700" text-anchor="middle">1</text>
+<rect x="155" y="177" width="53" height="53" rx="5" fill="#e1eae3" stroke="none" stroke-width="2"/>
+<text x="181.5" y="213" font-size="24" fill="#183c35" font-weight="700" text-anchor="middle">2</text>
+<rect x="210" y="177" width="53" height="53" rx="5" fill="#f1e2d1" stroke="none" stroke-width="2"/>
+<text x="236.5" y="213" font-size="24" fill="#183c35" font-weight="700" text-anchor="middle">3</text>
+<rect x="265" y="177" width="53" height="53" rx="5" fill="#f1e2d1" stroke="none" stroke-width="2"/>
+<text x="291.5" y="213" font-size="24" fill="#183c35" font-weight="700" text-anchor="middle">4</text>
+<rect x="100" y="232" width="53" height="53" rx="5" fill="#12655b" stroke="none" stroke-width="2"/>
+<text x="126.5" y="268" font-size="24" fill="#f7f5ef" font-weight="700" text-anchor="middle">5</text>
+<rect x="155" y="232" width="53" height="53" rx="5" fill="#e1eae3" stroke="none" stroke-width="2"/>
+<text x="181.5" y="268" font-size="24" fill="#183c35" font-weight="700" text-anchor="middle">6</text>
+<rect x="210" y="232" width="53" height="53" rx="5" fill="#e1eae3" stroke="none" stroke-width="2"/>
+<text x="236.5" y="268" font-size="24" fill="#183c35" font-weight="700" text-anchor="middle">7</text>
+<rect x="265" y="232" width="53" height="53" rx="5" fill="#f1e2d1" stroke="none" stroke-width="2"/>
+<text x="291.5" y="268" font-size="24" fill="#183c35" font-weight="700" text-anchor="middle">8</text>
+<rect x="100" y="287" width="53" height="53" rx="5" fill="#12655b" stroke="none" stroke-width="2"/>
+<text x="126.5" y="323" font-size="24" fill="#f7f5ef" font-weight="700" text-anchor="middle">9</text>
+<rect x="155" y="287" width="53" height="53" rx="5" fill="#12655b" stroke="none" stroke-width="2"/>
+<text x="181.5" y="323" font-size="24" fill="#f7f5ef" font-weight="700" text-anchor="middle">10</text>
+<rect x="210" y="287" width="53" height="53" rx="5" fill="#12655b" stroke="none" stroke-width="2"/>
+<text x="236.5" y="323" font-size="24" fill="#f7f5ef" font-weight="700" text-anchor="middle">11</text>
+<rect x="265" y="287" width="53" height="53" rx="5" fill="#e1eae3" stroke="none" stroke-width="2"/>
+<text x="291.5" y="323" font-size="24" fill="#183c35" font-weight="700" text-anchor="middle">12</text>
+<rect x="100" y="342" width="53" height="53" rx="5" fill="#e1eae3" stroke="none" stroke-width="2"/>
+<text x="126.5" y="378" font-size="24" fill="#183c35" font-weight="700" text-anchor="middle">13</text>
+<rect x="155" y="342" width="53" height="53" rx="5" fill="#e1eae3" stroke="none" stroke-width="2"/>
+<text x="181.5" y="378" font-size="24" fill="#183c35" font-weight="700" text-anchor="middle">14</text>
+<rect x="210" y="342" width="53" height="53" rx="5" fill="#e1eae3" stroke="none" stroke-width="2"/>
+<text x="236.5" y="378" font-size="24" fill="#183c35" font-weight="700" text-anchor="middle">15</text>
+<rect x="265" y="342" width="53" height="53" rx="5" fill="#e1eae3" stroke="none" stroke-width="2"/>
+<text x="291.5" y="378" font-size="24" fill="#183c35" font-weight="700" text-anchor="middle">16</text>
+<text x="700" y="157" font-size="23" fill="#183c35" font-weight="700" text-anchor="start">Horizontal flip X′</text>
+<rect x="700" y="177" width="53" height="53" rx="5" fill="#f1e2d1" stroke="none" stroke-width="2"/>
+<text x="726.5" y="213" font-size="24" fill="#183c35" font-weight="700" text-anchor="middle">4</text>
+<rect x="755" y="177" width="53" height="53" rx="5" fill="#f1e2d1" stroke="none" stroke-width="2"/>
+<text x="781.5" y="213" font-size="24" fill="#183c35" font-weight="700" text-anchor="middle">3</text>
+<rect x="810" y="177" width="53" height="53" rx="5" fill="#e1eae3" stroke="none" stroke-width="2"/>
+<text x="836.5" y="213" font-size="24" fill="#183c35" font-weight="700" text-anchor="middle">2</text>
+<rect x="865" y="177" width="53" height="53" rx="5" fill="#12655b" stroke="none" stroke-width="2"/>
+<text x="891.5" y="213" font-size="24" fill="#f7f5ef" font-weight="700" text-anchor="middle">1</text>
+<rect x="700" y="232" width="53" height="53" rx="5" fill="#f1e2d1" stroke="none" stroke-width="2"/>
+<text x="726.5" y="268" font-size="24" fill="#183c35" font-weight="700" text-anchor="middle">8</text>
+<rect x="755" y="232" width="53" height="53" rx="5" fill="#e1eae3" stroke="none" stroke-width="2"/>
+<text x="781.5" y="268" font-size="24" fill="#183c35" font-weight="700" text-anchor="middle">7</text>
+<rect x="810" y="232" width="53" height="53" rx="5" fill="#e1eae3" stroke="none" stroke-width="2"/>
+<text x="836.5" y="268" font-size="24" fill="#183c35" font-weight="700" text-anchor="middle">6</text>
+<rect x="865" y="232" width="53" height="53" rx="5" fill="#12655b" stroke="none" stroke-width="2"/>
+<text x="891.5" y="268" font-size="24" fill="#f7f5ef" font-weight="700" text-anchor="middle">5</text>
+<rect x="700" y="287" width="53" height="53" rx="5" fill="#e1eae3" stroke="none" stroke-width="2"/>
+<text x="726.5" y="323" font-size="24" fill="#183c35" font-weight="700" text-anchor="middle">12</text>
+<rect x="755" y="287" width="53" height="53" rx="5" fill="#12655b" stroke="none" stroke-width="2"/>
+<text x="781.5" y="323" font-size="24" fill="#f7f5ef" font-weight="700" text-anchor="middle">11</text>
+<rect x="810" y="287" width="53" height="53" rx="5" fill="#12655b" stroke="none" stroke-width="2"/>
+<text x="836.5" y="323" font-size="24" fill="#f7f5ef" font-weight="700" text-anchor="middle">10</text>
+<rect x="865" y="287" width="53" height="53" rx="5" fill="#12655b" stroke="none" stroke-width="2"/>
+<text x="891.5" y="323" font-size="24" fill="#f7f5ef" font-weight="700" text-anchor="middle">9</text>
+<rect x="700" y="342" width="53" height="53" rx="5" fill="#e1eae3" stroke="none" stroke-width="2"/>
+<text x="726.5" y="378" font-size="24" fill="#183c35" font-weight="700" text-anchor="middle">16</text>
+<rect x="755" y="342" width="53" height="53" rx="5" fill="#e1eae3" stroke="none" stroke-width="2"/>
+<text x="781.5" y="378" font-size="24" fill="#183c35" font-weight="700" text-anchor="middle">15</text>
+<rect x="810" y="342" width="53" height="53" rx="5" fill="#e1eae3" stroke="none" stroke-width="2"/>
+<text x="836.5" y="378" font-size="24" fill="#183c35" font-weight="700" text-anchor="middle">14</text>
+<rect x="865" y="342" width="53" height="53" rx="5" fill="#e1eae3" stroke="none" stroke-width="2"/>
+<text x="891.5" y="378" font-size="24" fill="#183c35" font-weight="700" text-anchor="middle">13</text>
+<path d="M363,275 L646,275" fill="none" stroke="#12655b" stroke-width="3" marker-end="url(#arrow)"/>
+<text x="505" y="244" font-size="22" fill="#12655b" font-weight="700" text-anchor="middle">reverse columns</text>
+<text x="505" y="317" font-size="23" fill="#183c35" font-weight="700" text-anchor="middle">X′[r,c] = X[r,3−c]</text>
+<text x="505" y="351" font-size="20" fill="#183c35" font-weight="400" text-anchor="middle">r,c ∈ {0,1,2,3}</text>
+<text x="100" y="438" font-size="22" fill="#183c35" font-weight="700" text-anchor="start">Same object category? Often yes.</text>
+<text x="100" y="471" font-size="22" fill="#183c35" font-weight="400" text-anchor="start">Left/right labels or text? A flip may change the target.</text>
+<path d="M40,492 L1060,492" fill="none" stroke="#e1eae3" stroke-width="3"/>
+<text x="40" y="527" font-size="18" fill="#183c35" font-weight="400" text-anchor="start">Split originals first. Apply label-preserving random augmentation to training data only.</text>
+</g></svg>
