@@ -1,0 +1,12 @@
+{
+  "devDependencies": {
+    "jsdom": "29.1.1"
+  },
+  "name": "sequence-modelling-lecture",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test": "node --test *.test.cjs",
+    "assets": "node build-assets.cjs && python3 build-handout.py"
+  }
+}

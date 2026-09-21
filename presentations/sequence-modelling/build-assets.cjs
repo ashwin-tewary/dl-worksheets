@@ -1,0 +1,28 @@
+/* Regenerate portable SVGs, their gallery, and the narration guide. */
+const fs=require('node:fs'),path=require('node:path');
+const scenes=require('./scenes.js'),stories=require('./storyboards.js');
+const assets=path.join(__dirname,'assets');fs.mkdirSync(assets,{recursive:true});
+const captions={
+ order:'Three numbered binary frames. Reverse their order to reverse motion; the time-averaged image stays unchanged.',
+ tasks:'One-hot inputs feed recurrent states. This exported frame shows one review label after the final state; the worksheet also shows token tags and shifted next-token targets.',
+ state:'The third tanh update for inputs [1,0,1], input weight 1, recurrent weight 0.5, bias 0 and initial state 0. Values displayed to three decimals.',
+ unroll:'Four uses of one parameter bank. With input width 3, hidden width 2 and output width 2 there are 18 parameters, including biases.',
+ memory:'A clue passes through 20 zero-input linear updates with recurrent weight 0.8. The final state is approximately 0.011529; this is not an accuracy.',
+ gradient:'Backward sensitivity through 20 linear links of derivative 0.8. The vertical axis is logarithmic. The footer supplies separate scalar parameter-gradient clipping examples; the plotted path is never clipped.'
+};
+const entries=Object.keys(stories).map((key,i)=>{
+ const filename=`${String(i+1).padStart(2,'0')}-${key}.svg`,beat=key==='unroll'?4:stories[key].steps.length-1;
+ fs.writeFileSync(path.join(assets,filename),scenes.render(key,beat,1));
+ return {key,filename,caption:captions[key],title:stories[key].title};
+});
+const gallery=`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sequence modelling · Original lecture figures</title><link rel="stylesheet" href="../styles.css"><style>main{max-width:1080px;margin:auto;padding:40px 24px}h1{font-size:48px}figure{margin:35px 0;background:var(--white);border:1px solid var(--line);border-radius:14px;padding:22px;break-inside:avoid}.figure-scroll{overflow:auto}img{display:block;width:100%;min-width:740px}figcaption{font-size:14px;line-height:1.8;margin-top:16px}.caption-note{font-size:12px;color:var(--muted)}@media print{main{padding:0}img{min-width:0}figure{break-after:page}.download{display:none}}</style></head><body><main><a href="../index.html">← Back to the interactive worksheet</a><div class="eyebrow" style="margin-top:30px">Reusable lecture assets / SVG</div><h1>Make the mechanism visible.</h1><p>Six original figures, with readable numbers and explicit assumptions. Save each SVG for slides, or use the worksheet's frame-download button to export another animation beat. All figures work offline.</p>${entries.map(e=>`<figure><h2 style="font-size:26px">${e.title}</h2><div class="figure-scroll"><img src="${e.filename}" alt="${e.caption}"></div><figcaption>${e.caption}</figcaption><p class="caption-note">Same numerical model and renderer as the live worksheet.</p><a class="download button" href="${e.filename}" download>Download SVG ↓</a></figure>`).join('')}<p><a href="../student-handout.html">Printable student questions</a> · <a href="../instructor-guide.md">Instructor notes and answers</a></p></main></body></html>`;
+fs.writeFileSync(path.join(assets,'gallery.html'),gallery);
+fs.writeFileSync(path.join(assets,'asset-manifest.md'),'# Original sequence-modelling figures\n\nAll figures are original vector drawings generated from the worksheet\'s deterministic numerical examples. No external image assets or fonts. Numeric values are SVG text, not rasterized pixels.\n\n'+entries.map(e=>`- [${e.filename}](${e.filename}): ${e.caption}`).join('\n')+'\n\nRegenerate with `node presentations/sequence-modelling/build-assets.cjs` from the repository root. The gallery is suitable for projection, print or importing figures into slides. Downloaded frames contain self-contained SVG styles.\n');
+let guide='# Sequence modelling — animation storyboard guide\n\nSix teaching sequences. Each is embedded at its point of need in the [worksheet](index.html). Play stops automatically at the prediction checkpoint. Gather answers before choosing Continue. Back, Next, Replay, speed, scrub and SVG export are available. Reduced motion uses stable steps. Only one player runs at a time, and it pauses when offscreen or when the document is hidden.\n\nDefaults are the reference examples below. Changing a control updates the diagram and numeric readout. Prediction prompts that specify numbers use their stated reference values; set those controls before posing that question. The two long-dependency players share settings.\n\n';
+for(const [key,story] of Object.entries(stories)){
+ guide+=`## ${story.title}\n\n${story.subtitle}\n\n**Assumptions:** ${story.note}\n\n`;
+ story.steps.forEach((step,i)=>{guide+=`### ${i+1}. ${step.title}${step.checkpoint?' — STOP FOR PREDICTIONS':''}\n\n${step.narration}\n\n${step.equation?'Calculation / board note: '+step.equation+'\n\n':''}`;});
+}
+guide+='## Presenter routine\n\n1. Read the hook before touching the controls.\n2. Let students predict individually, then compare with a neighbour.\n3. Reveal one step; ask someone to narrate the arithmetic.\n4. Change one control and ask which quantity should stay invariant.\n5. Use a worked answer only after a student explains their reasoning.\n\nFor a 60-minute route, use the 85-minute guide\'s suggested cuts; do not omit the distinction between state, weight and gradient.\n';
+fs.writeFileSync(path.join(__dirname,'storyboard-guide.md'),guide);
+console.log('Generated 6 standalone SVGs, gallery, asset manifest, and storyboard guide.');
