@@ -1,0 +1,92 @@
+[
+  {
+    "file": "rnn.png",
+    "source_pdf": "cs231n",
+    "page": 25,
+    "crop_points": [
+      65,
+      155,
+      650,
+      325
+    ],
+    "scale": 3,
+    "width": 1755,
+    "height": 510,
+    "source_sha256": "77daa89d148772242e9e9d6fe7c802f9de78dc0ce46c26e9361cdc64d3fb009d",
+    "source_url": "https://cs231n.stanford.edu/slides/2017/cs231n_2017_lecture10.pdf",
+    "authors": "Fei-Fei Li, Justin Johnson & Serena Yeung",
+    "course": "CS231n \u00b7 Lecture 10 (4 May 2017)"
+  },
+  {
+    "file": "lstm.png",
+    "source_pdf": "cs231n",
+    "page": 98,
+    "crop_points": [
+      15,
+      78,
+      710,
+      355
+    ],
+    "scale": 3,
+    "width": 2085,
+    "height": 831,
+    "source_sha256": "77daa89d148772242e9e9d6fe7c802f9de78dc0ce46c26e9361cdc64d3fb009d",
+    "source_url": "https://cs231n.stanford.edu/slides/2017/cs231n_2017_lecture10.pdf",
+    "authors": "Fei-Fei Li, Justin Johnson & Serena Yeung",
+    "course": "CS231n \u00b7 Lecture 10 (4 May 2017)"
+  },
+  {
+    "file": "memory-path.png",
+    "source_pdf": "cs231n",
+    "page": 100,
+    "crop_points": [
+      5,
+      115,
+      715,
+      254
+    ],
+    "scale": 3,
+    "width": 2130,
+    "height": 417,
+    "source_sha256": "77daa89d148772242e9e9d6fe7c802f9de78dc0ce46c26e9361cdc64d3fb009d",
+    "source_url": "https://cs231n.stanford.edu/slides/2017/cs231n_2017_lecture10.pdf",
+    "authors": "Fei-Fei Li, Justin Johnson & Serena Yeung",
+    "course": "CS231n \u00b7 Lecture 10 (4 May 2017)"
+  },
+  {
+    "file": "gru.png",
+    "source_pdf": "notes",
+    "page": 12,
+    "crop_points": [
+      73,
+      408,
+      502,
+      632
+    ],
+    "scale": 3,
+    "width": 1287,
+    "height": 672,
+    "source_sha256": "0cefa88acccdfb592c2aca4d6a7f0ce2d56d886bf9556745b9ce37330606f78e",
+    "source_url": "https://web.stanford.edu/class/cs224n/readings/cs224n-2019-notes05-LM_RNN.pdf",
+    "authors": "Milad Mohammadi, Rohit Mundra, Richard Socher, Lisa Wang & Amita Kamath",
+    "course": "CS224n \u00b7 Lecture Notes V (Winter 2019), Figure 12"
+  },
+  {
+    "file": "bidirectional.png",
+    "source_pdf": "cs224n",
+    "page": 34,
+    "crop_points": [
+      130,
+      65,
+      810,
+      521
+    ],
+    "scale": 3,
+    "width": 2040,
+    "height": 1368,
+    "source_sha256": "12db7c00bee530819f1cc05863f8148e126509b09a78b6f54ca04b531ed0e9b7",
+    "source_url": "https://web.stanford.edu/class/archive/cs/cs224n/cs224n.1246/slides/cs224n-spr2024-lecture06-fancy-rnn.pdf",
+    "authors": "Christopher Manning",
+    "course": "CS224N/Ling284 \u00b7 Lecture 6 (Spring 2024)"
+  }
+]

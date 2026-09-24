@@ -70,7 +70,7 @@ Final design challenge: completed recordings can use bidirectional gated models;
 
 ## Assets and attribution
 
-Five original vector figures are in `assets/`; `assets/gallery.html` provides previews and downloads. `storyboard-guide.md` lists every planned beat, prompt and assumption. The worksheet cites the original LSTM, forget-gate, GRU and bidirectional papers and links to Dive into Deep Learning for further study. No copyrighted book scans or third-party images are embedded. There are no external runtime or font requests.
+Five original vector figures are in `assets/`; `assets/gallery.html` provides previews and downloads. `storyboard-guide.md` lists every planned beat, prompt and assumption. The worksheet cites the original LSTM, forget-gate, GRU and bidirectional papers and links to Dive into Deep Learning for further study. Five attributed architecture reference images from Stanford CS231n and CS224n PDFs sit immediately above the interactive sections. See `assets/architecture/README.md` for authors, exact PDF pages, crop provenance and notation differences. The reference images are served locally; there are no external runtime or font requests.
 
 The final SVG figures are also an offline/no-JavaScript fallback. Print uses the final animation frames and suppresses controls. Open any desired theory disclosures before printing; answer disclosures remain under instructor control.
 
