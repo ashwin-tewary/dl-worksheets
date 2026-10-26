@@ -1,0 +1,10 @@
+const {test}=require('node:test');const a=require('node:assert/strict');const M=require('./model.js');
+const near=(x,y)=>a.ok(Math.abs(x-y)<1e-8,`${x} != ${y}`);
+test('counts retain repetition but lose order',()=>{a.deepEqual(M.bow('dog bites person',['dog','bites','person']),[1,1,1]);a.deepEqual(M.bow('person bites dog',['dog','bites','person']),[1,1,1]);a.deepEqual(M.bow('cat cat unknown',['cat','dog']),[2,0]);});
+test('TF-IDF uses document presence, smoothed natural log and raw counts',()=>{const r=M.tfidf(['cat cat dog','cat bird','dog bird'],['cat','dog','bird']);a.deepEqual(r.df,[2,2,2]);near(r.values[0][0],2*(Math.log(4/3)+1));near(M.tfidf(['cat','cat','cat'],['cat']).idf[0],1);});
+test('cosine handles zero and negative similarity',()=>{near(M.cosine([1,0],[1,1]),1/Math.sqrt(2));a.equal(M.cosine([0,0],[1,2]),null);near(M.cosine([1,0],[-1,0]),-1);});
+test('tokenization separates punctuation and preserves Unicode words',()=>{a.deepEqual(M.tokens('Cats, café!'),['cats',',','café','!']);a.deepEqual(M.tokens(''),[]);});
+test('BPE learns pairs with deterministic tie break',()=>{const r=M.bpe(['low','low','lower'],3);a.deepEqual(r.steps[0].pair,['l','o']);a.equal(r.steps[0].count,3);a.deepEqual(r.steps[1].words[0],['low','▁']);a.deepEqual(r.words[0],['low▁']);});
+test('cooccurrence counts symmetric radius-one windows without crossing documents',()=>{a.deepEqual(M.cooccur(['cat dog cat','bird'],['cat','dog','bird']),[[0,2,0],[2,0,0],[0,0,0]]);});
+test('stable softmax and CBOW update reduce the actual target loss',()=>{a.deepEqual(M.softmax([1000,1000]),[.5,.5]);const s=M.initialCBOW();const f=M.cbow(s,[0,1],2);a.deepEqual(f.h,[.5,.5]);near(f.p.reduce((x,y)=>x+y),1);const next=M.trainCBOW(s,[0,1],2,.2);a.ok(M.cbow(next,[0,1],2).loss<f.loss);a.deepEqual(s,M.initialCBOW());});
+test('GloVe term uses weighting, log count, biases and omits zero',()=>{const r=M.gloveTerm(4,[1,0],[0,1],.2,.3,4,.75);near(r.residual,.5-Math.log(4));near(r.loss,r.residual**2);a.equal(M.gloveTerm(0,[1],[1],0,0,4,.75).loss,0);});
