@@ -1,0 +1,1 @@
+{"name":"encoder-decoder-attention-lecture","version":"1.0.0","private":true,"scripts":{"test":"node --test *.test.cjs","assets":"node build-assets.cjs"},"devDependencies":{"jsdom":"29.1.1"}}

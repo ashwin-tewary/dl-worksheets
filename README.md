@@ -6,6 +6,8 @@ Interactive material for in-lecture teaching and practice—not laboratory assig
 
 ## Lecture presentation sheets
 
+- [Encoder–decoder & attention: look back for the next word](presentations/encoder-decoder-attention/) — a beginner sequence-to-sequence bridge, context bottleneck, shared attention recipe, Bahdanau additive and Luong dot/general scoring. Five guided animations with prediction stops, editable numbered attention maps, eighteen worked checks, browser-local notes and export, [five original SVG figures](presentations/encoder-decoder-attention/assets/gallery.html), and an [instructor guide](presentations/encoder-decoder-attention/instructor-guide.md).
+
 - [From words to meaning: text representations](presentations/text-representations/) — tokenization, Bag of Words, TF–IDF, word embeddings, CBOW, GloVe and applications. Seven controllable animations, explicit numerical conventions, sixteen checked questions, foldable theory, a [student handout](presentations/text-representations/student-handout.html), [instructor guide](presentations/text-representations/instructor-guide.md) and [animation narration](presentations/text-representations/storyboard-guide.md).
 
 - [LSTM, GRU & bidirectional RNNs: keep the clue, read the context](presentations/gated-rnns/) — five planned animations with prediction pauses, gate experiments, a beginner RNN recap, gradient-path comparisons, fifteen checked questions, a causal-context design challenge, [reusable SVG figures](presentations/gated-rnns/assets/gallery.html), and an [instructor guide](presentations/gated-rnns/instructor-guide.md).
@@ -93,3 +95,5 @@ Sequence modelling is standalone HTML/CSS/JavaScript with no external fonts or r
 Gated RNNs is editable standalone HTML/CSS/JavaScript and reuses the sequence-modelling theme and timeline. Run `cd presentations/gated-rnns && npm ci && npm test`; regenerate its figures and storyboard guide with `node build-assets.cjs`. No build step is required to serve the worksheet.
 
 Text representations is standalone HTML/CSS/JavaScript and reuses the sequence-modelling stylesheet. No build or model download is required. Run `cd presentations/text-representations && npm ci && npm test` to verify numerical and DOM behavior. Its two-dimensional vectors are explicitly hand-designed teaching illustrations, and CBOW uses a tiny exact full-softmax training example.
+
+Encoder–decoder and attention is a standalone worksheet using the existing sequence-modelling theme and timeline. Edit `presentations/encoder-decoder-attention/` directly; `build-page.py` is the static page authoring source. Regenerate the page with `python3 build-page.py`, then figures and storyboards with `node build-assets.cjs`. Run `npm ci && npm test` in that directory for arithmetic, scene and DOM interaction checks. No runtime dependencies, external fonts, images or model downloads are required.
